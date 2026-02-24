@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -19,7 +18,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.ui.components.LascitoPrimaryButton
+import com.perenniasystems.lascito.ui.components.LascitoTextField
 import com.perenniasystems.lascito.ui.theme.*
 
 /**
@@ -81,7 +83,7 @@ fun LoginScreen(
             Text(
                 text  = "Perennia Systems",
                 style = MaterialTheme.typography.bodySmall.copy(
-                    letterSpacing = 3.sp_from_sp(),
+                    letterSpacing = 3.sp,
                     color         = MutedGoldDim
                 ),
             )
@@ -90,20 +92,20 @@ fun LoginScreen(
 
             // ── Email ─────────────────────────────────────────────────────────
             LascitoTextField(
-                value       = email,
+                value         = email,
                 onValueChange = { email = it },
-                label       = stringResource(R.string.label_email),
+                label         = stringResource(R.string.label_email),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
             Spacer(modifier = Modifier.height(16.dp))
 
             // ── Password ──────────────────────────────────────────────────────
             LascitoTextField(
-                value         = password,
-                onValueChange = { password = it },
-                label         = stringResource(R.string.label_password),
+                value                = password,
+                onValueChange        = { password = it },
+                label                = stringResource(R.string.label_password),
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                keyboardOptions      = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -129,15 +131,10 @@ fun LoginScreen(
     }
 }
 
-// ── Private extension to convert Sp in context ────────────────────────────────
-@Composable
-private fun sp_from_sp(): androidx.compose.ui.unit.TextUnit =
-    androidx.compose.ui.unit.TextUnit(3f, androidx.compose.ui.unit.TextUnitType.Sp)
-
 @Preview(showBackground = true, backgroundColor = 0xFF0D0D0D)
 @Composable
 private fun LoginScreenPreview() {
-    com.perenniasystems.lascito.ui.theme.LascitoTheme {
+    LascitoTheme {
         LoginScreen()
     }
 }
