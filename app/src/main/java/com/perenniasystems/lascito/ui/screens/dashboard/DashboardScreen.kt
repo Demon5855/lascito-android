@@ -27,7 +27,8 @@ import com.perenniasystems.lascito.viewmodel.DashboardViewModel
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
-    onNavigateToAltar: (String) -> Unit = {}
+    onNavigateToAltar: (String) -> Unit = {},
+    onNavigateToAddProfile: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -55,7 +56,7 @@ fun DashboardScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick        = { /* Phase 2: Navigate to Add Profile */ },
+                onClick        = onNavigateToAddProfile,
                 containerColor = MutedGold,
                 contentColor   = AmoledBlack,
                 shape          = CircleShape,
@@ -65,7 +66,7 @@ fun DashboardScreen(
             ) {
                 Icon(
                     imageVector        = Icons.Default.Add,
-                    contentDescription = "Añadir altar"
+                    contentDescription = "Crear altar"
                 )
             }
         },

@@ -11,12 +11,15 @@ import com.perenniasystems.lascito.ui.screens.auth.LoginScreen
 import com.perenniasystems.lascito.ui.screens.auth.RegisterScreen
 import com.perenniasystems.lascito.ui.screens.dashboard.DashboardScreen
 import com.perenniasystems.lascito.ui.screens.memory.AddMemoryScreen
+import com.perenniasystems.lascito.ui.screens.profile.AddProfileScreen
 
 /**
  * NavGraph wires up all application destinations.
  *
- * Phase 1: Login → Dashboard → Altar → AddMemory (mock data, no auth gate).
- * Phase 2: Login will call Firebase Auth; write ops will persist to Firestore.
+ * Phase 1 flow:
+ *   Login → Dashboard → AddProfile   (new altar)
+ *                     → Altar        → AddMemory
+ * Phase 2: Replace mocks with Firebase/Firestore.
  */
 @Composable
 fun LascitoNavGraph(navController: NavHostController) {
@@ -45,9 +48,18 @@ fun LascitoNavGraph(navController: NavHostController) {
 
         composable(Screen.Dashboard.route) {
             DashboardScreen(
-                onNavigateToAltar = { profileId ->
+                onNavigateToAltar      = { profileId ->
                     navController.navigate(Screen.Altar.createRoute(profileId))
+                },
+                onNavigateToAddProfile = {
+                    navController.navigate(Screen.AddProfile.route)
                 }
+            )
+        }
+
+        composable(Screen.AddProfile.route) {
+            AddProfileScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -57,9 +69,9 @@ fun LascitoNavGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val profileId = backStackEntry.arguments?.getString("profileId") ?: return@composable
             AltarScreen(
-                profileId        = profileId,
-                onNavigateBack   = { navController.popBackStack() },
-                onAddMemory      = { navController.navigate(Screen.AddMemory.createRoute(profileId)) }
+                profileId      = profileId,
+                onNavigateBack = { navController.popBackStack() },
+                onAddMemory    = { navController.navigate(Screen.AddMemory.createRoute(profileId)) }
             )
         }
 
@@ -75,4 +87,5 @@ fun LascitoNavGraph(navController: NavHostController) {
         }
     }
 }
+
 

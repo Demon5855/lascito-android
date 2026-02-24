@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.data.repository.MockUserRepository
 import com.perenniasystems.lascito.ui.components.LascitoPrimaryButton
 import com.perenniasystems.lascito.ui.components.LascitoTextField
 import com.perenniasystems.lascito.ui.theme.*
@@ -39,6 +40,7 @@ fun LoginScreen(
     var email           by remember { mutableStateOf("") }
     var password        by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var loginError      by remember { mutableStateOf(false) }
 
     // Validaciones — solo mostramos error si el campo fue tocado (no vacío)
     val emailError = email.isNotBlank() && !EMAIL_REGEX.matches(email)
@@ -95,7 +97,7 @@ fun LoginScreen(
             // ── Email ─────────────────────────────────────────────────────────
             LascitoTextField(
                 value           = email,
-                onValueChange   = { email = it },
+                onValueChange   = { email = it; loginError = false },
                 label           = stringResource(R.string.label_email),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 isError         = emailError
@@ -141,12 +143,30 @@ fun LoginScreen(
                 }
             )
 
+            // Error de credenciales inválidas
+            if (loginError) {
+                Text(
+                    text  = "Correo o contraseña incorrectos",
+                    color = ErrorRed,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, top = 4.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(40.dp))
 
             // ── CTA ──────────────────────────────────────────────────────────
             LascitoPrimaryButton(
                 text    = stringResource(R.string.btn_login),
-                onClick = onNavigateToDashboard,
+                onClick = {
+                    if (MockUserRepository.login(email, password)) {
+                        onNavigateToDashboard()
+                    } else {
+                        loginError = true
+                    }
+                },
                 enabled = email.isNotBlank() && !emailError && password.isNotBlank()
             )
 
