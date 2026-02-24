@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -24,29 +28,27 @@ import com.perenniasystems.lascito.ui.components.LascitoPrimaryButton
 import com.perenniasystems.lascito.ui.components.LascitoTextField
 import com.perenniasystems.lascito.ui.theme.*
 
-/**
- * Login screen — entry point of the app.
- *
- * Phase 1: No real Firebase Auth. Tapping "Iniciar Sesión" navigates
- * directly to the Dashboard so the team can iterate on UI.
- *
- * @param onNavigateToDashboard Callback invoked on (future) successful login.
- * @param onNavigateToRegister  Callback to open the Register screen.
- */
+// Regex básico de formato email
+private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+
 @Composable
 fun LoginScreen(
     onNavigateToDashboard: () -> Unit = {},
     onNavigateToRegister: () -> Unit = {}
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var email           by remember { mutableStateOf("") }
+    var password        by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    // Validaciones — solo mostramos error si el campo fue tocado (no vacío)
+    val emailError = email.isNotBlank() && !EMAIL_REGEX.matches(email)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(AmoledBlack)
     ) {
-        // ── Subtle top gradient veil ──────────────────────────────────────────
+        // ── Gradient veil ─────────────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -92,11 +94,24 @@ fun LoginScreen(
 
             // ── Email ─────────────────────────────────────────────────────────
             LascitoTextField(
-                value         = email,
-                onValueChange = { email = it },
-                label         = stringResource(R.string.label_email),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                value           = email,
+                onValueChange   = { email = it },
+                label           = stringResource(R.string.label_email),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                isError         = emailError
             )
+            // Mensaje de error de email
+            if (emailError) {
+                Text(
+                    text  = "Introduce un correo válido",
+                    color = ErrorRed,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, top = 4.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // ── Password ──────────────────────────────────────────────────────
@@ -104,8 +119,26 @@ fun LoginScreen(
                 value                = password,
                 onValueChange        = { password = it },
                 label                = stringResource(R.string.label_password),
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions      = KeyboardOptions(keyboardType = KeyboardType.Password)
+                visualTransformation = if (passwordVisible)
+                    VisualTransformation.None
+                else
+                    PasswordVisualTransformation(),
+                keyboardOptions      = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon         = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible)
+                                Icons.Filled.VisibilityOff
+                            else
+                                Icons.Filled.Visibility,
+                            contentDescription = if (passwordVisible)
+                                "Ocultar contraseña"
+                            else
+                                "Mostrar contraseña",
+                            tint = TextSecondary
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -113,7 +146,8 @@ fun LoginScreen(
             // ── CTA ──────────────────────────────────────────────────────────
             LascitoPrimaryButton(
                 text    = stringResource(R.string.btn_login),
-                onClick = onNavigateToDashboard
+                onClick = onNavigateToDashboard,
+                enabled = email.isNotBlank() && !emailError && password.isNotBlank()
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -134,7 +168,5 @@ fun LoginScreen(
 @Preview(showBackground = true, backgroundColor = 0xFF0D0D0D)
 @Composable
 private fun LoginScreenPreview() {
-    LascitoTheme {
-        LoginScreen()
-    }
+    LascitoTheme { LoginScreen() }
 }

@@ -25,7 +25,8 @@ fun LascitoTextField(
     modifier: Modifier = Modifier,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    isError: Boolean = false
+    isError: Boolean = false,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     OutlinedTextField(
         value                = value,
@@ -35,6 +36,7 @@ fun LascitoTextField(
         visualTransformation = visualTransformation,
         keyboardOptions      = keyboardOptions,
         isError              = isError,
+        trailingIcon         = trailingIcon,
         shape                = RoundedCornerShape(8.dp),
         colors               = OutlinedTextFieldDefaults.colors(
             focusedBorderColor   = MutedGold,

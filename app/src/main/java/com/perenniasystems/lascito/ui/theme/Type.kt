@@ -99,11 +99,11 @@ val LascitoTypography = Typography(
         color = TextSecondary
     ),
     labelLarge = TextStyle(
-        fontFamily = Lato,
-        fontWeight = FontWeight.Bold,
-        fontSize = 14.sp,
-        letterSpacing = 1.5.sp,
-        color = MutedGold
+        fontFamily   = Lato,
+        fontWeight   = FontWeight.Bold,
+        fontSize     = 14.sp,
+        letterSpacing = 1.5.sp
+        // No color here — inherits LocalContentColor so buttons can set their own text color
     ),
     labelMedium = TextStyle(
         fontFamily = Lato,

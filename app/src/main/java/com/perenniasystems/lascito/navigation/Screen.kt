@@ -8,4 +8,10 @@ sealed class Screen(val route: String) {
     data object Login     : Screen("login")
     data object Register  : Screen("register")
     data object Dashboard : Screen("dashboard")
+    data object Altar     : Screen("altar/{profileId}") {
+        fun createRoute(profileId: String) = "altar/$profileId"
+    }
+    data object AddMemory : Screen("add_memory/{profileId}") {
+        fun createRoute(profileId: String) = "add_memory/$profileId"
+    }
 }
