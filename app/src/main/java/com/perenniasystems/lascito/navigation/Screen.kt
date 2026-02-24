@@ -1,0 +1,11 @@
+package com.perenniasystems.lascito.navigation
+
+/**
+ * Sealed hierarchy of Navigation destinations.
+ * Each object maps to a unique route string used by Compose Navigation.
+ */
+sealed class Screen(val route: String) {
+    data object Login     : Screen("login")
+    data object Register  : Screen("register")
+    data object Dashboard : Screen("dashboard")
+}

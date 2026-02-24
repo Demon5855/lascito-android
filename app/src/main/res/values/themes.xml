@@ -1,0 +1,10 @@
+<resources>
+    <!-- Base application theme. The app uses Compose's dark theme; this bare
+         XML theme is only applied during the launch splash/window animation. -->
+    <style name="Theme.Lascito" parent="android:Theme.Material.NoTitleBar">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

@@ -1,0 +1,37 @@
+# ── Android / Gradle ─────────────────────────────────────────────────────────
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# ── Android Studio ────────────────────────────────────────────────────────────
+*.class
+gen/
+out/
+.navigation/
+*.orig
+
+# ── Keystore / Secrets (NUNCA subir al repositorio) ──────────────────────────
+*.jks
+*.keystore
+google-services.json
+aws-credentials.json
+*.env
+secrets.properties
+
+# ── Kotlin / Compose ─────────────────────────────────────────────────────────
+.kotlin/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini

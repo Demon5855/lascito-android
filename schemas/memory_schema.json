@@ -1,0 +1,81 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Memory",
+    "description": "A single media Memory linked to a Profile. Stored as a Firestore document under `profiles/{profileId}/memories/{memoryId}`. The `contextText` field is mandatory by product design — every media item must carry a written story.",
+    "type": "object",
+    "required": [
+        "memoryId",
+        "profileId",
+        "mediaType",
+        "mediaUrl",
+        "storageClass",
+        "contextText",
+        "capturedDate"
+    ],
+    "properties": {
+        "memoryId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier. Generated client-side (UUID v4) before upload."
+        },
+        "profileId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Foreign key linking this Memory to its parent Profile."
+        },
+        "mediaType": {
+            "type": "string",
+            "enum": [
+                "IMAGE",
+                "VIDEO",
+                "AUDIO"
+            ],
+            "description": "Type of the media file. Drives player/viewer selection in the UI."
+        },
+        "mediaUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "HTTPS URL of the media file in S3 (retrieved via presigned URL in Phase 2)."
+        },
+        "storageClass": {
+            "type": "string",
+            "enum": [
+                "STANDARD",
+                "STANDARD_IA",
+                "GLACIER_INSTANT_RETRIEVAL",
+                "GLACIER_DEEP_ARCHIVE"
+            ],
+            "description": "S3 storage class. Lifecycle rules will automatically migrate old memories to GLACIER_DEEP_ARCHIVE."
+        },
+        "contextText": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000,
+            "description": "MANDATORY: The written story explaining the significance of this memory. The app blocks upload if empty."
+        },
+        "contextAudioUrl": {
+            "type": [
+                "string",
+                "null"
+            ],
+            "format": "uri",
+            "description": "Optional: HTTPS URL to an audio narration clip supplementing the written context."
+        },
+        "capturedDate": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp in milliseconds for when the photo/video/audio was originally captured."
+        }
+    },
+    "additionalProperties": false,
+    "example": {
+        "memoryId": "m1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "profileId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "mediaType": "IMAGE",
+        "mediaUrl": "https://storage.perenniasystems.com/memories/m1b2c3d4.jpg",
+        "storageClass": "STANDARD",
+        "contextText": "Este fue el último verano que pasamos juntos en Cartagena. Abuela insistió en que nos tomáramos esta foto al atardecer. Nunca olvidaré su sonrisa ese día.",
+        "contextAudioUrl": null,
+        "capturedDate": 1659398400000
+    }
+}

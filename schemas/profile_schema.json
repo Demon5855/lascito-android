@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Profile",
+  "description": "A Commemorative Profile representing a loved one (human or pet) in Lascito. Each Profile is a Firestore document under the `profiles/{profileId}` path.",
+  "type": "object",
+  "required": ["profileId", "creatorUserId", "fullName", "profileType", "relationship", "birthDate", "avatarUrl", "status"],
+  "properties": {
+    "profileId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier. Generated client-side (UUID v4) before the document is written."
+    },
+    "creatorUserId": {
+      "type": "string",
+      "description": "Firebase Auth UID of the user who created this profile."
+    },
+    "fullName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "description": "Full name of the person or pet being memorialized."
+    },
+    "profileType": {
+      "type": "string",
+      "enum": ["HUMAN", "PET"],
+      "description": "Determines display treatment (avatar badge, UI copy, etc.)."
+    },
+    "relationship": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60,
+      "description": "The creator's relationship to the subject (e.g. Abuela, Padre, Compañero fiel)."
+    },
+    "birthDate": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Unix timestamp in milliseconds representing the date of birth."
+    },
+    "passingDate": {
+      "type": ["integer", "null"],
+      "format": "int64",
+      "description": "Unix timestamp in milliseconds for the date of passing. Null if the person is still living."
+    },
+    "avatarUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "HTTPS URL pointing to the profile avatar stored in S3."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ACTIVE", "READ_ONLY"],
+      "description": "ACTIVE: editable. READ_ONLY: archived / immutable (content may be in Glacier)."
+    }
+  },
+  "additionalProperties": false,
+  "example": {
+    "profileId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "creatorUserId": "firebase-uid-abc123",
+    "fullName": "Elena Ríos Marchetti",
+    "profileType": "HUMAN",
+    "relationship": "Abuela",
+    "birthDate": 599616000000,
+    "passingDate": 1672531200000,
+    "avatarUrl": "https://storage.perenniasystems.com/avatars/prof-001.jpg",
+    "status": "ACTIVE"
+  }
+}
