@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lascito</string>
+    <string name="company_name">Perennia Systems</string>
+
+    <!-- ── Shared ─────────────────────────────────────────────────────────── -->
+    <string name="btn_back">Go back</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="label_present">Present</string>
+    <string name="desc_select_date">Select date</string>
+    <string name="hint_date_format">DD/MM/YYYY</string>
+    <string name="label_photo">Photo</string>
+    <string name="error_profile_not_found">Profile not found</string>
+
+    <!-- ── Auth ──────────────────────────────────────────────────────────── -->
+    <string name="label_email">Email address</string>
+    <string name="label_password">Password</string>
+    <string name="label_full_name">Full name</string>
+    <string name="label_confirm_password">Confirm password</string>
+    <string name="btn_login">Sign In</string>
+    <string name="btn_register">Create Account</string>
+    <string name="link_no_account">Don\'t have an account? Sign up</string>
+    <string name="link_have_account">Already have an account? Sign in</string>
+    <string name="error_login">Incorrect email or password</string>
+    <!-- Register screen -->
+    <string name="screen_register">Create Account</string>
+    <string name="subtitle_register">Preserve their memories forever.</string>
+    <string name="error_invalid_email">Enter a valid email address</string>
+    <string name="error_passwords_no_match">Passwords do not match</string>
+    <string name="error_password_strength">Min. 8 characters: 1 uppercase, 1 lowercase, 1 number and 1 symbol</string>
+    <string name="desc_show_password">Show password</string>
+    <string name="desc_hide_password">Hide password</string>
+    <!-- Terms &amp; Privacy consent -->
+    <string name="terms_prefix">"I have read and accept the "</string>
+    <string name="terms_tos">Terms of Service</string>
+    <string name="terms_connector">" and the "</string>
+    <string name="terms_privacy">Privacy Policy</string>
+
+    <!-- ── Dashboard ─────────────────────────────────────────────────────── -->
+    <string name="screen_my_altars">Your Altars</string>
+    <string name="desc_create_altar">Create altar</string>
+    <string name="empty_altars">No altars yet.\nPress + to create the first one.</string>
+    <string name="error_load_altars">Could not load altars.</string>
+
+    <!-- ── Altar ─────────────────────────────────────────────────────────── -->
+    <string name="screen_memories">Memories</string>
+    <string name="desc_add_memory">Add memory</string>
+    <string name="empty_memories">No memories yet.\nPress + to add the first one.</string>
+    <string name="desc_play_video">Play video</string>
+    <string name="desc_play_audio">Play voice note</string>
+
+    <!-- ── AddMemory ──────────────────────────────────────────────────────── -->
+    <string name="screen_new_memory">New Memory</string>
+    <string name="desc_photo">Photo</string>
+    <string name="desc_video">Video</string>
+    <string name="desc_voice_note">Voice note</string>
+    <string name="hint_pick_media">Tap to add a Photo, Video\nor record a Voice Note</string>
+    <string name="hint_context_text">Write the story behind this moment…</string>
+    <string name="btn_preserve_memory">Preserve Memory</string>
+
+    <!-- ── AddProfile ─────────────────────────────────────────────────────── -->
+    <string name="screen_new_altar">New Altar</string>
+    <string name="label_type">Type</string>
+    <string name="type_human">Human</string>
+    <string name="type_pet">Pet</string>
+    <string name="label_full_name_field">Full Name</string>
+    <string name="placeholder_human_name">Elena Ríos Marchetti</string>
+    <string name="placeholder_pet_name">Mochi</string>
+    <string name="label_relationship">Relationship</string>
+    <string name="placeholder_human_rel">Grandmother, Father, Friend…</string>
+    <string name="placeholder_pet_rel">Faithful companion</string>
+    <string name="label_birthdate">Date of Birth</string>
+    <string name="label_still_with_us">Still with us</string>
+    <string name="label_departed">Has departed</string>
+    <string name="label_passing_date_hint">Enter the date of departure</string>
+    <string name="label_passing_date">Date of Departure</string>
+    <string name="btn_create_altar">Create Altar</string>
+    <string name="desc_upload_photo">Upload photo</string>
+    <!-- Validation -->
+    <string name="error_day">Invalid day (01–31)</string>
+    <string name="error_month">Invalid month (01–12)</string>
+    <string name="error_year">Year out of range (1900–%1$d)</string>
+
+    <!-- ── My Account (UserSettings) ─────────────────────────────────────── -->
+    <string name="screen_my_account">My Account</string>
+    <string name="section_mausoleum">Mausoleum Status</string>
+    <string name="plan_lifetime">Active Lifetime Plan</string>
+    <string name="label_storage_used">Protected memories</string>
+    <string name="label_storage_amount">%1$.1f GB / %2$d GB</string>
+    <string name="section_guardian">Legacy Guardian</string>
+    <string name="hint_guardian_email">Heir\'s email…</string>
+    <string name="guardian_help_text">In case of prolonged inactivity, this person will receive read-only access to your altars.</string>
+    <string name="btn_save_guardian">Save guardian</string>
+    <string name="section_personalization">Sanctuary Personalization</string>
+    <string name="label_language">Language</string>
+    <string name="lang_spanish">Español</string>
+    <string name="lang_english">English</string>
+    <string name="label_accent_metal">Custody Metal</string>
+    <string name="accent_gold">Gold</string>
+    <string name="accent_silver">Silver</string>
+    <string name="accent_bronze">Bronze</string>
+    <string name="section_security">Security and Privacy</string>
+    <string name="btn_export">Export my memories</string>
+    <string name="btn_privacy">Privacy Policy</string>
+    <string name="btn_logout">Sign Out</string>
+    <string name="btn_delete_account">Delete Account</string>
+    <!-- Toasts -->
+    <string name="toast_guardian_saved">Guardian updated</string>
+    <string name="toast_exporting">Exporting memories…</string>
+    <string name="toast_privacy_soon">Coming soon — Privacy Policy</string>
+    <string name="toast_delete_soon">Coming soon — Delete account</string>
+    <string name="toast_lang_changed">Language updated to: %1$s</string>
+    <string name="toast_accent_changed">Accent updated: %1$s</string>
+</resources>

@@ -1,4 +1,4 @@
-package com.perenniasystems.lascito.ui.screens.profile
+﻿package com.perenniasystems.lascito.ui.screens.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,8 +26,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -129,7 +131,7 @@ fun AddProfileScreen(
                 TextButton(onClick = {
                     birthPickerState.selectedDateMillis?.let { birthDigits = it.toRawDigits() }
                     showBirthPicker = false
-                }) { Text("Aceptar", color = MutedGold) }
+                }) { Text("Aceptar", color = MaterialTheme.colorScheme.primary) }
             },
             dismissButton = {
                 TextButton(onClick = { showBirthPicker = false }) {
@@ -148,7 +150,7 @@ fun AddProfileScreen(
                 TextButton(onClick = {
                     passingPickerState.selectedDateMillis?.let { passDigits = it.toRawDigits() }
                     showPassingPicker = false
-                }) { Text("Aceptar", color = MutedGold) }
+                }) { Text("Aceptar", color = MaterialTheme.colorScheme.primary) }
             },
             dismissButton = {
                 TextButton(onClick = { showPassingPicker = false }) {
@@ -167,15 +169,15 @@ fun AddProfileScreen(
                         modifier         = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Crear Altar", style = MaterialTheme.typography.headlineLarge)
+                        Text(stringResource(R.string.screen_new_altar), style = MaterialTheme.typography.headlineLarge)
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            tint               = MutedGold
+                            contentDescription = stringResource(R.string.btn_back),
+                            tint               = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -204,7 +206,7 @@ fun AddProfileScreen(
                     .size(120.dp)
                     .clip(CircleShape)
                     .background(SurfaceDark)
-                    .border(1.5.dp, MutedGoldDim, CircleShape)
+                    .border(1.5.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape)
                     .clickable { /* Phase 2: Launch photo picker */ },
                 contentAlignment = Alignment.Center
             ) {
@@ -215,17 +217,17 @@ fun AddProfileScreen(
                     Icon(
                         imageVector        = Icons.Default.AddAPhoto,
                         contentDescription = "Subir foto",
-                        tint               = MutedGold,
+                        tint               = MaterialTheme.colorScheme.primary,
                         modifier           = Modifier.size(32.dp)
                     )
-                    Text("Foto", style = MaterialTheme.typography.labelSmall.copy(color = MutedGoldDim))
+                    Text(stringResource(R.string.label_photo), style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primaryContainer))
                 }
             }
 
             // ── Tipo: Humano / Mascota ────────────────────────────────────────
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text     = "Tipo",
+                    text     = stringResource(R.string.label_type),
                     style    = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
                     modifier = Modifier.padding(start = 4.dp)
                 )
@@ -236,16 +238,19 @@ fun AddProfileScreen(
                             onClick  = { selectedType = choice },
                             shape    = SegmentedButtonDefaults.itemShape(index, ProfileTypeChoice.entries.size),
                             colors   = SegmentedButtonDefaults.colors(
-                                activeContainerColor   = MutedGold,
+                                activeContainerColor   = MaterialTheme.colorScheme.primary,
                                 activeContentColor     = AmoledBlack,
                                 inactiveContainerColor = SurfaceDark,
                                 inactiveContentColor   = TextSecondary,
-                                activeBorderColor      = MutedGold,
+                                activeBorderColor      = MaterialTheme.colorScheme.primary,
                                 inactiveBorderColor    = CardBorder
                             ),
                             label = {
                                 Text(
-                                    if (choice == ProfileTypeChoice.HUMAN) "Humano" else "Mascota",
+                                    if (choice == ProfileTypeChoice.HUMAN)
+                                        stringResource(R.string.type_human)
+                                    else
+                                        stringResource(R.string.type_pet),
                                     style = MaterialTheme.typography.labelLarge
                                 )
                             }
@@ -255,14 +260,17 @@ fun AddProfileScreen(
             }
 
             // ── Nombre Completo — capitaliza cada palabra ─────────────────────
-            LabeledField("Nombre Completo") {
+            LabeledField(stringResource(R.string.label_full_name_field)) {
                 OutlinedTextField(
                     value         = fullName,
                     onValueChange = { fullName = it },
                     modifier      = Modifier.fillMaxWidth(),
                     placeholder   = {
                         Text(
-                            if (selectedType == ProfileTypeChoice.HUMAN) "Elena Ríos Marchetti" else "Mochi",
+                            if (selectedType == ProfileTypeChoice.HUMAN)
+                                stringResource(R.string.placeholder_human_name)
+                            else
+                                stringResource(R.string.placeholder_pet_name),
                             style = MaterialTheme.typography.bodyLarge.copy(color = TextDisabled)
                         )
                     },
@@ -281,14 +289,17 @@ fun AddProfileScreen(
             }
 
             // ── Parentesco / Vínculo ──────────────────────────────────────────
-            LabeledField("Parentesco / Vínculo") {
+            LabeledField(stringResource(R.string.label_relationship)) {
                 OutlinedTextField(
                     value         = relationship,
                     onValueChange = { relationship = it },
                     modifier      = Modifier.fillMaxWidth(),
                     placeholder   = {
                         Text(
-                            if (selectedType == ProfileTypeChoice.HUMAN) "Abuela, Padre, Amigo…" else "Compañero fiel",
+                            if (selectedType == ProfileTypeChoice.HUMAN)
+                                stringResource(R.string.placeholder_human_rel)
+                            else
+                                stringResource(R.string.placeholder_pet_rel),
                             style = MaterialTheme.typography.bodyLarge.copy(color = TextDisabled)
                         )
                     },
@@ -304,13 +315,13 @@ fun AddProfileScreen(
             }
 
             // ── Fecha de Nacimiento ───────────────────────────────────────────
-            LabeledField("Fecha de Nacimiento") {
+            LabeledField(stringResource(R.string.label_birthdate)) {
                 OutlinedTextField(
                     value         = birthDigits,
                     onValueChange = { birthDigits = it.filter(Char::isDigit).take(8) },
                     modifier      = Modifier.fillMaxWidth(),
                     placeholder   = {
-                        Text("DD/MM/AAAA",
+                        Text(stringResource(R.string.hint_date_format),
                             style = MaterialTheme.typography.bodyMedium.copy(color = TextDisabled))
                     },
                     textStyle             = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary),
@@ -323,7 +334,7 @@ fun AddProfileScreen(
                             Icon(
                                 Icons.Default.CalendarMonth,
                                 contentDescription = "Seleccionar fecha",
-                                tint     = if (birthError != null) ErrorRed else MutedGold,
+                                tint     = if (birthError != null) ErrorRed else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -349,11 +360,13 @@ fun AddProfileScreen(
             ) {
                 Column {
                     Text(
-                        if (isPresent) "Aún está con nosotros" else "Ha partido",
+                        if (isPresent) stringResource(R.string.label_still_with_us)
+                        else           stringResource(R.string.label_departed),
                         style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary)
                     )
                     Text(
-                        if (isPresent) "Presente" else "Ingresa la fecha de partida",
+                        if (isPresent) stringResource(R.string.label_present)
+                        else           stringResource(R.string.label_passing_date_hint),
                         style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
                     )
                 }
@@ -362,7 +375,7 @@ fun AddProfileScreen(
                     onCheckedChange = { isPresent = it; if (it) passDigits = "" },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor    = AmoledBlack,
-                        checkedTrackColor    = MutedGold,
+                        checkedTrackColor    = MaterialTheme.colorScheme.primary,
                         uncheckedThumbColor  = TextSecondary,
                         uncheckedTrackColor  = SurfaceDark,
                         uncheckedBorderColor = CardBorder
@@ -372,13 +385,13 @@ fun AddProfileScreen(
 
             // ── Fecha de Partida (solo si !isPresent) ────────────────────────
             if (!isPresent) {
-                LabeledField("Fecha de Partida") {
+                LabeledField(stringResource(R.string.label_passing_date)) {
                     OutlinedTextField(
                         value         = passDigits,
                         onValueChange = { passDigits = it.filter(Char::isDigit).take(8) },
                         modifier      = Modifier.fillMaxWidth(),
                         placeholder   = {
-                            Text("DD/MM/AAAA",
+                            Text(stringResource(R.string.hint_date_format),
                                 style = MaterialTheme.typography.bodyMedium.copy(color = TextDisabled))
                         },
                         textStyle             = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary),
@@ -391,7 +404,7 @@ fun AddProfileScreen(
                                 Icon(
                                     Icons.Default.CalendarMonth,
                                     contentDescription = "Seleccionar fecha",
-                                    tint     = if (passError != null) ErrorRed else MutedGold,
+                                    tint     = if (passError != null) ErrorRed else MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -418,14 +431,14 @@ fun AddProfileScreen(
                 enabled  = canSave,
                 shape    = RoundedCornerShape(8.dp),
                 colors   = ButtonDefaults.buttonColors(
-                    containerColor         = MutedGold,
+                    containerColor         = MaterialTheme.colorScheme.primary,
                     contentColor           = AmoledBlack,
-                    disabledContainerColor = MutedGoldDim,
+                    disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     disabledContentColor   = TextDisabled
                 ),
                 modifier = Modifier.fillMaxWidth().height(54.dp)
             ) {
-                Text("Levantar Altar", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.btn_create_altar), style = MaterialTheme.typography.labelLarge)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -449,9 +462,9 @@ private fun LabeledField(label: String, content: @Composable () -> Unit) {
 
 @Composable
 private fun diaryFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor      = MutedGoldDim,
+    focusedBorderColor      = MaterialTheme.colorScheme.primaryContainer,
     unfocusedBorderColor    = CardBorder,
-    cursorColor             = MutedGold,
+    cursorColor             = MaterialTheme.colorScheme.primary,
     focusedContainerColor   = SurfaceDark.copy(alpha = 0.4f),
     unfocusedContainerColor = Color.Transparent
 )
@@ -474,16 +487,16 @@ private fun pickerColors() = DatePickerDefaults.colors(
     headlineContentColor       = TextPrimary,
     weekdayContentColor        = TextSecondary,
     subheadContentColor        = TextSecondary,
-    navigationContentColor     = MutedGold,
+    navigationContentColor     = MaterialTheme.colorScheme.primary,
     yearContentColor           = TextPrimary,
-    currentYearContentColor    = MutedGold,
-    selectedYearContainerColor = MutedGold,
+    currentYearContentColor    = MaterialTheme.colorScheme.primary,
+    selectedYearContainerColor = MaterialTheme.colorScheme.primary,
     selectedYearContentColor   = AmoledBlack,
     dayContentColor            = TextPrimary,
-    selectedDayContainerColor  = MutedGold,
+    selectedDayContainerColor  = MaterialTheme.colorScheme.primary,
     selectedDayContentColor    = AmoledBlack,
-    todayContentColor          = MutedGold,
-    todayDateBorderColor       = MutedGold
+    todayContentColor          = MaterialTheme.colorScheme.primary,
+    todayDateBorderColor       = MaterialTheme.colorScheme.primary
 )
 
 @Preview(showBackground = true, backgroundColor = 0xFF0D0D0D)

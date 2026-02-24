@@ -4,43 +4,48 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 
-// ── Color Scheme (Dark Only) ──────────────────────────────────────────────────
-private val LascitoDarkColorScheme = darkColorScheme(
-    primary          = MutedGold,
-    onPrimary        = AmoledBlack,
-    primaryContainer = MutedGoldDim,
-    onPrimaryContainer = MutedGoldLight,
-
-    secondary        = MutedGoldDim,
-    onSecondary      = TextPrimary,
-
-    background       = AmoledBlack,
-    onBackground     = TextPrimary,
-
-    surface          = SurfaceDark,
-    onSurface        = TextPrimary,
-    surfaceVariant   = SurfaceVariant,
-    onSurfaceVariant = TextSecondary,
-
-    outline          = CardBorder,
-    outlineVariant   = MutedGoldDim,
-
-    error            = ErrorRed,
-    onError          = AmoledBlack,
-)
-
 // ── App Theme ──────────────────────────────────────────────────────────────────
 /**
- * LascitoTheme — always applies the dark color scheme.
- * No light theme is provided by design (memorial / AMOLED context).
+ * LascitoTheme — always dark. Never a light theme.
+ *
+ * The [darkColorScheme] is built dynamically from [ThemeState.selectedMetal],
+ * so a simple `ThemeState.selectedMetal = AccentMetal.SILVER` anywhere in the
+ * app will trigger an instant recomposition with the new accent applied.
  */
 @Composable
 fun LascitoTheme(
     content: @Composable () -> Unit
 ) {
+    val metal = ThemeState.selectedMetal          // ← reads Compose mutableStateOf
+
+    val colorScheme = darkColorScheme(
+        primary            = metal.color,
+        onPrimary          = AmoledBlack,
+        primaryContainer   = metal.dimColor,
+        onPrimaryContainer = MutedGoldLight,
+
+        secondary          = metal.dimColor,
+        onSecondary        = TextPrimary,
+
+        background         = AmoledBlack,
+        onBackground       = TextPrimary,
+
+        surface            = SurfaceDark,
+        onSurface          = TextPrimary,
+        surfaceVariant     = SurfaceVariant,
+        onSurfaceVariant   = TextSecondary,
+
+        outline            = CardBorder,
+        outlineVariant     = metal.dimColor,
+
+        error              = ErrorRed,
+        onError            = AmoledBlack,
+    )
+
     MaterialTheme(
-        colorScheme = LascitoDarkColorScheme,
+        colorScheme = colorScheme,
         typography  = LascitoTypography,
         content     = content
     )
 }
+

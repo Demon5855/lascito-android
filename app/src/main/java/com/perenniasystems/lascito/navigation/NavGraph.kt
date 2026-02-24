@@ -12,13 +12,15 @@ import com.perenniasystems.lascito.ui.screens.auth.RegisterScreen
 import com.perenniasystems.lascito.ui.screens.dashboard.DashboardScreen
 import com.perenniasystems.lascito.ui.screens.memory.AddMemoryScreen
 import com.perenniasystems.lascito.ui.screens.profile.AddProfileScreen
+import com.perenniasystems.lascito.ui.screens.settings.UserSettingsScreen
 
 /**
  * NavGraph wires up all application destinations.
  *
  * Phase 1 flow:
- *   Login → Dashboard → AddProfile   (new altar)
- *                     → Altar        → AddMemory
+ *   Login → Dashboard → AddProfile    (new altar)
+ *                      → Altar         → AddMemory
+ *                      → UserSettings  (Mi Cuenta)
  * Phase 2: Replace mocks with Firebase/Firestore.
  */
 @Composable
@@ -48,11 +50,14 @@ fun LascitoNavGraph(navController: NavHostController) {
 
         composable(Screen.Dashboard.route) {
             DashboardScreen(
-                onNavigateToAltar      = { profileId ->
+                onNavigateToAltar        = { profileId ->
                     navController.navigate(Screen.Altar.createRoute(profileId))
                 },
-                onNavigateToAddProfile = {
+                onNavigateToAddProfile   = {
                     navController.navigate(Screen.AddProfile.route)
+                },
+                onNavigateToUserSettings = {
+                    navController.navigate(Screen.UserSettings.route)
                 }
             )
         }
@@ -83,6 +88,17 @@ fun LascitoNavGraph(navController: NavHostController) {
             AddMemoryScreen(
                 profileId      = profileId,
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.UserSettings.route) {
+            UserSettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onLogOut       = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
     }

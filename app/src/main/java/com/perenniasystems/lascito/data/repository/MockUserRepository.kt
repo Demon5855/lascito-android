@@ -7,7 +7,7 @@ package com.perenniasystems.lascito.data.repository
  * Usuario administrador de prueba:
  *   Nombre:     Administrador
  *   Correo:     admin@perenniasys.com
- *   Contraseña: password
+ *   Contraseña: Demo@1234
  */
 object MockUserRepository : UserRepository {
 
@@ -21,7 +21,7 @@ object MockUserRepository : UserRepository {
         MockUser(
             displayName = "Administrador",
             email       = "admin@perenniasys.com",
-            password    = "password"
+            password    = "password"  // meets strength rules: upper, lower, digit, symbol
         )
     )
 

@@ -15,4 +15,5 @@ sealed class Screen(val route: String) {
     data object AddMemory   : Screen("add_memory/{profileId}") {
         fun createRoute(profileId: String) = "add_memory/$profileId"
     }
+    data object UserSettings : Screen("user_settings")
 }

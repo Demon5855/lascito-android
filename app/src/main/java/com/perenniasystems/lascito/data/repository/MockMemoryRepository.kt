@@ -45,6 +45,33 @@ class MockMemoryRepository : MemoryRepository {
                     contextAudioUrl = null,
                     capturedDate    = 1577836800000L  // 2020-01-01
                 ),
+                // VIDEO — thumbnail de Unsplash, mediaUrl simularía un .mp4 en S3
+                Memory(
+                    memoryId        = "mem-001-v",
+                    profileId       = "prof-001",
+                    mediaType       = MediaType.VIDEO,
+                    mediaUrl        = "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800",
+                    storageClass    = "STANDARD",
+                    contextText     = "El cumpleaños número setenta y cinco. Todos los nietos cantamos " +
+                            "'Feliz cumpleaños' desafinados y ella se rió tanto que se le cayeron las " +
+                            "lágrimas. Ese videoclip de treinta segundos vale más que cualquier álbum.",
+                    contextAudioUrl = null,
+                    capturedDate    = 1596240000000L  // 2020-08-01
+                ),
+                // AUDIO — nota de voz grabada por la abuela (simulada)
+                Memory(
+                    memoryId        = "mem-001-au",
+                    profileId       = "prof-001",
+                    mediaType       = MediaType.AUDIO,
+                    mediaUrl        = "https://mock-cdn.lascito.app/audio/mem-001-au.m4a",
+                    storageClass    = "GLACIER_DEEP_ARCHIVE",
+                    contextText     = "Una nota de voz que la abuela dejó grabada para los bisnietos que " +
+                            "aún no habían nacido. Su propia voz, serena y cálida, contando la historia " +
+                            "de cómo llegó a este país con dos maletas y mucha fe. Escucharla es " +
+                            "sentirla presente.",
+                    contextAudioUrl = null,
+                    capturedDate    = 1545091200000L  // 2018-12-18
+                ),
                 Memory(
                     memoryId        = "mem-001-c",
                     profileId       = "prof-001",

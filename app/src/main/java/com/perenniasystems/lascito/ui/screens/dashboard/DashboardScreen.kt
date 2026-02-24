@@ -1,4 +1,4 @@
-package com.perenniasystems.lascito.ui.screens.dashboard
+﻿package com.perenniasystems.lascito.ui.screens.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,10 +16,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.viewmodel.DashboardUiState
 import com.perenniasystems.lascito.viewmodel.DashboardViewModel
@@ -27,8 +30,9 @@ import com.perenniasystems.lascito.viewmodel.DashboardViewModel
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
-    onNavigateToAltar: (String) -> Unit = {},
-    onNavigateToAddProfile: () -> Unit = {}
+    onNavigateToAltar:        (String) -> Unit = {},
+    onNavigateToAddProfile:   () -> Unit = {},
+    onNavigateToUserSettings: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -41,13 +45,23 @@ fun DashboardScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text  = "Tus Altares",
+                            text  = stringResource(R.string.screen_my_altars),
                             style = MaterialTheme.typography.headlineLarge
                         )
                     }
                 },
-                // Elimina el padding interno de la acción para que el centrado sea real
-                actions = { Spacer(modifier = Modifier.width(48.dp)) },
+                // Spacer igual al ancho del ícono de la derecha → título verdaderamente centrado
+                navigationIcon = { Spacer(modifier = Modifier.width(48.dp)) },
+                // Settings icon as counterweight for the centered title
+                actions = {
+                    IconButton(onClick = onNavigateToUserSettings) {
+                        Icon(
+                            imageVector        = Icons.Default.AccountCircle,
+                            contentDescription = stringResource(R.string.screen_my_account),
+                            tint               = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    }
+                },
                 colors  = TopAppBarDefaults.topAppBarColors(
                     containerColor    = AmoledBlack,
                     titleContentColor = TextPrimary
@@ -57,7 +71,7 @@ fun DashboardScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick        = onNavigateToAddProfile,
-                containerColor = MutedGold,
+                containerColor = MaterialTheme.colorScheme.primary,
                 contentColor   = AmoledBlack,
                 shape          = CircleShape,
                 elevation      = FloatingActionButtonDefaults.elevation(
@@ -66,7 +80,7 @@ fun DashboardScreen(
             ) {
                 Icon(
                     imageVector        = Icons.Default.Add,
-                    contentDescription = "Crear altar"
+                    contentDescription = stringResource(R.string.desc_create_altar)
                 )
             }
         },
@@ -81,7 +95,7 @@ fun DashboardScreen(
 
                 is DashboardUiState.Loading -> {
                     CircularProgressIndicator(
-                        color    = MutedGold,
+                        color    = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
@@ -147,11 +161,11 @@ private fun EmptyState(modifier: Modifier = Modifier) {
     ) {
         Text(
             text  = "✦",
-            style = MaterialTheme.typography.displayLarge.copy(color = MutedGoldDim)
+            style = MaterialTheme.typography.displayLarge.copy(color = MaterialTheme.colorScheme.primaryContainer)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text      = "Aún no hay altares.\nPresiona + para crear el primero.",
+            text      = stringResource(R.string.empty_altars),
             style     = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center
         )

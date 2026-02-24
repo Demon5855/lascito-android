@@ -1,6 +1,5 @@
 package com.perenniasystems.lascito.ui.screens.auth
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,10 +14,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.perenniasystems.lascito.R
@@ -26,28 +29,43 @@ import com.perenniasystems.lascito.ui.components.LascitoPrimaryButton
 import com.perenniasystems.lascito.ui.components.LascitoTextField
 import com.perenniasystems.lascito.ui.theme.*
 
-private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+import com.perenniasystems.lascito.util.Validators
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     onNavigateBack: () -> Unit = {}
 ) {
-    var fullName          by remember { mutableStateOf("") }
-    var email             by remember { mutableStateOf("") }
-    var password          by remember { mutableStateOf("") }
-    var confirmPassword   by remember { mutableStateOf("") }
-    var passwordVisible   by remember { mutableStateOf(false) }
-    var confirmVisible    by remember { mutableStateOf(false) }
+    var fullName        by remember { mutableStateOf("") }
+    var email           by remember { mutableStateOf("") }
+    var password        by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmVisible  by remember { mutableStateOf(false) }
+    var termsAccepted   by remember { mutableStateOf(false) }
 
-    val emailError    = email.isNotBlank() && !EMAIL_REGEX.matches(email)
-    val passwordsMatch = confirmPassword.isBlank() || confirmPassword == password
-    val confirmError  = confirmPassword.isNotBlank() && confirmPassword != password
+    val emailError     = email.isNotBlank()    && !Validators.EMAIL_REGEX.matches(email)
+    val passwordError   = password.isNotBlank() && !Validators.isPasswordStrong(password)
+    val confirmError    = confirmPassword.isNotBlank() && confirmPassword != password
 
     val canSubmit = fullName.isNotBlank()
             && email.isNotBlank() && !emailError
-            && password.isNotBlank()
+            && password.isNotBlank() && !passwordError
             && confirmPassword == password
+            && termsAccepted
+
+    // ── Accent color for styled links ─────────────────────────────────────────
+    val accentColor = MaterialTheme.colorScheme.primary
+    val termsText = buildAnnotatedString {
+        append(stringResource(R.string.terms_prefix))
+        withStyle(SpanStyle(color = accentColor, textDecoration = TextDecoration.Underline)) {
+            append(stringResource(R.string.terms_tos))
+        }
+        append(stringResource(R.string.terms_connector))
+        withStyle(SpanStyle(color = accentColor, textDecoration = TextDecoration.Underline)) {
+            append(stringResource(R.string.terms_privacy))
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -57,8 +75,8 @@ fun RegisterScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            tint               = MutedGold
+                            contentDescription = stringResource(R.string.btn_back),
+                            tint               = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -80,11 +98,11 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text  = "Crear Cuenta",
-                style = MaterialTheme.typography.headlineLarge,
+                text  = stringResource(R.string.screen_register),
+                style = MaterialTheme.typography.headlineLarge
             )
             Text(
-                text      = "Preserva sus memorias para siempre.",
+                text      = stringResource(R.string.subtitle_register),
                 style     = MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center
             )
@@ -109,7 +127,7 @@ fun RegisterScreen(
             )
             if (emailError) {
                 Text(
-                    text     = "Introduce un correo válido",
+                    text     = stringResource(R.string.error_invalid_email),
                     color    = ErrorRed,
                     style    = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
@@ -128,23 +146,32 @@ fun RegisterScreen(
                     VisualTransformation.None
                 else
                     PasswordVisualTransformation(),
-                keyboardOptions      = KeyboardOptions(keyboardType = KeyboardType.Password),
-                trailingIcon         = {
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                isError         = passwordError,
+                trailingIcon    = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector        = if (passwordVisible)
-                                Icons.Filled.VisibilityOff
-                            else
-                                Icons.Filled.Visibility,
-                            contentDescription = if (passwordVisible)
-                                "Ocultar contraseña"
-                            else
-                                "Mostrar contraseña",
+                                Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = stringResource(
+                                if (passwordVisible) R.string.desc_hide_password
+                                else                 R.string.desc_show_password
+                            ),
                             tint = TextSecondary
                         )
                     }
                 }
             )
+            if (passwordError) {
+                Text(
+                    text     = stringResource(R.string.error_password_strength),
+                    color    = ErrorRed,
+                    style    = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, top = 4.dp)
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
 
             // ── Confirmar contraseña ──────────────────────────────────────────
@@ -156,28 +183,25 @@ fun RegisterScreen(
                     VisualTransformation.None
                 else
                     PasswordVisualTransformation(),
-                keyboardOptions      = KeyboardOptions(keyboardType = KeyboardType.Password),
-                isError              = confirmError,
-                trailingIcon         = {
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                isError         = confirmError,
+                trailingIcon    = {
                     IconButton(onClick = { confirmVisible = !confirmVisible }) {
                         Icon(
                             imageVector        = if (confirmVisible)
-                                Icons.Filled.VisibilityOff
-                            else
-                                Icons.Filled.Visibility,
-                            contentDescription = if (confirmVisible)
-                                "Ocultar contraseña"
-                            else
-                                "Mostrar contraseña",
+                                Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = stringResource(
+                                if (confirmVisible) R.string.desc_hide_password
+                                else               R.string.desc_show_password
+                            ),
                             tint = if (confirmError) ErrorRed else TextSecondary
                         )
                     }
                 }
             )
-            // Mensaje de error contraseña no coincide
             if (confirmError) {
                 Text(
-                    text     = "Las contraseñas no coinciden",
+                    text     = stringResource(R.string.error_passwords_no_match),
                     color    = ErrorRed,
                     style    = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
@@ -186,8 +210,37 @@ fun RegisterScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
+            // ── Consentimiento de Términos ─────────────────────────────────────
+            // The Checkbox turns gold when checked; "Términos de Servicio" and
+            // "Política de Privacidad" are underlined + colored to look like links.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier          = Modifier
+                    .fillMaxWidth()
+                    .clickable { termsAccepted = !termsAccepted }
+                    .padding(vertical = 4.dp)
+            ) {
+                Checkbox(
+                    checked         = termsAccepted,
+                    onCheckedChange = { termsAccepted = it },
+                    colors          = CheckboxDefaults.colors(
+                        checkedColor   = MaterialTheme.colorScheme.primary,
+                        uncheckedColor = CardBorder,
+                        checkmarkColor = AmoledBlack
+                    )
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text  = termsText,
+                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Crear Cuenta — disabled (gray) until form + terms are valid ───
             LascitoPrimaryButton(
                 text    = stringResource(R.string.btn_register),
                 onClick = onNavigateBack,   // Phase 2: real Auth call

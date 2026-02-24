@@ -1,4 +1,4 @@
-package com.perenniasystems.lascito.ui.screens.memory
+﻿package com.perenniasystems.lascito.ui.screens.memory
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,7 +9,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,8 +23,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,7 +47,7 @@ fun AddMemoryScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text  = "Nuevo Recuerdo",
+                            text  = stringResource(R.string.screen_new_memory),
                             style = MaterialTheme.typography.headlineLarge
                         )
                     }
@@ -52,8 +56,8 @@ fun AddMemoryScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            tint               = MutedGold
+                            contentDescription = stringResource(R.string.btn_back),
+                            tint               = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -94,15 +98,34 @@ fun AddMemoryScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(
-                        imageVector        = Icons.Default.AddPhotoAlternate,
-                        contentDescription = "Seleccionar foto o video",
-                        tint               = MutedGold,
-                        modifier           = Modifier.size(56.dp)
-                    )
+                    // Tres íconos centrados horizontalmente
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(24.dp),
+                        verticalAlignment     = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector        = Icons.Default.PhotoCamera,
+                            contentDescription = stringResource(R.string.desc_photo),
+                            tint               = MaterialTheme.colorScheme.primary,
+                            modifier           = Modifier.size(32.dp)
+                        )
+                        Icon(
+                            imageVector        = Icons.Default.Videocam,
+                            contentDescription = stringResource(R.string.desc_video),
+                            tint               = MaterialTheme.colorScheme.primary,
+                            modifier           = Modifier.size(32.dp)
+                        )
+                        Icon(
+                            imageVector        = Icons.Default.Mic,
+                            contentDescription = stringResource(R.string.desc_voice_note),
+                            tint               = MaterialTheme.colorScheme.primary,
+                            modifier           = Modifier.size(32.dp)
+                        )
+                    }
                     Text(
-                        text  = "Toca para elegir una foto o video",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
+                        text  = stringResource(R.string.hint_pick_media),
+                        style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
             }
@@ -116,7 +139,7 @@ fun AddMemoryScreen(
                     .heightIn(min = 200.dp),
                 placeholder   = {
                     Text(
-                        text  = "Escribe la historia detrás de este momento...",
+                        text  = stringResource(R.string.hint_context_text),
                         style = MaterialTheme.typography.bodyLarge.copy(
                             color     = TextDisabled,
                             fontStyle = FontStyle.Italic
@@ -132,9 +155,9 @@ fun AddMemoryScreen(
                     capitalization = KeyboardCapitalization.Sentences
                 ),
                 colors   = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = MutedGoldDim,
+                    focusedBorderColor   = MaterialTheme.colorScheme.primaryContainer,
                     unfocusedBorderColor = Color.Transparent,  // hoja de diario
-                    cursorColor          = MutedGold,
+                    cursorColor          = MaterialTheme.colorScheme.primary,
                     focusedContainerColor   = SurfaceDark.copy(alpha = 0.4f),
                     unfocusedContainerColor = Color.Transparent
                 ),
@@ -152,9 +175,9 @@ fun AddMemoryScreen(
                 enabled  = canSave,
                 shape    = RoundedCornerShape(8.dp),
                 colors   = ButtonDefaults.buttonColors(
-                    containerColor         = MutedGold,
+                    containerColor         = MaterialTheme.colorScheme.primary,
                     contentColor           = AmoledBlack,
-                    disabledContainerColor = MutedGoldDim,
+                    disabledContainerColor = SurfaceVariant,   // gray — clearly blocked
                     disabledContentColor   = TextDisabled
                 ),
                 modifier = Modifier
@@ -162,7 +185,7 @@ fun AddMemoryScreen(
                     .height(54.dp)
             ) {
                 Text(
-                    text  = "Preservar Recuerdo",
+                    text  = stringResource(R.string.btn_preserve_memory),
                     style = MaterialTheme.typography.labelLarge
                 )
             }

@@ -28,9 +28,7 @@ import com.perenniasystems.lascito.data.repository.MockUserRepository
 import com.perenniasystems.lascito.ui.components.LascitoPrimaryButton
 import com.perenniasystems.lascito.ui.components.LascitoTextField
 import com.perenniasystems.lascito.ui.theme.*
-
-// Regex básico de formato email
-private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+import com.perenniasystems.lascito.util.Validators
 
 @Composable
 fun LoginScreen(
@@ -42,15 +40,15 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var loginError      by remember { mutableStateOf(false) }
 
-    // Validaciones — solo mostramos error si el campo fue tocado (no vacío)
-    val emailError = email.isNotBlank() && !EMAIL_REGEX.matches(email)
+    // Validate format only when the field has been touched (non-empty).
+    val emailError = email.isNotBlank() && !Validators.EMAIL_REGEX.matches(email)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(AmoledBlack)
     ) {
-        // ── Gradient veil ─────────────────────────────────────────────────────
+        // ── Subtle gradient veil aligned to accent color ───────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -58,7 +56,7 @@ fun LoginScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            MutedGold.copy(alpha = 0.06f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
                             Color.Transparent
                         )
                     )
@@ -77,7 +75,9 @@ fun LoginScreen(
             // ── Logotype ──────────────────────────────────────────────────────
             Text(
                 text  = "✦",
-                style = MaterialTheme.typography.displayLarge.copy(color = MutedGold),
+                style = MaterialTheme.typography.displayLarge.copy(
+                    color = MaterialTheme.colorScheme.primary
+                ),
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
@@ -85,10 +85,10 @@ fun LoginScreen(
                 style = MaterialTheme.typography.displayLarge,
             )
             Text(
-                text  = "Perennia Systems",
+                text  = stringResource(R.string.company_name),
                 style = MaterialTheme.typography.bodySmall.copy(
                     letterSpacing = 3.sp,
-                    color         = MutedGoldDim
+                    color         = MaterialTheme.colorScheme.primaryContainer
                 ),
             )
 
@@ -102,10 +102,9 @@ fun LoginScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 isError         = emailError
             )
-            // Mensaje de error de email
             if (emailError) {
                 Text(
-                    text  = "Introduce un correo válido",
+                    text  = stringResource(R.string.error_invalid_email),
                     color = ErrorRed,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
@@ -119,7 +118,7 @@ fun LoginScreen(
             // ── Password ──────────────────────────────────────────────────────
             LascitoTextField(
                 value                = password,
-                onValueChange        = { password = it },
+                onValueChange        = { password = it; loginError = false },
                 label                = stringResource(R.string.label_password),
                 visualTransformation = if (passwordVisible)
                     VisualTransformation.None
@@ -133,10 +132,10 @@ fun LoginScreen(
                                 Icons.Filled.VisibilityOff
                             else
                                 Icons.Filled.Visibility,
-                            contentDescription = if (passwordVisible)
-                                "Ocultar contraseña"
-                            else
-                                "Mostrar contraseña",
+                            contentDescription = stringResource(
+                                if (passwordVisible) R.string.desc_hide_password
+                                else                 R.string.desc_show_password
+                            ),
                             tint = TextSecondary
                         )
                     }
@@ -146,7 +145,7 @@ fun LoginScreen(
             // Error de credenciales inválidas
             if (loginError) {
                 Text(
-                    text  = "Correo o contraseña incorrectos",
+                    text  = stringResource(R.string.error_login),
                     color = ErrorRed,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier

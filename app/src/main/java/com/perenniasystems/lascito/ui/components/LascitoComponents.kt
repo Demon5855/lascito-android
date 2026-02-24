@@ -1,6 +1,5 @@
 package com.perenniasystems.lascito.ui.components
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,14 +7,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.perenniasystems.lascito.ui.theme.*
 
 /**
  * Shared text field styled for the Lascito design system.
- * Outlined with a muted-gold accent on focus.
+ * Accent colors come from [MaterialTheme.colorScheme] so they respond to
+ * the accent metal selector automatically.
  */
 @Composable
 fun LascitoTextField(
@@ -39,11 +38,11 @@ fun LascitoTextField(
         trailingIcon         = trailingIcon,
         shape                = RoundedCornerShape(8.dp),
         colors               = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor   = MutedGold,
+            focusedBorderColor   = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = CardBorder,
-            focusedLabelColor    = MutedGold,
+            focusedLabelColor    = MaterialTheme.colorScheme.primary,
             unfocusedLabelColor  = TextSecondary,
-            cursorColor          = MutedGold,
+            cursorColor          = MaterialTheme.colorScheme.primary,
             focusedTextColor     = TextPrimary,
             unfocusedTextColor   = TextPrimary,
             errorBorderColor     = ErrorRed,
@@ -54,7 +53,9 @@ fun LascitoTextField(
 }
 
 /**
- * Primary CTA button with gold fill and black text.
+ * Primary CTA button with accent fill.
+ * When [enabled] is false the button turns gray so it's clear the user
+ * must meet a prerequisite (e.g. accept terms) before proceeding.
  */
 @Composable
 fun LascitoPrimaryButton(
@@ -68,9 +69,9 @@ fun LascitoPrimaryButton(
         enabled  = enabled,
         shape    = RoundedCornerShape(8.dp),
         colors   = ButtonDefaults.buttonColors(
-            containerColor         = MutedGold,
+            containerColor         = MaterialTheme.colorScheme.primary,
             contentColor           = AmoledBlack,
-            disabledContainerColor = MutedGoldDim,
+            disabledContainerColor = SurfaceVariant,   // opaque gray — clearly blocked
             disabledContentColor   = TextDisabled
         ),
         modifier = modifier
@@ -96,9 +97,9 @@ fun LascitoSecondaryButton(
     OutlinedButton(
         onClick  = onClick,
         shape    = RoundedCornerShape(8.dp),
-        border   = androidx.compose.foundation.BorderStroke(1.dp, MutedGold),
+        border   = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primaryContainer),
         colors   = ButtonDefaults.outlinedButtonColors(
-            contentColor = MutedGold
+            contentColor = MaterialTheme.colorScheme.primary
         ),
         modifier = modifier
             .fillMaxWidth()
@@ -110,3 +111,5 @@ fun LascitoSecondaryButton(
         )
     }
 }
+
+

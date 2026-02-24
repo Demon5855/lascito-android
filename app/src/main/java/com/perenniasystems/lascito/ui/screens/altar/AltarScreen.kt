@@ -1,6 +1,7 @@
-package com.perenniasystems.lascito.ui.screens.altar
+﻿package com.perenniasystems.lascito.ui.screens.altar
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,20 +10,29 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.data.model.MediaType
 import com.perenniasystems.lascito.data.model.Memory
 import com.perenniasystems.lascito.data.model.Profile
 import com.perenniasystems.lascito.data.model.ProfileType
@@ -41,9 +51,7 @@ fun AltarScreen(
     onAddMemory:    () -> Unit = {},
     viewModel:      AltarViewModel = viewModel()
 ) {
-    // Load data when the screen enters composition
     LaunchedEffect(profileId) { viewModel.load(profileId) }
-
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
@@ -52,14 +60,14 @@ fun AltarScreen(
             if (uiState is AltarUiState.Success) {
                 FloatingActionButton(
                     onClick        = onAddMemory,
-                    containerColor = MutedGold,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     contentColor   = AmoledBlack,
                     shape          = CircleShape,
                     elevation      = FloatingActionButtonDefaults.elevation(0.dp)
                 ) {
                     Icon(
                         imageVector        = Icons.Default.AddPhotoAlternate,
-                        contentDescription = "Añadir recuerdo"
+                        contentDescription = stringResource(R.string.desc_add_memory)
                     )
                 }
             }
@@ -73,14 +81,13 @@ fun AltarScreen(
             when (val state = uiState) {
                 is AltarUiState.Loading -> {
                     CircularProgressIndicator(
-                        color    = MutedGold,
+                        color    = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-
                 is AltarUiState.Error -> {
                     Text(
-                        text      = state.message,
+                        text      = stringResource(state.messageResId),
                         style     = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         modifier  = Modifier
@@ -88,11 +95,10 @@ fun AltarScreen(
                             .padding(32.dp)
                     )
                 }
-
                 is AltarUiState.Success -> {
                     AltarContent(
-                        profile       = state.profile,
-                        memories      = state.memories,
+                        profile        = state.profile,
+                        memories       = state.memories,
                         onNavigateBack = onNavigateBack
                     )
                 }
@@ -115,17 +121,39 @@ private fun AltarContent(
     val dateRange    = "$birthYear — $passingLabel"
 
     LazyColumn(
-        modifier            = Modifier.fillMaxSize(),
-        contentPadding      = PaddingValues(bottom = 96.dp)
+        modifier       = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 96.dp)
     ) {
-        // ── HERO SECTION ──────────────────────────────────────────────────────
+        // ── HERO ─────────────────────────────────────────────────────────────
         item {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(320.dp)
             ) {
-                // Avatar a pantalla completa
+                // Placeholder debajo (la foto lo tapa cuando carga con éxito)
+                Box(
+                    modifier         = Modifier
+                        .fillMaxSize()
+                        .background(SurfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (profile.profileType == ProfileType.PET) {
+                        Text(
+                            text  = "🐾",
+                            style = MaterialTheme.typography.displayLarge.copy(color = MaterialTheme.colorScheme.primaryContainer)
+                        )
+                    } else {
+                        Icon(
+                            imageVector        = Icons.Default.Person,
+                            contentDescription = null,
+                            tint               = MaterialTheme.colorScheme.primaryContainer,
+                            modifier           = Modifier.size(72.dp)
+                        )
+                    }
+                }
+
+                // Foto del perfil encima del placeholder
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(profile.avatarUrl)
@@ -135,34 +163,36 @@ private fun AltarContent(
                     contentScale       = ContentScale.Crop,
                     modifier           = Modifier.fillMaxSize()
                 )
-
-                // Placeholder sin imagen
-                Box(
-                    modifier         = Modifier
-                        .fillMaxSize()
-                        .background(SurfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text  = if (profile.profileType == ProfileType.PET) "🐾" else "✦",
-                        style = MaterialTheme.typography.displayLarge.copy(color = MutedGoldDim)
-                    )
-                }
-
-                // Degradado inferior imagen → fondo
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
                         .align(Alignment.BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, AmoledBlack)
-                            )
-                        )
+                        .background(Brush.verticalGradient(listOf(Color.Transparent, AmoledBlack)))
                 )
 
-                // Botón atrás flotante sobre la imagen
+                // ── Badge tipo de perfil (esquina inferior derecha) ───────────
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 16.dp)
+                        .size(40.dp)
+                        .background(AmoledBlack.copy(alpha = 0.72f), CircleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (profile.profileType == ProfileType.PET) {
+                        Text(text = "🐾", fontSize = 18.sp)
+                    } else {
+                        Icon(
+                            imageVector        = Icons.Default.Person,
+                            contentDescription = null,
+                            tint               = MaterialTheme.colorScheme.primary,
+                            modifier           = Modifier.size(22.dp)
+                        )
+                    }
+                }
+
                 IconButton(
                     onClick  = onNavigateBack,
                     modifier = Modifier
@@ -179,26 +209,24 @@ private fun AltarContent(
             }
         }
 
-        // ── CABECERA DE INFORMACIÓN ───────────────────────────────────────────
+        // ── CABECERA INFO ─────────────────────────────────────────────────────
         item {
             Column(
                 modifier            = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-                    .offset(y = (-32).dp),   // sube sobre el degradado
+                    .offset(y = (-32).dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text      = profile.fullName,
-                    style     = MaterialTheme.typography.displayMedium.copy(
-                        fontFamily = PlayfairDisplay
-                    ),
+                    style     = MaterialTheme.typography.displayMedium.copy(fontFamily = PlayfairDisplay),
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text  = "${profile.relationship}  ·  $dateRange",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = MutedGoldDim),
+                    text      = "${profile.relationship}  ·  $dateRange",
+                    style     = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.primaryContainer),
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(24.dp))
@@ -211,19 +239,17 @@ private fun AltarContent(
             }
         }
 
-        // ── SECCIÓN TÍTULO "Memorias" ─────────────────────────────────────────
+        // ── TÍTULO ────────────────────────────────────────────────────────────
         item {
             Text(
-                text     = "Memorias",
-                style    = MaterialTheme.typography.headlineLarge.copy(
-                    fontFamily = PlayfairDisplay
-                ),
+                text     = stringResource(R.string.screen_memories),
+                style    = MaterialTheme.typography.headlineLarge.copy(fontFamily = PlayfairDisplay),
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // ── MURO DE MEMORIAS ─────────────────────────────────────────────────
+        // ── MURO DE MEMORIAS ──────────────────────────────────────────────────
         if (memories.isEmpty()) {
             item {
                 Box(
@@ -233,7 +259,7 @@ private fun AltarContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text      = "Aún no hay recuerdos.\nPresiona + para añadir el primero.",
+                        text      = stringResource(R.string.empty_memories),
                         style     = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
@@ -241,36 +267,82 @@ private fun AltarContent(
             }
         } else {
             items(memories, key = { it.memoryId }) { memory ->
-                MemoryCard(memory = memory, dateFmt = dateFmt)
+                MemoryItem(memory = memory, dateFmt = dateFmt)
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
 }
 
-@Composable
-private fun MemoryCard(
-    memory:  Memory,
-    dateFmt: SimpleDateFormat
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Imagen del recuerdo — ancho completo
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(memory.mediaUrl)
-                .crossfade(true)
-                .build(),
-            contentDescription = null,
-            contentScale       = ContentScale.Crop,
-            modifier           = Modifier
-                .fillMaxWidth()
-                .height(260.dp)
-        )
+// ────────────────────────────────────────────────────────────────────────────
+// MemoryItem — dispatcher por tipo de media
+// ────────────────────────────────────────────────────────────────────────────
 
-        // Texto contextual y fecha
-        Column(
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
-        ) {
+@Composable
+private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+
+        when (memory.mediaType) {
+
+            // ── IMAGE ─────────────────────────────────────────────────────────
+            MediaType.IMAGE -> {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(memory.mediaUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = null,
+                    contentScale       = ContentScale.Crop,
+                    modifier           = Modifier
+                        .fillMaxWidth()
+                        .height(260.dp)
+                )
+            }
+
+            // ── VIDEO ─────────────────────────────────────────────────────────
+            // Muestra el thumbnail con un overlay oscuro y un ícono Play centrado
+            MediaType.VIDEO -> {
+                Box(
+                    modifier         = Modifier
+                        .fillMaxWidth()
+                        .height(260.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Thumbnail (misma URL en mock; en Fase 2 será una URL de thumbnail separada)
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(memory.mediaUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = null,
+                        contentScale       = ContentScale.Crop,
+                        modifier           = Modifier.fillMaxSize()
+                    )
+                    // Oscurecimiento sutil
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0x80000000))
+                    )
+                    // Botón Play dorado
+                    Icon(
+                        imageVector        = Icons.Default.PlayCircle,
+                        contentDescription = "Reproducir video",
+                        tint               = MaterialTheme.colorScheme.primary,
+                        modifier           = Modifier.size(72.dp)
+                    )
+                }
+            }
+
+            // ── AUDIO ─────────────────────────────────────────────────────────
+            // Reproductor minimalista: play + barra de progreso + tiempo
+            MediaType.AUDIO -> {
+                AudioPlayer()
+            }
+        }
+
+        // ── Contexto y fecha (comunes a todos los tipos) ──────────────────────
+        Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
             Text(
                 text  = memory.contextText,
                 style = MaterialTheme.typography.bodyLarge.copy(
@@ -281,7 +353,7 @@ private fun MemoryCard(
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text  = dateFmt.format(Date(memory.capturedDate)),
-                style = MaterialTheme.typography.bodySmall.copy(color = MutedGoldDim)
+                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primaryContainer)
             )
         }
 
@@ -290,5 +362,75 @@ private fun MemoryCard(
             thickness = 0.5.dp,
             modifier  = Modifier.padding(horizontal = 24.dp)
         )
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// AudioPlayer — reproductor estático minimalista (Phase 1: visual sólo)
+// ────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun AudioPlayer() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(SurfaceDark)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment     = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        // Botón Play circular dorado
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector        = Icons.Default.PlayCircle,
+                contentDescription = "Reproducir nota de voz",
+                tint               = MaterialTheme.colorScheme.primary,
+                modifier           = Modifier.size(32.dp)
+            )
+        }
+
+        // Barra de progreso + tiempo
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            LinearProgressIndicator(
+                progress            = { 0.35f },   // Phase 2: progreso real del player
+                modifier            = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp)),
+                color               = MaterialTheme.colorScheme.primary,
+                trackColor          = CardBorder,
+                strokeCap           = StrokeCap.Round
+            )
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text  = "0:31",    // Phase 2: posición real
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color    = TextSecondary,
+                        fontSize = 11.sp
+                    )
+                )
+                Text(
+                    text  = "1:24",    // Phase 2: duración real
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color      = TextSecondary,
+                        fontSize   = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+            }
+        }
     }
 }

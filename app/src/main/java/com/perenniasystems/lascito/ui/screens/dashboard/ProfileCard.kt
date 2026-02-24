@@ -1,15 +1,16 @@
-package com.perenniasystems.lascito.ui.screens.dashboard
+﻿package com.perenniasystems.lascito.ui.screens.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -18,12 +19,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.Profile
 import com.perenniasystems.lascito.data.model.ProfileStatus
 import com.perenniasystems.lascito.data.model.ProfileType
 import com.perenniasystems.lascito.ui.theme.*
+import androidx.compose.ui.res.stringResource
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -31,16 +35,13 @@ import java.util.Locale
 /**
  * Inmersive altar card — cuadrícula 2 columnas.
  *
- * Layout (vertical):
- *   ┌─────────────────┐
- *   │                 │  ← imagen ocupa mitad superior (~160dp)
- *   │   [Foto]        │
- *   │                 │
- *   ├── degradado ────┤
- *   │ Nombre completo │  ← serif, blanco cálido
- *   │ Parentesco      │  ← gris secundario
- *   │ 1940 — 2001     │  ← dorado apagado, sin palabras extra
- *   └─────────────────┘
+ * Capas (de atrás hacia adelante):
+ *   1. Placeholder con emoji (PET 🐾 / HUMAN ✦) sobre fondo oscuro
+ *   2. AsyncImage — tapa el placeholder cuando la foto carga
+ *   3. Degradado imagen → fondo de tarjeta
+ *   4. Texto (Nombre, Parentesco, Fechas)
+ *   5. Badge tipo de perfil (esquina superior izquierda)
+ *   6. Badge READ_ONLY (esquina superior derecha)
  */
 @Composable
 fun ProfileCard(
@@ -50,9 +51,7 @@ fun ProfileCard(
 ) {
     val cardShape = RoundedCornerShape(16.dp)
     val yearFmt   = SimpleDateFormat("yyyy", Locale.getDefault())
-    val dateFmt   = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-    // Formato de fechas: año solo si han pasado más de 2 años, si no fecha completa
     val birthYear    = yearFmt.format(Date(profile.birthDate))
     val passingLabel = profile.passingDate?.let { yearFmt.format(Date(it)) } ?: "Presente"
     val dateRange    = "$birthYear — $passingLabel"
@@ -60,7 +59,7 @@ fun ProfileCard(
     Card(
         shape    = cardShape,
         colors   = CardDefaults.cardColors(containerColor = SurfaceDark),
-        onClick   = onClick,
+        onClick  = onClick,
         modifier = modifier
             .fillMaxWidth()
             .height(220.dp)
@@ -68,21 +67,7 @@ fun ProfileCard(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
 
-            // ── Imagen — mitad superior ────────────────────────────────────────
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(profile.avatarUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = "${profile.fullName}",
-                contentScale       = ContentScale.Crop,
-                modifier           = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.6f)     // 60% de la tarjeta
-                    .align(Alignment.TopCenter)
-            )
-
-            // Placeholder si no hay imagen (URL vacía o carga fallida)
+            // ── Capa 1: Placeholder (siempre visible detrás) ──────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -91,13 +76,36 @@ fun ProfileCard(
                     .background(SurfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text  = if (profile.profileType == ProfileType.PET) "🐾" else "✦",
-                    style = MaterialTheme.typography.displayMedium.copy(color = MutedGoldDim)
-                )
+                if (profile.profileType == ProfileType.PET) {
+                    Text(
+                        text  = "🐾",
+                        style = MaterialTheme.typography.displayMedium.copy(color = MaterialTheme.colorScheme.primaryContainer)
+                    )
+                } else {
+                    Icon(
+                        imageVector        = Icons.Default.Person,
+                        contentDescription = null,
+                        tint               = MaterialTheme.colorScheme.primaryContainer,
+                        modifier           = Modifier.size(48.dp)
+                    )
+                }
             }
 
-            // ── Degradado de imagen → fondo ────────────────────────────────────
+            // ── Capa 2: Foto del perfil (tapa el placeholder al cargar) ───────
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(profile.avatarUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = profile.fullName,
+                contentScale       = ContentScale.Crop,
+                modifier           = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.6f)
+                    .align(Alignment.TopCenter)
+            )
+
+            // ── Capa 3: Degradado imagen → fondo de la tarjeta ────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,7 +122,7 @@ fun ProfileCard(
                     )
             )
 
-            // ── Texto — parte inferior ─────────────────────────────────────────
+            // ── Capa 4: Texto ─────────────────────────────────────────────────
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -122,7 +130,6 @@ fun ProfileCard(
                     .padding(horizontal = 12.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Nombre (serif)
                 Text(
                     text      = profile.fullName,
                     style     = MaterialTheme.typography.titleMedium.copy(
@@ -133,32 +140,51 @@ fun ProfileCard(
                     maxLines  = 2,
                     overflow  = TextOverflow.Ellipsis
                 )
-
                 Spacer(modifier = Modifier.height(2.dp))
-
-                // Parentesco
                 Text(
                     text  = profile.relationship,
                     style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
                     textAlign = TextAlign.Center,
                     maxLines  = 1
                 )
-
                 Spacer(modifier = Modifier.height(4.dp))
-
-                // Fechas limpias
                 Text(
                     text  = dateRange,
-                    style = MaterialTheme.typography.bodySmall.copy(color = MutedGoldDim),
+                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primaryContainer),
                     textAlign = TextAlign.Center
                 )
             }
 
-            // ── Badge archivado (READ_ONLY) ────────────────────────────────────
+            // ── Capa 5: Badge tipo de perfil (esquina superior izquierda) ─────
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 8.dp, top = 8.dp)
+                    .size(28.dp)
+                    .background(AmoledBlack.copy(alpha = 0.72f), CircleShape)
+                    .border(0.8.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                if (profile.profileType == ProfileType.PET) {
+                    Text(
+                        text  = "🐾",
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp)
+                    )
+                } else {
+                    Icon(
+                        imageVector        = Icons.Default.Person,
+                        contentDescription = null,
+                        tint               = MaterialTheme.colorScheme.primary,
+                        modifier           = Modifier.size(16.dp)
+                    )
+                }
+            }
+
+            // ── Capa 6: Badge READ_ONLY (esquina superior derecha) ────────────
             if (profile.status == ProfileStatus.READ_ONLY) {
                 Text(
                     text     = "⚯",
-                    style    = MaterialTheme.typography.bodySmall.copy(color = MutedGoldDim),
+                    style    = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primaryContainer),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
