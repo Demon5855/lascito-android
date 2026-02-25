@@ -2,7 +2,7 @@ package com.perenniasystems.lascito.data.repository
 
 /**
  * Implementación mock para Phase 1.
- * Fase 2: sustituir por FirebaseAuth.authenticate().
+ * Fase 2: sustituir por [FirebaseAuthRepository].
  *
  * Usuario administrador de prueba:
  *   Nombre:     Administrador
@@ -12,19 +12,41 @@ package com.perenniasystems.lascito.data.repository
 object MockUserRepository : UserRepository {
 
     private data class MockUser(
+        val uid:         String,
         val displayName: String,
         val email:       String,
-        val password:    String   // plaintext solo para mock; en prod → hash o Firebase
+        val password:    String
     )
 
     private val users = listOf(
         MockUser(
+            uid         = "mock-user-123",
             displayName = "Administrador",
             email       = "admin@perenniasys.com",
-            password    = "password"  // meets strength rules: upper, lower, digit, symbol
+            password    = "Demo@1234"
         )
     )
 
-    override fun login(email: String, password: String): Boolean =
-        users.any { it.email.equals(email.trim(), ignoreCase = true) && it.password == password }
+    private var currentUid: String? = null
+
+    override suspend fun login(email: String, password: String): Result<String> {
+        val user = users.find {
+            it.email.equals(email.trim(), ignoreCase = true) && it.password == password
+        }
+        return if (user != null) {
+            currentUid = user.uid
+            Result.success(user.uid)
+        } else {
+            Result.failure(Exception("Correo o contraseña incorrectos"))
+        }
+    }
+
+    override suspend fun register(name: String, email: String, password: String): Result<String> {
+        currentUid = "user-mock-new"
+        return Result.success("user-mock-new")
+    }
+
+    override fun currentUserId(): String? = currentUid
+
+    override fun logout() { currentUid = null }
 }

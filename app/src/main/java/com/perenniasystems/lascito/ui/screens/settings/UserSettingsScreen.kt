@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -35,11 +36,9 @@ import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.util.LocaleHelper
 import com.perenniasystems.lascito.util.Validators
 
-// ── Mock data (Phase 2: inject from ViewModel/UserRepository) ─────────────────
-private const val MOCK_DISPLAY_NAME = "Administrador"
-private const val MOCK_EMAIL        = "admin@perenniasys.com"
-private const val MOCK_STORAGE_USED = 2.4f   // GB
-private const val MOCK_STORAGE_MAX  = 10     // GB
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.perenniasystems.lascito.viewmodel.UserSettingsUiState
+import com.perenniasystems.lascito.viewmodel.UserSettingsViewModel
 
 // ── Language options ──────────────────────────────────────────────────────────
 enum class AppLanguage(val labelRes: Int, val tag: String) {
@@ -50,10 +49,12 @@ enum class AppLanguage(val labelRes: Int, val tag: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserSettingsScreen(
+    viewModel: UserSettingsViewModel = viewModel(),
     onNavigateBack: () -> Unit = {},
     onLogOut:       () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
 
     // Init from LangState (which was already seeded from SharedPreferences
     // in MainActivity.onCreate before setContent was called).
@@ -111,12 +112,12 @@ fun UserSettingsScreen(
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
             // ── § 1 Perfil ─────────────────────────────────────────────────────
-            ProfileSection()
+            ProfileSection(uiState)
 
             HorizontalDivider(color = CardBorder, thickness = 0.5.dp)
 
             // ── § 2 Estado del Mausoleo ────────────────────────────────────────
-            MausoleumStatusCard()
+            MausoleumStatusCard(uiState)
 
             HorizontalDivider(color = CardBorder, thickness = 0.5.dp)
 
@@ -165,7 +166,7 @@ fun UserSettingsScreen(
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun ProfileSection() {
+private fun ProfileSection(state: UserSettingsUiState) {
     Column(
         modifier            = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -187,7 +188,7 @@ private fun ProfileSection() {
             )
         }
         Text(
-            text  = MOCK_DISPLAY_NAME,
+            text  = state.displayName,
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontFamily = PlayfairDisplay,
                 color      = TextPrimary
@@ -195,7 +196,7 @@ private fun ProfileSection() {
             textAlign = TextAlign.Center
         )
         Text(
-            text  = MOCK_EMAIL,
+            text  = state.email,
             style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
             textAlign = TextAlign.Center
         )
@@ -207,7 +208,7 @@ private fun ProfileSection() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun MausoleumStatusCard() {
+private fun MausoleumStatusCard(state: UserSettingsUiState) {
     SectionTitle(stringResource(R.string.section_mausoleum))
 
     Card(
@@ -225,7 +226,7 @@ private fun MausoleumStatusCard() {
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Icon(
-                    imageVector        = Icons.Default.Stars,
+                    painter            = painterResource(R.drawable.ic_perennia_leaf_logo),
                     contentDescription = null,
                     tint               = MaterialTheme.colorScheme.primary,
                     modifier           = Modifier.size(22.dp)
@@ -251,12 +252,12 @@ private fun MausoleumStatusCard() {
                         style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
                     )
                     Text(
-                        text  = "${"%.1f".format(MOCK_STORAGE_USED)} GB / $MOCK_STORAGE_MAX GB",
+                        text  = "${state.storageUsedStr} / ${state.storageMaxStr}",
                         style = MaterialTheme.typography.bodySmall.copy(color = TextPrimary)
                     )
                 }
                 LinearProgressIndicator(
-                    progress  = { MOCK_STORAGE_USED / MOCK_STORAGE_MAX },
+                    progress  = { 0f }, // Phase 2: Set to 0% since we removed mocks.
                     modifier  = Modifier
                         .fillMaxWidth()
                         .height(6.dp)

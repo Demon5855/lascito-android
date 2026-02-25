@@ -23,17 +23,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.components.LascitoPrimaryButton
 import com.perenniasystems.lascito.ui.components.LascitoTextField
 import com.perenniasystems.lascito.ui.theme.*
-
 import com.perenniasystems.lascito.util.Validators
+import com.perenniasystems.lascito.viewmodel.AuthUiState
+import com.perenniasystems.lascito.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
+    authViewModel:  AuthViewModel,
     onNavigateBack: () -> Unit = {}
 ) {
     var fullName        by remember { mutableStateOf("") }
@@ -241,11 +245,34 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // ── Crear Cuenta — disabled (gray) until form + terms are valid ───
+            val authState by authViewModel.uiState.collectAsState()
+            val isLoading = authState is AuthUiState.Loading
+
+            // Show Firebase error if any
+            if (authState is AuthUiState.Error) {
+                Text(
+                    text     = (authState as AuthUiState.Error).message,
+                    color    = ErrorRed,
+                    style    = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, bottom = 8.dp)
+                )
+            }
+
             LascitoPrimaryButton(
-                text    = stringResource(R.string.btn_register),
-                onClick = onNavigateBack,   // Phase 2: real Auth call
-                enabled = canSubmit
+                text    = if (isLoading) stringResource(R.string.btn_loading)
+                          else           stringResource(R.string.btn_register),
+                onClick = { authViewModel.register(fullName, email, password) },
+                enabled = !isLoading && canSubmit
             )
+
+            // Navigate on success
+            LaunchedEffect(authState) {
+                if (authState is AuthUiState.Success) {
+                    onNavigateBack()
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -264,5 +291,5 @@ fun RegisterScreen(
 @Preview(showBackground = true, backgroundColor = 0xFF0D0D0D)
 @Composable
 private fun RegisterScreenPreview() {
-    LascitoTheme { RegisterScreen() }
+    LascitoTheme { RegisterScreen(authViewModel = AuthViewModel()) }
 }

@@ -31,6 +31,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
+import com.perenniasystems.lascito.data.model.ProfileType
+import com.perenniasystems.lascito.viewmodel.AddProfileUiState
+import com.perenniasystems.lascito.viewmodel.AddProfileViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -96,17 +99,29 @@ private fun validateDateDigits(digits: String): String? {
     val maxYear = Calendar.getInstance().get(Calendar.YEAR)
     if (year !in 1900..maxYear) return "Año fuera de rango (1900–$maxYear)"
 
+    // Validar que la fecha no esté en el futuro
+    val format = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
+    try {
+        val parsedDate = format.parse(digits)
+        if (parsedDate != null && parsedDate.after(Date())) {
+            return "La fecha no puede ser en el futuro"
+        }
+    } catch (e: Exception) {
+        return "Fecha inválida"
+    }
+
     return null   // válido
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProfileScreen(
-    onNavigateBack: () -> Unit = {}
+    viewModel: AddProfileViewModel,
+    onNavigateBack: () -> Unit
 ) {
-    var selectedType by remember { mutableStateOf(ProfileTypeChoice.HUMAN) }
-    var fullName     by remember { mutableStateOf("") }
-    var relationship by remember { mutableStateOf("") }
+    var rawName         by remember { mutableStateOf("") }
+    var rawRelationship by remember { mutableStateOf("") }
+    var selectedType    by remember { mutableStateOf(ProfileTypeChoice.HUMAN) }
     // Estado = solo dígitos (máx. 8). La transformación visual agrega las '/'.
     var birthDigits  by remember { mutableStateOf("") }
     var passDigits   by remember { mutableStateOf("") }
@@ -114,12 +129,23 @@ fun AddProfileScreen(
 
     var showBirthPicker   by remember { mutableStateOf(false) }
     var showPassingPicker by remember { mutableStateOf(false) }
+
+    val uiState by viewModel.uiState.collectAsState()
+    val isLoading = uiState is AddProfileUiState.Loading
+
+    // Handle success navigation
+    LaunchedEffect(uiState) {
+        if (uiState is AddProfileUiState.Success) {
+            viewModel.resetState()
+            onNavigateBack()
+        }
+    }
     val birthPickerState   = rememberDatePickerState()
     val passingPickerState = rememberDatePickerState()
 
     val birthError = validateDateDigits(birthDigits)
     val passError  = if (!isPresent) validateDateDigits(passDigits) else null
-    val canSave    = fullName.isNotBlank() && relationship.isNotBlank()
+    val canSave    = rawName.isNotBlank() && rawRelationship.isNotBlank()
                      && birthDigits.length == 8 && birthError == null
                      && (isPresent || (passDigits.length == 8 && passError == null))
 
@@ -262,8 +288,8 @@ fun AddProfileScreen(
             // ── Nombre Completo — capitaliza cada palabra ─────────────────────
             LabeledField(stringResource(R.string.label_full_name_field)) {
                 OutlinedTextField(
-                    value         = fullName,
-                    onValueChange = { fullName = it },
+                    value         = rawName,
+                    onValueChange = { rawName = it },
                     modifier      = Modifier.fillMaxWidth(),
                     placeholder   = {
                         Text(
@@ -291,8 +317,8 @@ fun AddProfileScreen(
             // ── Parentesco / Vínculo ──────────────────────────────────────────
             LabeledField(stringResource(R.string.label_relationship)) {
                 OutlinedTextField(
-                    value         = relationship,
-                    onValueChange = { relationship = it },
+                    value         = rawRelationship,
+                    onValueChange = { rawRelationship = it },
                     modifier      = Modifier.fillMaxWidth(),
                     placeholder   = {
                         Text(
@@ -425,10 +451,35 @@ fun AddProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Show error if any
+            if (uiState is AddProfileUiState.Error) {
+                Text(
+                    text     = (uiState as AddProfileUiState.Error).message,
+                    color    = ErrorRed,
+                    style    = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp).align(Alignment.CenterHorizontally)
+                )
+            }
+
             // ── Levantar Altar Button ─────────────────────────────────────────
             Button(
-                onClick  = { onNavigateBack() },   // Phase 2: persist to Firestore
-                enabled  = canSave,
+                onClick  = {
+                    val format = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
+                    val birthMillis = try { format.parse(birthDigits)?.time ?: 0L } catch (e: Exception) { 0L }
+                    val passMillis = if (isPresent || passDigits.isBlank()) null else {
+                        try { format.parse(passDigits)?.time } catch (e: Exception) { null }
+                    }
+
+                    val pType = if (selectedType == ProfileTypeChoice.HUMAN) ProfileType.HUMAN else ProfileType.PET
+                    viewModel.saveProfile(
+                        fullName = rawName,
+                        profileType = pType,
+                        relationship = rawRelationship,
+                        birthDate = birthMillis,
+                        passingDate = passMillis
+                    )
+                },
+                enabled  = canSave && !isLoading,
                 shape    = RoundedCornerShape(8.dp),
                 colors   = ButtonDefaults.buttonColors(
                     containerColor         = MaterialTheme.colorScheme.primary,
@@ -438,7 +489,15 @@ fun AddProfileScreen(
                 ),
                 modifier = Modifier.fillMaxWidth().height(54.dp)
             ) {
-                Text(stringResource(R.string.btn_create_altar), style = MaterialTheme.typography.labelLarge)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = AmoledBlack,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(stringResource(R.string.btn_create_altar), style = MaterialTheme.typography.labelLarge)
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -502,5 +561,5 @@ private fun pickerColors() = DatePickerDefaults.colors(
 @Preview(showBackground = true, backgroundColor = 0xFF0D0D0D)
 @Composable
 private fun AddProfileScreenPreview() {
-    LascitoTheme { AddProfileScreen() }
+    LascitoTheme { AddProfileScreen(viewModel = AddProfileViewModel()) {} }
 }

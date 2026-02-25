@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -24,21 +25,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.perenniasystems.lascito.R
-import com.perenniasystems.lascito.data.repository.MockUserRepository
 import com.perenniasystems.lascito.ui.components.LascitoPrimaryButton
 import com.perenniasystems.lascito.ui.components.LascitoTextField
 import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.util.Validators
+import com.perenniasystems.lascito.viewmodel.AuthUiState
+import com.perenniasystems.lascito.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(
+    authViewModel:         AuthViewModel,
     onNavigateToDashboard: () -> Unit = {},
-    onNavigateToRegister: () -> Unit = {}
+    onNavigateToRegister:  () -> Unit = {}
 ) {
     var email           by remember { mutableStateOf("") }
     var password        by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var loginError      by remember { mutableStateOf(false) }
+
+    val authState by authViewModel.uiState.collectAsState()
 
     // Validate format only when the field has been touched (non-empty).
     val emailError = email.isNotBlank() && !Validators.EMAIL_REGEX.matches(email)
@@ -73,11 +77,11 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(100.dp))
 
             // ── Logotype ──────────────────────────────────────────────────────
-            Text(
-                text  = "✦",
-                style = MaterialTheme.typography.displayLarge.copy(
-                    color = MaterialTheme.colorScheme.primary
-                ),
+            Icon(
+                painter = painterResource(R.drawable.ic_perennia_leaf_logo),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(72.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
@@ -97,7 +101,7 @@ fun LoginScreen(
             // ── Email ─────────────────────────────────────────────────────────
             LascitoTextField(
                 value           = email,
-                onValueChange   = { email = it; loginError = false },
+                onValueChange   = { email = it; if (authState is AuthUiState.Error) authViewModel.resetState() },
                 label           = stringResource(R.string.label_email),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 isError         = emailError
@@ -118,7 +122,7 @@ fun LoginScreen(
             // ── Password ──────────────────────────────────────────────────────
             LascitoTextField(
                 value                = password,
-                onValueChange        = { password = it; loginError = false },
+                onValueChange        = { password = it; if (authState is AuthUiState.Error) authViewModel.resetState() },
                 label                = stringResource(R.string.label_password),
                 visualTransformation = if (passwordVisible)
                     VisualTransformation.None
@@ -143,9 +147,9 @@ fun LoginScreen(
             )
 
             // Error de credenciales inválidas
-            if (loginError) {
+            if (authState is AuthUiState.Error) {
                 Text(
-                    text  = stringResource(R.string.error_login),
+                    text  = (authState as AuthUiState.Error).message,
                     color = ErrorRed,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
@@ -157,17 +161,20 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             // ── CTA ──────────────────────────────────────────────────────────
+            val isLoading = authState is AuthUiState.Loading
             LascitoPrimaryButton(
-                text    = stringResource(R.string.btn_login),
-                onClick = {
-                    if (MockUserRepository.login(email, password)) {
-                        onNavigateToDashboard()
-                    } else {
-                        loginError = true
-                    }
-                },
-                enabled = email.isNotBlank() && !emailError && password.isNotBlank()
+                text    = if (isLoading) stringResource(R.string.btn_loading)
+                          else           stringResource(R.string.btn_login),
+                onClick = { authViewModel.login(email, password) },
+                enabled = !isLoading && email.isNotBlank() && !emailError && password.isNotBlank()
             )
+
+            // Navigate on success
+            LaunchedEffect(authState) {
+                if (authState is AuthUiState.Success) {
+                    onNavigateToDashboard()
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -187,5 +194,5 @@ fun LoginScreen(
 @Preview(showBackground = true, backgroundColor = 0xFF0D0D0D)
 @Composable
 private fun LoginScreenPreview() {
-    LascitoTheme { LoginScreen() }
+    LascitoTheme { LoginScreen(authViewModel = AuthViewModel()) }
 }

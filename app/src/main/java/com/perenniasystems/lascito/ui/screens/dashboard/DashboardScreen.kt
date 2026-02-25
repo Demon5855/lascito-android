@@ -11,11 +11,13 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,6 +37,11 @@ fun DashboardScreen(
     onNavigateToUserSettings: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Trigger re-fetch every time this screen becomes active
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
 
     Scaffold(
         topBar = {
@@ -136,9 +143,11 @@ fun DashboardScreen(
                             .padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text  = "✦",
-                            style = MaterialTheme.typography.displayLarge.copy(color = ErrorRed)
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_perennia_leaf_logo),
+                            contentDescription = null,
+                            tint = ErrorRed,
+                            modifier = Modifier.size(72.dp)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
@@ -159,9 +168,11 @@ private fun EmptyState(modifier: Modifier = Modifier) {
         modifier            = modifier.padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text  = "✦",
-            style = MaterialTheme.typography.displayLarge.copy(color = MaterialTheme.colorScheme.primaryContainer)
+        Icon(
+            painter = painterResource(id = R.drawable.ic_perennia_leaf_logo),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(72.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(

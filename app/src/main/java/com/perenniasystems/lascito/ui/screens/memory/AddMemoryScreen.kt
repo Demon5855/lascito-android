@@ -28,15 +28,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.perenniasystems.lascito.viewmodel.AddMemoryUiState
+import com.perenniasystems.lascito.viewmodel.AddMemoryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMemoryScreen(
-    profileId:     String,
+    profileId:      String,
+    viewModel:      AddMemoryViewModel = viewModel(),
     onNavigateBack: () -> Unit = {}
 ) {
     var contextText by remember { mutableStateOf("") }
-    val canSave = contextText.isNotBlank()
+    val uiState by viewModel.uiState.collectAsState()
+    val isLoading = uiState is AddMemoryUiState.Loading
+
+    LaunchedEffect(uiState) {
+        if (uiState is AddMemoryUiState.Success) {
+            viewModel.resetState()
+            onNavigateBack()
+        }
+    }
+
+    val canSave = contextText.isNotBlank() && !isLoading
 
     Scaffold(
         topBar = {
@@ -166,11 +180,19 @@ fun AddMemoryScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            if (uiState is AddMemoryUiState.Error) {
+                Text(
+                    text     = (uiState as AddMemoryUiState.Error).message,
+                    color    = ErrorRed,
+                    style    = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 8.dp).align(Alignment.CenterHorizontally)
+                )
+            }
+
             // ── Save Button ───────────────────────────────────────────────────
             Button(
                 onClick  = {
-                    // Phase 2: persist to Firestore / upload media to S3
-                    onNavigateBack()
+                    viewModel.saveMemory(profileId = profileId, contextText = contextText)
                 },
                 enabled  = canSave,
                 shape    = RoundedCornerShape(8.dp),
@@ -184,10 +206,18 @@ fun AddMemoryScreen(
                     .fillMaxWidth()
                     .height(54.dp)
             ) {
-                Text(
-                    text  = stringResource(R.string.btn_preserve_memory),
-                    style = MaterialTheme.typography.labelLarge
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = AmoledBlack,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text  = stringResource(R.string.btn_preserve_memory),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))

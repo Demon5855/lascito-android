@@ -5,17 +5,20 @@ package com.perenniasystems.lascito.data.model
  *
  * Maps 1:1 to a Firestore document under the `profiles` collection.
  * UUIDs are generated client-side before upload.
+ *
+ * The no-arg constructor with defaults is required by Firestore's
+ * automatic deserialization (`toObject<Profile>()`).
  */
 data class Profile(
-    val profileId: String,
-    val creatorUserId: String,
-    val fullName: String,
-    val profileType: ProfileType,
-    val relationship: String,
-    val birthDate: Long,             // Unix timestamp (ms)
-    val passingDate: Long?,          // null if the profile is "Presente"
-    val avatarUrl: String,
-    val status: ProfileStatus
+    val profileId: String = "",
+    val creatorUserId: String = "",
+    val fullName: String = "",
+    val profileType: ProfileType = ProfileType.HUMAN,
+    val relationship: String = "",
+    val birthDate: Long = 0L,             // Unix timestamp (ms)
+    val passingDate: Long? = null,        // null if the profile is "Presente"
+    val avatarUrl: String = "",
+    val status: ProfileStatus = ProfileStatus.ACTIVE
 )
 
 enum class ProfileType {

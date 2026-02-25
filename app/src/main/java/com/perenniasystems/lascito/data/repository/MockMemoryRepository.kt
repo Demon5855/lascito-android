@@ -13,6 +13,8 @@ class MockMemoryRepository : MemoryRepository {
     override suspend fun getMemoriesByProfile(profileId: String): List<Memory> =
         MOCK_MEMORIES[profileId] ?: emptyList()
 
+    override suspend fun save(memory: Memory): String = memory.memoryId
+
     companion object {
         private val MOCK_MEMORIES: Map<String, List<Memory>> = mapOf(
 

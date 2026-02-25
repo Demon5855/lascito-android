@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.data.model.Memory
 import com.perenniasystems.lascito.data.model.Profile
+import com.perenniasystems.lascito.data.repository.FirebaseMemoryRepository
+import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
 import com.perenniasystems.lascito.data.repository.MemoryRepository
-import com.perenniasystems.lascito.data.repository.MockMemoryRepository
-import com.perenniasystems.lascito.data.repository.MockProfileRepository
 import com.perenniasystems.lascito.data.repository.ProfileRepository
 import com.perenniasystems.lascito.R
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,9 +21,8 @@ sealed class AltarUiState {
 }
 
 class AltarViewModel(
-    // Depend on interfaces — swap impl in Phase 2 without touching this class.
-    private val profileRepo: ProfileRepository = MockProfileRepository(),
-    private val memoryRepo:  MemoryRepository  = MockMemoryRepository()
+    private val profileRepo: ProfileRepository = FirebaseProfileRepository(),
+    private val memoryRepo:  MemoryRepository  = FirebaseMemoryRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AltarUiState>(AltarUiState.Loading)

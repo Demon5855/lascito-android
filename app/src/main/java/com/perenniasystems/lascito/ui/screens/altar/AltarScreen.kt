@@ -51,7 +51,8 @@ fun AltarScreen(
     onAddMemory:    () -> Unit = {},
     viewModel:      AltarViewModel = viewModel()
 ) {
-    LaunchedEffect(profileId) { viewModel.load(profileId) }
+    // Trigger reload when the profileId changes OR when the screen becomes active again
+    LaunchedEffect(profileId, Unit) { viewModel.load(profileId) }
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(

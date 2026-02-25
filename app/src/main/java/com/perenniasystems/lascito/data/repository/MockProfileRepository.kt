@@ -19,6 +19,8 @@ class MockProfileRepository : ProfileRepository {
     override suspend fun getProfileById(profileId: String): Profile? =
         MOCK_PROFILES.find { it.profileId == profileId }
 
+    override suspend fun save(profile: Profile): String = profile.profileId
+
     companion object {
         /**
          * Dates are Unix timestamps in milliseconds.
@@ -31,7 +33,7 @@ class MockProfileRepository : ProfileRepository {
         private val MOCK_PROFILES = listOf(
             Profile(
                 profileId      = "prof-001",
-                creatorUserId  = "user-mock-001",
+                creatorUserId  = "mock-user-123",
                 fullName       = "Elena Ríos Marchetti",
                 profileType    = ProfileType.HUMAN,
                 relationship   = "Abuela",
@@ -42,7 +44,7 @@ class MockProfileRepository : ProfileRepository {
             ),
             Profile(
                 profileId      = "prof-002",
-                creatorUserId  = "user-mock-001",
+                creatorUserId  = "mock-user-123",
                 fullName       = "Roberto Vargas Solís",
                 profileType    = ProfileType.HUMAN,
                 relationship   = "Padre",
@@ -53,7 +55,7 @@ class MockProfileRepository : ProfileRepository {
             ),
             Profile(
                 profileId      = "prof-003",
-                creatorUserId  = "user-mock-001",
+                creatorUserId  = "mock-user-123",
                 fullName       = "Mochi",
                 profileType    = ProfileType.PET,
                 relationship   = "Compañero fiel",
@@ -64,7 +66,7 @@ class MockProfileRepository : ProfileRepository {
             ),
             Profile(
                 profileId      = "prof-004",
-                creatorUserId  = "user-mock-001",
+                creatorUserId  = "mock-user-123",
                 fullName       = "Carlos Mendoza Ríos",
                 profileType    = ProfileType.HUMAN,
                 relationship   = "Tío",

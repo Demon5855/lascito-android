@@ -1,6 +1,8 @@
 package com.perenniasystems.lascito.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -13,6 +15,8 @@ import com.perenniasystems.lascito.ui.screens.dashboard.DashboardScreen
 import com.perenniasystems.lascito.ui.screens.memory.AddMemoryScreen
 import com.perenniasystems.lascito.ui.screens.profile.AddProfileScreen
 import com.perenniasystems.lascito.ui.screens.settings.UserSettingsScreen
+import com.perenniasystems.lascito.viewmodel.AddProfileViewModel
+import com.perenniasystems.lascito.viewmodel.AuthViewModel
 
 /**
  * NavGraph wires up all application destinations.
@@ -25,12 +29,18 @@ import com.perenniasystems.lascito.ui.screens.settings.UserSettingsScreen
  */
 @Composable
 fun LascitoNavGraph(navController: NavHostController) {
+    // Shared AuthViewModel — survives across Login ↔ Register navigation
+    val authViewModel: AuthViewModel = viewModel()
+
     NavHost(
         navController    = navController,
         startDestination = Screen.Login.route
     ) {
         composable(Screen.Login.route) {
+            // Reset auth state when entering Login (clears errors from Register)
+            LaunchedEffect(Unit) { authViewModel.resetState() }
             LoginScreen(
+                authViewModel         = authViewModel,
                 onNavigateToDashboard = {
                     navController.navigate(Screen.Dashboard.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
@@ -43,7 +53,10 @@ fun LascitoNavGraph(navController: NavHostController) {
         }
 
         composable(Screen.Register.route) {
+            // Reset auth state when entering Register (clears errors from Login)
+            LaunchedEffect(Unit) { authViewModel.resetState() }
             RegisterScreen(
+                authViewModel  = authViewModel,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -63,7 +76,9 @@ fun LascitoNavGraph(navController: NavHostController) {
         }
 
         composable(Screen.AddProfile.route) {
+            val addProfileViewModel: AddProfileViewModel = viewModel()
             AddProfileScreen(
+                viewModel      = addProfileViewModel,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -95,6 +110,7 @@ fun LascitoNavGraph(navController: NavHostController) {
             UserSettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onLogOut       = {
+                    authViewModel.logout()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }

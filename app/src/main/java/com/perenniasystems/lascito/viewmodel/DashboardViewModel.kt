@@ -2,8 +2,10 @@ package com.perenniasystems.lascito.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.Profile
-import com.perenniasystems.lascito.data.repository.MockProfileRepository
+import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
 import com.perenniasystems.lascito.data.repository.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,11 +16,10 @@ import kotlinx.coroutines.launch
  * ViewModel for the Dashboard screen.
  *
  * Owns the UI state for the profile list. The [ProfileRepository] is injected
- * to follow Dependency Inversion — in Phase 2 swap [MockProfileRepository]
- * for a real Firestore/DynamoDB implementation without touching this class.
+ * to follow Dependency Inversion — swap implementation without touching this class.
  */
 class DashboardViewModel(
-    private val repository: ProfileRepository = MockProfileRepository()
+    private val repository: ProfileRepository = FirebaseProfileRepository()
 ) : ViewModel() {
 
     // ── UI State ──────────────────────────────────────────────────────────────
@@ -26,15 +27,16 @@ class DashboardViewModel(
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     init {
-        loadProfiles()
+        refresh()
     }
 
-    private fun loadProfiles() {
+    fun refresh() {
         viewModelScope.launch {
             _uiState.value = DashboardUiState.Loading
             runCatching {
-                // Mock user ID — will come from Firebase Auth in Phase 2
-                repository.getProfiles(userId = "user-mock-001")
+                val uid = FirebaseAuth.getInstance().currentUser?.uid
+                    ?: throw Exception("Not authenticated")
+                repository.getProfiles(userId = uid)
             }.onSuccess { profiles ->
                 _uiState.value = DashboardUiState.Success(profiles)
             }.onFailure { error ->
