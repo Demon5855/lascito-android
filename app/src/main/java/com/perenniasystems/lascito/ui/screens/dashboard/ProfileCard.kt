@@ -20,13 +20,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.Profile
 import com.perenniasystems.lascito.data.model.ProfileStatus
 import com.perenniasystems.lascito.data.model.ProfileType
 import com.perenniasystems.lascito.ui.theme.*
+import com.perenniasystems.lascito.ui.components.shimmerEffect
 import androidx.compose.ui.res.stringResource
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -67,34 +68,10 @@ fun ProfileCard(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
 
-            // ── Capa 1: Placeholder (siempre visible detrás) ──────────────────
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.6f)
-                    .align(Alignment.TopCenter)
-                    .background(SurfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                if (profile.profileType == ProfileType.PET) {
-                    Text(
-                        text  = "🐾",
-                        style = MaterialTheme.typography.displayMedium.copy(color = MaterialTheme.colorScheme.primaryContainer)
-                    )
-                } else {
-                    Icon(
-                        imageVector        = Icons.Default.Person,
-                        contentDescription = null,
-                        tint               = MaterialTheme.colorScheme.primaryContainer,
-                        modifier           = Modifier.size(48.dp)
-                    )
-                }
-            }
-
-            // ── Capa 2: Foto del perfil (tapa el placeholder al cargar) ───────
-            AsyncImage(
+            // ── Foto del perfil (con Loading Shimmer y Error state combinados) ────
+            SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(profile.avatarUrl)
+                    .data(profile.avatarUrl.takeIf { it.isNotBlank() })
                     .crossfade(true)
                     .build(),
                 contentDescription = profile.fullName,
@@ -102,7 +79,32 @@ fun ProfileCard(
                 modifier           = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight(0.6f)
-                    .align(Alignment.TopCenter)
+                    .align(Alignment.TopCenter),
+                loading = {
+                    Box(modifier = Modifier.fillMaxSize().shimmerEffect())
+                },
+                error = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(SurfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (profile.profileType == ProfileType.PET) {
+                            Text(
+                                text  = "🐾",
+                                style = MaterialTheme.typography.displayMedium.copy(color = MaterialTheme.colorScheme.primaryContainer)
+                            )
+                        } else {
+                            Icon(
+                                imageVector        = Icons.Default.Person,
+                                contentDescription = null,
+                                tint               = MaterialTheme.colorScheme.primaryContainer,
+                                modifier           = Modifier.size(48.dp)
+                            )
+                        }
+                    }
+                }
             )
 
             // ── Capa 3: Degradado imagen → fondo de la tarjeta ────────────────

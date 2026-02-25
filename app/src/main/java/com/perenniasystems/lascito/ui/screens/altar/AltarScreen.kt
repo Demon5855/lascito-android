@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.ImageNotSupported
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.*
@@ -29,7 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.MediaType
@@ -38,6 +39,7 @@ import com.perenniasystems.lascito.data.model.Profile
 import com.perenniasystems.lascito.data.model.ProfileType
 import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
+import com.perenniasystems.lascito.ui.components.shimmerEffect
 import com.perenniasystems.lascito.viewmodel.AltarUiState
 import com.perenniasystems.lascito.viewmodel.AltarViewModel
 import java.text.SimpleDateFormat
@@ -116,7 +118,7 @@ private fun AltarContent(
 
     val birthYear    = yearFmt.format(Date(profile.birthDate))
     val passingLabel = profile.passingDate?.let { yearFmt.format(Date(it)) } ?: "Presente"
-    val dateRange    = "$birthYear � $passingLabel"
+    val dateRange    = "$birthYear — $passingLabel"
 
     LazyColumn(
         modifier       = Modifier.fillMaxSize(),
@@ -129,38 +131,40 @@ private fun AltarContent(
                     .fillMaxWidth()
                     .height(320.dp)
             ) {
-                // Placeholder debajo (la foto lo tapa cuando carga con �xito)
-                Box(
-                    modifier         = Modifier
-                        .fillMaxSize()
-                        .background(SurfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (profile.profileType == ProfileType.PET) {
-                        Text(
-                            text  = "??",
-                            style = MaterialTheme.typography.displayLarge.copy(color = MaterialTheme.colorScheme.primaryContainer)
-                        )
-                    } else {
-                        Icon(
-                            imageVector        = Icons.Default.Person,
-                            contentDescription = null,
-                            tint               = MaterialTheme.colorScheme.primaryContainer,
-                            modifier           = Modifier.size(72.dp)
-                        )
-                    }
-                }
-
-                // Foto del perfil encima del placeholder
-                AsyncImage(
+                // Foto del perfil (con Loading Shimmer y Error state combinados)
+                SubcomposeAsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(profile.avatarUrl)
+                        .data(profile.avatarUrl.takeIf { it.isNotBlank() })
                         .crossfade(true)
                         .build(),
                     contentDescription = profile.fullName,
                     contentScale       = ContentScale.Crop,
-                    modifier           = Modifier.fillMaxSize()
+                    modifier           = Modifier.fillMaxSize(),
+                    loading = {
+                        Box(modifier = Modifier.fillMaxSize().shimmerEffect())
+                    },
+                    error = {
+                        Box(
+                            modifier         = Modifier.fillMaxSize().background(SurfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (profile.profileType == ProfileType.PET) {
+                                Text(
+                                    text  = "🐾",
+                                    style = MaterialTheme.typography.displayLarge.copy(color = MaterialTheme.colorScheme.primaryContainer)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector        = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint               = MaterialTheme.colorScheme.primaryContainer,
+                                    modifier           = Modifier.size(72.dp)
+                                )
+                            }
+                        }
+                    }
                 )
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -180,7 +184,7 @@ private fun AltarContent(
                     contentAlignment = Alignment.Center
                 ) {
                     if (profile.profileType == ProfileType.PET) {
-                        Text(text = "??", fontSize = 18.sp)
+                        Text(text = "🐾", fontSize = 18.sp)
                     } else {
                         Icon(
                             imageVector        = Icons.Default.Person,
@@ -223,7 +227,7 @@ private fun AltarContent(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text      = "${profile.relationship}  �  $dateRange",
+                    text      = "${profile.relationship}  •  $dateRange",
                     style     = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.primaryContainer),
                     textAlign = TextAlign.Center
                 )
@@ -237,7 +241,7 @@ private fun AltarContent(
             }
         }
 
-        // -- T�TULO ------------------------------------------------------------
+        // -- TÍTULO ------------------------------------------------------------
         item {
             Text(
                 text     = stringResource(R.string.screen_memories),
@@ -273,7 +277,7 @@ private fun AltarContent(
 }
 
 // ----------------------------------------------------------------------------
-// MemoryItem � dispatcher por tipo de media
+// MemoryItem — dispatcher por tipo de media
 // ----------------------------------------------------------------------------
 
 @Composable
@@ -284,21 +288,37 @@ private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
 
             // -- IMAGE ---------------------------------------------------------
             MediaType.IMAGE -> {
-                AsyncImage(
+                SubcomposeAsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(memory.mediaUrl)
+                        .data(memory.mediaUrl.takeIf { it.isNotBlank() })
                         .crossfade(true)
                         .build(),
                     contentDescription = null,
                     contentScale       = ContentScale.Crop,
                     modifier           = Modifier
                         .fillMaxWidth()
-                        .height(260.dp)
+                        .height(260.dp),
+                    loading = {
+                        Box(modifier = Modifier.fillMaxSize().shimmerEffect())
+                    },
+                    error = {
+                        Box(
+                            modifier         = Modifier.fillMaxSize().background(SurfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector        = Icons.Default.ImageNotSupported,
+                                contentDescription = null,
+                                tint               = MaterialTheme.colorScheme.primaryContainer,
+                                modifier           = Modifier.size(48.dp)
+                            )
+                        }
+                    }
                 )
             }
 
             // -- VIDEO ---------------------------------------------------------
-            // Muestra el thumbnail con un overlay oscuro y un �cono Play centrado
+            // Muestra el thumbnail con un overlay oscuro y un ícono Play centrado
             MediaType.VIDEO -> {
                 Box(
                     modifier         = Modifier
@@ -306,15 +326,31 @@ private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
                         .height(260.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Thumbnail (misma URL en mock; en Fase 2 ser� una URL de thumbnail separada)
-                    AsyncImage(
+                    // Thumbnail
+                    SubcomposeAsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(memory.mediaUrl)
+                            .data(memory.mediaUrl.takeIf { it.isNotBlank() })
                             .crossfade(true)
                             .build(),
                         contentDescription = null,
                         contentScale       = ContentScale.Crop,
-                        modifier           = Modifier.fillMaxSize()
+                        modifier           = Modifier.fillMaxSize(),
+                        loading = {
+                            Box(modifier = Modifier.fillMaxSize().shimmerEffect())
+                        },
+                        error = {
+                            Box(
+                                modifier         = Modifier.fillMaxSize().background(SurfaceVariant),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector        = Icons.Default.ImageNotSupported,
+                                    contentDescription = null,
+                                    tint               = MaterialTheme.colorScheme.primaryContainer,
+                                    modifier           = Modifier.size(48.dp)
+                                )
+                            }
+                        }
                     )
                     // Oscurecimiento sutil
                     Box(
@@ -322,7 +358,7 @@ private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
                             .fillMaxSize()
                             .background(Color(0x80000000))
                     )
-                    // Bot�n Play dorado
+                    // Botón Play dorado
                     Icon(
                         imageVector        = Icons.Default.PlayCircle,
                         contentDescription = "Reproducir video",
@@ -364,7 +400,7 @@ private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
 }
 
 // ----------------------------------------------------------------------------
-// AudioPlayer � reproductor est�tico minimalista (Phase 1: visual s�lo)
+// AudioPlayer — reproductor estático minimalista (Phase 1: visual sólo)
 // ----------------------------------------------------------------------------
 
 @Composable
@@ -379,7 +415,7 @@ private fun AudioPlayer() {
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Bot�n Play circular dorado
+        // Botón Play circular dorado
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -414,14 +450,14 @@ private fun AudioPlayer() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text  = "0:31",    // Phase 2: posici�n real
+                    text  = "0:31",    // Phase 2: posición real
                     style = MaterialTheme.typography.bodySmall.copy(
                         color    = TextSecondary,
                         fontSize = 11.sp
                     )
                 )
                 Text(
-                    text  = "1:24",    // Phase 2: duraci�n real
+                    text  = "1:24",    // Phase 2: duración real
                     style = MaterialTheme.typography.bodySmall.copy(
                         color      = TextSecondary,
                         fontSize   = 11.sp,
@@ -432,4 +468,3 @@ private fun AudioPlayer() {
         }
     }
 }
-

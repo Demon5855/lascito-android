@@ -36,6 +36,16 @@ import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.viewmodel.AddMemoryUiState
 import com.perenniasystems.lascito.viewmodel.AddMemoryViewModel
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import com.perenniasystems.lascito.util.ImageCompressor
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMemoryScreen(
@@ -44,6 +54,18 @@ fun AddMemoryScreen(
     onNavigateBack: () -> Unit = {}
 ) {
     var contextText by remember { mutableStateOf("") }
+    
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri -> if (uri != null) selectedImageUri = uri }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    var isPickerLaunchEnabled by remember { mutableStateOf(true) }
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isLoading = uiState is AddMemoryUiState.Loading
 
@@ -54,7 +76,7 @@ fun AddMemoryScreen(
         }
     }
 
-    val canSave = contextText.isNotBlank() && !isLoading
+    val canSave = contextText.isNotBlank() && selectedImageUri != null && !isLoading
 
     Scaffold(
         topBar = {
@@ -88,14 +110,15 @@ fun AddMemoryScreen(
         },
         containerColor = AmoledBlack
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
 
             // -- Media Picker Area ---------------------------------------------
             Box(
@@ -109,42 +132,58 @@ fun AddMemoryScreen(
                         color = CardBorder,
                         shape = RoundedCornerShape(16.dp)
                     )
-                    .clickable { /* Phase 2: Launch photo/video picker */ },
+                    .clickable(enabled = isPickerLaunchEnabled) { 
+                        coroutineScope.launch {
+                            isPickerLaunchEnabled = false
+                            showBottomSheet = true
+                            delay(1000)
+                            isPickerLaunchEnabled = true
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Tres �conos centrados horizontalmente
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(24.dp),
-                        verticalAlignment     = androidx.compose.ui.Alignment.CenterVertically
+                if (selectedImageUri != null) {
+                    AsyncImage(
+                        model = selectedImageUri,
+                        contentDescription = "Foto elegida",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Icon(
-                            imageVector        = Icons.Default.PhotoCamera,
-                            contentDescription = stringResource(R.string.desc_photo),
-                            tint               = MaterialTheme.colorScheme.primary,
-                            modifier           = Modifier.size(32.dp)
-                        )
-                        Icon(
-                            imageVector        = Icons.Default.Videocam,
-                            contentDescription = stringResource(R.string.desc_video),
-                            tint               = MaterialTheme.colorScheme.primary,
-                            modifier           = Modifier.size(32.dp)
-                        )
-                        Icon(
-                            imageVector        = Icons.Default.Mic,
-                            contentDescription = stringResource(R.string.desc_voice_note),
-                            tint               = MaterialTheme.colorScheme.primary,
-                            modifier           = Modifier.size(32.dp)
+                        // Tres iconos centrados horizontalmente
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(24.dp),
+                            verticalAlignment     = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector        = Icons.Default.PhotoCamera,
+                                contentDescription = stringResource(R.string.desc_photo),
+                                tint               = MaterialTheme.colorScheme.primary,
+                                modifier           = Modifier.size(32.dp)
+                            )
+                            Icon(
+                                imageVector        = Icons.Default.Videocam,
+                                contentDescription = stringResource(R.string.desc_video),
+                                tint               = MaterialTheme.colorScheme.primary,
+                                modifier           = Modifier.size(32.dp)
+                            )
+                            Icon(
+                                imageVector        = Icons.Default.Mic,
+                                contentDescription = stringResource(R.string.desc_voice_note),
+                                tint               = MaterialTheme.colorScheme.primary,
+                                modifier           = Modifier.size(32.dp)
+                            )
+                        }
+                        Text(
+                            text  = stringResource(R.string.hint_pick_media),
+                            style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
-                    Text(
-                        text  = stringResource(R.string.hint_pick_media),
-                        style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
                 }
             }
 
@@ -195,7 +234,14 @@ fun AddMemoryScreen(
             // -- Save Button ---------------------------------------------------
             Button(
                 onClick  = {
-                    viewModel.saveMemory(profileId = profileId, contextText = contextText)
+                    coroutineScope.launch {
+                        val bytes = selectedImageUri?.let { ImageCompressor.compressImage(context, it) }
+                        viewModel.saveMemory(
+                            profileId = profileId,
+                            contextText = contextText,
+                            imageBytes = bytes
+                        )
+                    }
                 },
                 enabled  = canSave,
                 shape    = RoundedCornerShape(8.dp),
@@ -209,22 +255,112 @@ fun AddMemoryScreen(
                     .fillMaxWidth()
                     .height(54.dp)
             ) {
-                if (isLoading) {
+                Text(
+                    text  = stringResource(R.string.btn_preserve_memory),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+
+            } // End of Column
+
+            // -- Loading Overlay ---------------------------------------------------
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(AmoledBlack.copy(alpha = 0.6f))
+                        .clickable(enabled = false) { /* Block clicks */ },
+                    contentAlignment = Alignment.Center
+                ) {
                     CircularProgressIndicator(
-                        color = AmoledBlack,
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(
-                        text  = stringResource(R.string.btn_preserve_memory),
-                        style = MaterialTheme.typography.labelLarge
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp),
+                        strokeWidth = 4.dp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-        }
+            // -- Bottom Sheet Menu ---------------------------------------------
+            if (showBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showBottomSheet = false },
+                    sheetState = sheetState,
+                    containerColor = Color(0xFF1A1A1A),
+                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 32.dp, top = 8.dp)
+                    ) {
+                        MediaBottomSheetItem(
+                            icon = Icons.Default.PhotoCamera,
+                            text = "Añadir Fotografía",
+                            onClick = {
+                                coroutineScope.launch {
+                                    sheetState.hide()
+                                    showBottomSheet = false
+                                    photoPickerLauncher.launch(
+                                        androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                }
+                            }
+                        )
+                        MediaBottomSheetItem(
+                            icon = Icons.Default.Videocam,
+                            text = "Añadir Video",
+                            onClick = {
+                                coroutineScope.launch {
+                                    sheetState.hide()
+                                    showBottomSheet = false
+                                    android.widget.Toast.makeText(context, "Video: Próximamente (Fase 3B)", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        )
+                        MediaBottomSheetItem(
+                            icon = Icons.Default.Mic,
+                            text = "Añadir Nota de Voz",
+                            onClick = {
+                                coroutineScope.launch {
+                                    sheetState.hide()
+                                    showBottomSheet = false
+                                    android.widget.Toast.makeText(context, "Audio: Próximamente (Fase 3B)", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        } // End of outer Box
+    } // End of Scaffold Container
+}
+
+// -- Helpers -------------------------------------------------------------------
+
+@Composable
+private fun MediaBottomSheetItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary, // Dorado
+            modifier = Modifier.size(28.dp)
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge.copy(color = TextSecondary) // Gris claro / Blanco
+        )
     }
 }
 

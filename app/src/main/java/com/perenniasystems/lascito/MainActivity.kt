@@ -61,6 +61,7 @@ class MainActivity : ComponentActivity() {
             // down the tree so every stringResource() resolves in the new lang.
             val langTag     = LangState.selectedTag
             val baseContext = LocalContext.current
+            val registryOwner = androidx.activity.compose.LocalActivityResultRegistryOwner.current
             val localizedContext = remember(langTag) {
                 LocaleHelper.wrapContext(baseContext, langTag)
             }
@@ -70,7 +71,10 @@ class MainActivity : ComponentActivity() {
             val hasSeenOnboarding by onboardingPreferences.hasSeenOnboarding.collectAsState(initial = null)
             val scope = rememberCoroutineScope()
 
-            CompositionLocalProvider(LocalContext provides localizedContext) {
+            CompositionLocalProvider(
+                LocalContext provides localizedContext,
+                androidx.activity.compose.LocalActivityResultRegistryOwner provides (registryOwner ?: this)
+            ) {
                 LascitoTheme {
                     if (hasSeenOnboarding == null) {
                         // Display a quick blank screen while reading from the DataStore

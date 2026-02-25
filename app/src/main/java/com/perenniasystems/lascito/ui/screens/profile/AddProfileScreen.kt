@@ -43,21 +43,31 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import com.perenniasystems.lascito.util.ImageCompressor
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+
 private enum class ProfileTypeChoice { HUMAN, PET }
 
 /**
- * VisualTransformation que muestra d�gitos crudos (m�x. 8) como DD/MM/AAAA.
- * El estado subyacente solo contiene d�gitos, por lo que la posici�n del cursor
- * es siempre correcta, sin el bug de inversi�n de d�gitos.
+ * VisualTransformation que muestra digitos crudos (max. 8) como DD/MM/AAAA.
+ * El estado subyacente solo contiene digitos, por lo que la posicion del cursor
+ * es siempre correcta, sin el bug de inversion de digitos.
  *
- * Mapeo de offsets (d�gitos ? formateado):
+ * Mapeo de offsets (digitos ? formateado):
  *   0,1 ? 0,1          (DD)
  *   2,3 ? 3,4  +1      (MM, salta el primer '/')
  *   4..7 ? 6..9  +2    (AAAA, salta ambas '/')
  */
 private object DateVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
-        val digits = text.text          // solo d�gitos, max 8
+        val digits = text.text          // solo digitos, max 8
         val out = buildString {
             digits.forEachIndexed { i, c ->
                 if (i == 2 || i == 4) append('/')
@@ -80,14 +90,14 @@ private object DateVisualTransformation : VisualTransformation {
     }
 }
 
-/** Extrae solo los 8 d�gitos de la cadena "dd/MM/yyyy" devuelta por el picker. */
+/** Extrae solo los 8 digitos de la cadena "dd/MM/yyyy" devuelta por el picker. */
 private fun Long.toRawDigits(): String =
     SimpleDateFormat("ddMMyyyy", Locale.getDefault()).format(Date(this))
 
 /**
- * Valida los d�gitos crudos de una fecha (m�x. 8) en tiempo real.
- * Solo valida un segmento cuando tiene suficientes d�gitos para juzgarlo.
- * Devuelve un mensaje de error o null si todo est� bien.
+ * Valida los digitos crudos de una fecha (max. 8) en tiempo real.
+ * Solo valida un segmento cuando tiene suficientes digitos para juzgarlo.
+ * Devuelve un mensaje de error o null si todo esta bien.
  */
 private fun validateDateDigits(digits: String): String? {
     if (digits.length < 2) return null
@@ -133,6 +143,15 @@ fun AddProfileScreen(
 
     var showBirthPicker   by remember { mutableStateOf(false) }
     var showPassingPicker by remember { mutableStateOf(false) }
+
+    var isPickerLaunchEnabled by remember { mutableStateOf(true) }
+
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri -> if (uri != null) selectedImageUri = uri }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isLoading = uiState is AddProfileUiState.Loading
@@ -220,15 +239,16 @@ fun AddProfileScreen(
         },
         containerColor = AmoledBlack
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
 
             // -- Avatar Picker -------------------------------------------------
             Box(
@@ -237,20 +257,38 @@ fun AddProfileScreen(
                     .clip(CircleShape)
                     .background(SurfaceDark)
                     .border(1.5.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape)
-                    .clickable { /* Phase 2: Launch photo picker */ },
+                    .clickable(enabled = isPickerLaunchEnabled) { 
+                        coroutineScope.launch {
+                            isPickerLaunchEnabled = false
+                            photoPickerLauncher.launch(
+                                androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                            delay(1000)
+                            isPickerLaunchEnabled = true
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        imageVector        = Icons.Default.AddAPhoto,
-                        contentDescription = "Subir foto",
-                        tint               = MaterialTheme.colorScheme.primary,
-                        modifier           = Modifier.size(32.dp)
+                if (selectedImageUri != null) {
+                    AsyncImage(
+                        model = selectedImageUri,
+                        contentDescription = "Foto elegida",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
-                    Text(stringResource(R.string.label_photo), style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primaryContainer))
+                } else {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector        = Icons.Default.AddAPhoto,
+                            contentDescription = "Subir foto",
+                            tint               = MaterialTheme.colorScheme.primary,
+                            modifier           = Modifier.size(32.dp)
+                        )
+                        Text(stringResource(R.string.label_photo), style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primaryContainer))
+                    }
                 }
             }
 
@@ -467,20 +505,25 @@ fun AddProfileScreen(
             // -- Levantar Altar Button -----------------------------------------
             Button(
                 onClick  = {
-                    val format = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
-                    val birthMillis = try { format.parse(birthDigits)?.time ?: 0L } catch (e: Exception) { 0L }
-                    val passMillis = if (isPresent || passDigits.isBlank()) null else {
-                        try { format.parse(passDigits)?.time } catch (e: Exception) { null }
-                    }
+                    coroutineScope.launch {
+                        val format = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
+                        val birthMillis = try { format.parse(birthDigits)?.time ?: 0L } catch (e: Exception) { 0L }
+                        val passMillis = if (isPresent || passDigits.isBlank()) null else {
+                            try { format.parse(passDigits)?.time } catch (e: Exception) { null }
+                        }
 
-                    val pType = if (selectedType == ProfileTypeChoice.HUMAN) ProfileType.HUMAN else ProfileType.PET
-                    viewModel.saveProfile(
-                        fullName = rawName,
-                        profileType = pType,
-                        relationship = rawRelationship,
-                        birthDate = birthMillis,
-                        passingDate = passMillis
-                    )
+                        val pType = if (selectedType == ProfileTypeChoice.HUMAN) ProfileType.HUMAN else ProfileType.PET
+                        val bytes = selectedImageUri?.let { ImageCompressor.compressImage(context, it) }
+
+                        viewModel.saveProfile(
+                            fullName = rawName,
+                            profileType = pType,
+                            relationship = rawRelationship,
+                            birthDate = birthMillis,
+                            passingDate = passMillis,
+                            imageBytes = bytes
+                        )
+                    }
                 },
                 enabled  = canSave && !isLoading,
                 shape    = RoundedCornerShape(8.dp),
@@ -492,20 +535,30 @@ fun AddProfileScreen(
                 ),
                 modifier = Modifier.fillMaxWidth().height(54.dp)
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color = AmoledBlack,
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(stringResource(R.string.btn_create_altar), style = MaterialTheme.typography.labelLarge)
-                }
+                Text(stringResource(R.string.btn_create_altar), style = MaterialTheme.typography.labelLarge)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-        }
-    }
+            } // End of Column
+
+            // -- Loading Overlay ---------------------------------------------------
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(AmoledBlack.copy(alpha = 0.6f))
+                        .clickable(enabled = false) { /* Block clicks */ },
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp),
+                        strokeWidth = 4.dp
+                    )
+                }
+            }
+        } // End of outer Box
+    } // End of Scaffold Container
 }
 
 // -- Helpers -------------------------------------------------------------------

@@ -8,6 +8,8 @@ import com.perenniasystems.lascito.data.model.Profile
 import com.perenniasystems.lascito.data.model.ProfileStatus
 import com.perenniasystems.lascito.data.model.ProfileType
 import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
+import com.perenniasystems.lascito.data.repository.FirebaseStorageRepository
+import com.perenniasystems.lascito.data.repository.FirebaseStorageRepositoryImpl
 import com.perenniasystems.lascito.data.repository.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,7 +30,8 @@ sealed interface AddProfileUiState {
 }
 
 class AddProfileViewModel(
-    private val repository: ProfileRepository = FirebaseProfileRepository()
+    private val repository: ProfileRepository = FirebaseProfileRepository(),
+    private val storage: FirebaseStorageRepository = FirebaseStorageRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AddProfileUiState>(AddProfileUiState.Idle)
@@ -43,7 +46,8 @@ class AddProfileViewModel(
         profileType: ProfileType,
         relationship: String,
         birthDate: Long,
-        passingDate: Long?
+        passingDate: Long?,
+        imageBytes: ByteArray?
     ) {
         viewModelScope.launch {
             _uiState.value = AddProfileUiState.Loading
@@ -54,16 +58,24 @@ class AddProfileViewModel(
                         throw IllegalStateException("Usuario no autenticado")
                     }
 
+                    val profileId = UUID.randomUUID().toString()
+                    var avatarUrl = ""
+
+                    if (imageBytes != null) {
+                        val path = "images/profiles/${currentUserUid}_${profileId}.jpg"
+                        avatarUrl = storage.uploadImage(imageBytes, path)
+                    }
+
                     // Generar un ID local provisorio si no esperamos el server-side ID
                     val newProfile = Profile(
-                        profileId = UUID.randomUUID().toString(), // FirebaseProfileRepository puede o no sobrescribir esto
+                        profileId = profileId, // FirebaseProfileRepository puede o no sobrescribir esto
                         creatorUserId = currentUserUid,
                         fullName = fullName.trim(),
                         profileType = profileType,
                         relationship = relationship.trim(),
                         birthDate = birthDate,
                         passingDate = passingDate,
-                        avatarUrl = "", // Empty for Phase 2, Storage logic comes later
+                        avatarUrl = avatarUrl,
                         status = ProfileStatus.ACTIVE
                     )
 

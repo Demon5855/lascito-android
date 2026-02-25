@@ -7,6 +7,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.perenniasystems.lascito.data.model.Memory
 import com.perenniasystems.lascito.data.model.MediaType
 import com.perenniasystems.lascito.data.repository.FirebaseMemoryRepository
+import com.perenniasystems.lascito.data.repository.FirebaseStorageRepository
+import com.perenniasystems.lascito.data.repository.FirebaseStorageRepositoryImpl
 import com.perenniasystems.lascito.data.repository.MemoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +29,8 @@ sealed interface AddMemoryUiState {
 }
 
 class AddMemoryViewModel(
-    private val repository: MemoryRepository = FirebaseMemoryRepository()
+    private val repository: MemoryRepository = FirebaseMemoryRepository(),
+    private val storage: FirebaseStorageRepository = FirebaseStorageRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AddMemoryUiState>(AddMemoryUiState.Idle)
@@ -37,7 +40,7 @@ class AddMemoryViewModel(
         _uiState.value = AddMemoryUiState.Idle
     }
 
-    fun saveMemory(profileId: String, contextText: String, mediaType: MediaType = MediaType.IMAGE) {
+    fun saveMemory(profileId: String, contextText: String, mediaType: MediaType = MediaType.IMAGE, imageBytes: ByteArray?) {
         viewModelScope.launch {
             _uiState.value = AddMemoryUiState.Loading
             try {
@@ -47,11 +50,19 @@ class AddMemoryViewModel(
                         throw IllegalStateException("Usuario no autenticado")
                     }
 
+                    val memoryId = UUID.randomUUID().toString()
+                    var mediaUrl = ""
+
+                    if (imageBytes != null) {
+                        val path = "images/memories/${profileId}/${memoryId}.jpg"
+                        mediaUrl = storage.uploadImage(imageBytes, path)
+                    }
+
                     val newMemory = Memory(
-                        memoryId = UUID.randomUUID().toString(),
+                        memoryId = memoryId,
                         profileId = profileId,
                         mediaType = mediaType,
-                        mediaUrl = "", // Empty for Phase 2, Storage logic comes later
+                        mediaUrl = mediaUrl,
                         storageClass = "STANDARD",
                         contextText = contextText.trim(),
                         capturedDate = System.currentTimeMillis()
