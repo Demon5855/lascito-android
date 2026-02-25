@@ -62,5 +62,9 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
+    
+    // ── DataStore ─────────────────────────────────────────────────────────────
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
     debugImplementation(libs.androidx.ui.tooling)
 }

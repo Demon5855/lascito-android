@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
+import java.io.IOException
 
 data class UserSettingsUiState(
     val displayName: String = "Cargando...",
@@ -33,21 +35,27 @@ class UserSettingsViewModel(
         viewModelScope.launch {
             val user = auth.currentUser
             if (user != null) {
-                var name = user.displayName
+                var name: String? = user.displayName
                 val userEmail = user.email ?: ""
 
                 // Fetch from Firestore if Auth Profile doesn't have the displayName
                 if (name.isNullOrBlank()) {
                     try {
-                        val doc = db.collection("users").document(user.uid).get().await()
-                        name = doc.getString("displayName")
+                        withTimeout(15_000L) {
+                            val doc = db.collection("users").document(user.uid).get().await()
+                            name = doc.getString("displayName")
+                        }
+                    } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                        name = "Sin conexión"
+                    } catch (e: IOException) {
+                        name = "Sin conexión"
                     } catch (e: Exception) {
                         // Keep as null if fetch fails, will fallback below
                     }
                 }
 
                 _uiState.value = _uiState.value.copy(
-                    displayName = if (name.isNullOrBlank()) "Usuario" else name,
+                    displayName = if (name.isNullOrBlank()) "Usuario" else name!!,
                     email = userEmail,
                     storageUsedStr = "Calculando..." // Placeholder for future phase
                 )

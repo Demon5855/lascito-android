@@ -18,6 +18,8 @@ import com.perenniasystems.lascito.ui.screens.settings.UserSettingsScreen
 import com.perenniasystems.lascito.viewmodel.AddProfileViewModel
 import com.perenniasystems.lascito.viewmodel.AuthViewModel
 
+import com.perenniasystems.lascito.ui.screens.onboarding.OnboardingScreen
+
 /**
  * NavGraph wires up all application destinations.
  *
@@ -28,14 +30,24 @@ import com.perenniasystems.lascito.viewmodel.AuthViewModel
  * Phase 2: Replace mocks with Firebase/Firestore.
  */
 @Composable
-fun LascitoNavGraph(navController: NavHostController) {
+fun LascitoNavGraph(
+    navController: NavHostController,
+    startDestination: String = Screen.Login.route,
+    onFinishOnboarding: () -> Unit = {}
+) {
     // Shared AuthViewModel — survives across Login ↔ Register navigation
     val authViewModel: AuthViewModel = viewModel()
 
     NavHost(
         navController    = navController,
-        startDestination = Screen.Login.route
+        startDestination = startDestination
     ) {
+        composable(Screen.Onboarding.route) {
+            OnboardingScreen(
+                onFinishOnboarding = onFinishOnboarding
+            )
+        }
+
         composable(Screen.Login.route) {
             // Reset auth state when entering Login (clears errors from Register)
             LaunchedEffect(Unit) { authViewModel.resetState() }

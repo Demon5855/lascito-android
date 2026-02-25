@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import java.io.IOException
 import java.util.UUID
 
 sealed interface AddMemoryUiState {
@@ -36,23 +38,29 @@ class AddMemoryViewModel(
         viewModelScope.launch {
             _uiState.value = AddMemoryUiState.Loading
             try {
-                val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
-                if (currentUserUid.isNullOrBlank()) {
-                    throw IllegalStateException("Usuario no autenticado")
+                withTimeout(15_000L) {
+                    val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
+                    if (currentUserUid.isNullOrBlank()) {
+                        throw IllegalStateException("Usuario no autenticado")
+                    }
+
+                    val newMemory = Memory(
+                        memoryId = UUID.randomUUID().toString(),
+                        profileId = profileId,
+                        mediaType = mediaType,
+                        mediaUrl = "", // Empty for Phase 2, Storage logic comes later
+                        storageClass = "STANDARD",
+                        contextText = contextText.trim(),
+                        capturedDate = System.currentTimeMillis()
+                    )
+
+                    repository.save(newMemory)
+                    _uiState.value = AddMemoryUiState.Success
                 }
-
-                val newMemory = Memory(
-                    memoryId = UUID.randomUUID().toString(),
-                    profileId = profileId,
-                    mediaType = mediaType,
-                    mediaUrl = "", // Empty for Phase 2, Storage logic comes later
-                    storageClass = "STANDARD",
-                    contextText = contextText.trim(),
-                    capturedDate = System.currentTimeMillis()
-                )
-
-                repository.save(newMemory)
-                _uiState.value = AddMemoryUiState.Success
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                _uiState.value = AddMemoryUiState.Error("Tiempo de espera agotado al guardar el recuerdo. Verifica tu conexión.")
+            } catch (e: IOException) {
+                _uiState.value = AddMemoryUiState.Error("No hay conexión a internet. Verifica tu red e intenta nuevamente.")
             } catch (e: Exception) {
                 Log.e("FirestoreError", "Error al guardar memoria", e)
                 _uiState.value = AddMemoryUiState.Error(e.localizedMessage ?: "Error al subir memoria")

@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import java.io.IOException
 
 /**
  * ViewModel for the Dashboard screen.
@@ -33,15 +35,20 @@ class DashboardViewModel(
     fun refresh() {
         viewModelScope.launch {
             _uiState.value = DashboardUiState.Loading
-            runCatching {
-                val uid = FirebaseAuth.getInstance().currentUser?.uid
-                    ?: throw Exception("Not authenticated")
-                repository.getProfiles(userId = uid)
-            }.onSuccess { profiles ->
-                _uiState.value = DashboardUiState.Success(profiles)
-            }.onFailure { error ->
+            try {
+                withTimeout(15_000L) {
+                    val uid = FirebaseAuth.getInstance().currentUser?.uid
+                        ?: throw Exception("Not authenticated")
+                    val profiles = repository.getProfiles(userId = uid)
+                    _uiState.value = DashboardUiState.Success(profiles)
+                }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                _uiState.value = DashboardUiState.Error("Tiempo de espera agotado al cargar los altares. Verifica tu conexión.")
+            } catch (e: IOException) {
+                _uiState.value = DashboardUiState.Error("No hay conexión a internet. Verifica tu red e intenta nuevamente.")
+            } catch (e: Exception) {
                 _uiState.value = DashboardUiState.Error(
-                    message = error.localizedMessage ?: "Error desconocido"
+                    message = e.localizedMessage ?: "Ocurrió un error al cargar los altares."
                 )
             }
         }

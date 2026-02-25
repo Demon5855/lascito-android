@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="200dp" android:height="200dp" android:viewportWidth="200" android:viewportHeight="200">
+
+    <!-- Outer Glow -->
+    <path android:fillColor="#1A000000" android:pathData="M100,20 C144.18,20 180,55.82 180,100 C180,144.18 144.18,180 100,180 C55.82,180 20,144.18 20,100 C20,55.82 55.82,20 100,20 Z" />
+
+    <!-- Stylized old photograph floating -->
+    <path android:fillColor="#0D0D0D" android:strokeColor="#C9A96E" android:strokeWidth="2" android:pathData="M 70,60 L 130,50 L 140,130 L 80,140 Z" />
+
+    <!-- Inner picture frame -->
+    <path android:fillColor="#00000000" android:strokeColor="#C9A96E" android:strokeWidth="1" android:strokeAlpha="0.6" android:pathData="M 75,65 L 125,56 L 133,122 L 83,131 Z" />
+
+    <!-- Sound Waves emanating (Golden) -->
+    <path android:fillColor="#00000000" android:strokeColor="#C9A96E" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M 40,80 C 30,90 30,110 40,120" />
+
+    <path android:fillColor="#00000000" android:strokeColor="#C9A96E" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M 50,70 C 40,90 40,110 50,130" />
+
+    <path android:fillColor="#00000000" android:strokeColor="#C9A96E" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M 160,80 C 170,90 170,110 160,120" />
+
+    <!-- Floating text particles -->
+    <path android:fillColor="#C9A96E" android:pathData="M 85,100 L 115,95 M 88,110 L 105,108 M 120,75 C 122,70 125,75 125,70" android:strokeColor="#C9A96E" android:strokeWidth="1.5" android:strokeLineCap="round"/>
+</vector>

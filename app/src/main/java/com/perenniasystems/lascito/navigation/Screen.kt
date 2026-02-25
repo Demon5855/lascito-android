@@ -5,6 +5,7 @@ package com.perenniasystems.lascito.navigation
  * Each object maps to a unique route string used by Compose Navigation.
  */
 sealed class Screen(val route: String) {
+    data object Onboarding  : Screen("onboarding")
     data object Login       : Screen("login")
     data object Register    : Screen("register")
     data object Dashboard   : Screen("dashboard")

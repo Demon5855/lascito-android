@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="200dp" android:height="200dp" android:viewportWidth="200" android:viewportHeight="200">
+
+    <!-- Inner Aura -->
+    <path android:fillColor="#1A000000" android:pathData="M100,20 C144.18,20 180,55.82 180,100 C180,144.18 144.18,180 100,180 C55.82,180 20,144.18 20,100 C20,55.82 55.82,20 100,20 Z" />
+
+    <!-- Sanctuary Doorway / Pillar motif -->
+    <path android:fillColor="#0D0D0D" android:strokeColor="#C9A96E" android:strokeWidth="2" android:pathData="M 60,180 L 60,60 C 60,37.9 77.9,20 100,20 C 122.1,20 140,37.9 140,60 L 140,180 Z" />
+
+    <!-- Golden Leaf Motif (Abstract Lascito skeleton leaf) -->
+    <path android:fillColor="#C9A96E" android:pathData="M 100,40 C 120,60 120,90 100,120 C 80,90 80,60 100,40 Z M 100,40 C 105,60 105,90 100,120 C 95,90 95,60 100,40 Z M 100,120 L 100,140" />
+
+    <!-- Floor reflection -->
+    <path android:fillColor="#C9A96E" android:fillAlpha="0.3" android:pathData="M 70,185 C 90,195 110,195 130,185 L 140,190 C 115,205 85,205 60,190 Z" />
+</vector>

@@ -3,6 +3,14 @@
     <string name="app_name">Lascito</string>
     <string name="company_name">Perennia Systems</string>
 
+    <!-- ── Onboarding ─────────────────────────────────────────────────────── -->
+    <string name="onboarding_slide1">Welcome to Lascito. \nYour private digital mausoleum.</string>
+    <string name="onboarding_slide2">They are not just photos or videos. \nPreserve the context and history of each moment.</string>
+    <string name="onboarding_slide3">Your legacy, \nsecured for eternity.</string>
+    <string name="btn_skip">Skip</string>
+    <string name="btn_next">Next</string>
+    <string name="btn_start">Begin</string>
+
     <!-- ── Shared ─────────────────────────────────────────────────────────── -->
     <string name="btn_back">Go back</string>
     <string name="btn_ok">OK</string>

@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="200dp" android:height="200dp" android:viewportWidth="200" android:viewportHeight="200">
+
+    <!-- Soft Background Ambient -->
+    <path android:fillColor="#1A000000" android:pathData="M100,20 C144.18,20 180,55.82 180,100 C180,144.18 144.18,180 100,180 C55.82,180 20,144.18 20,100 C20,55.82 55.82,20 100,20 Z" />
+
+    <!-- Hourglass shape (Classic meets futuristic lines) -->
+    <path android:fillColor="#0D0D0D" android:strokeColor="#C9A96E" android:strokeWidth="2" android:pathData="M 70,40 L 130,40 C 130,70 110,95 100,100 C 110,105 130,130 130,160 L 70,160 C 70,130 90,105 100,100 C 90,95 70,70 70,40 Z" />
+
+    <!-- Top Gold Dust Pile -->
+    <path android:fillColor="#C9A96E" android:fillAlpha="0.4" android:pathData="M 80,60 C 90,75 110,75 120,60 L 125,45 L 75,45 Z" />
+
+    <!-- Bottom Gold Pile -->
+    <path android:fillColor="#C9A96E" android:pathData="M 85,155 C 95,145 105,145 115,155 L 125,158 L 75,158 Z" />
+
+    <!-- Golden Dust particles falling -->
+    <path android:fillColor="#C9A96E" android:pathData="M 100,102 C 101,102 101,103 100,103 C 99,103 99,102 100,102 Z" />
+    <path android:fillColor="#C9A96E" android:pathData="M 98,110 C 99,110 99,111 98,111 C 97,111 97,110 98,110 Z" />
+    <path android:fillColor="#C9A96E" android:pathData="M 102,115 C 103,115 103,116 102,116 C 101,116 101,115 102,115 Z" />
+    <path android:fillColor="#C9A96E" android:pathData="M 100,125 C 101,125 101,127 100,127 C 99,127 99,125 100,125 Z" />
+    <path android:fillColor="#C9A96E" android:pathData="M 97,135 C 98,135 98,136 97,136 C 96,136 96,135 97,135 Z" />
+    <path android:fillColor="#C9A96E" android:pathData="M 103,140 C 104,140 104,141 103,141 C 102,141 102,140 103,140 Z" />
+</vector>

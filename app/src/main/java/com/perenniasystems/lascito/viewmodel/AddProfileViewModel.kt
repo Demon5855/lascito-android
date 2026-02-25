@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import java.io.IOException
 import java.util.UUID
 
 sealed interface AddProfileUiState {
@@ -43,26 +45,32 @@ class AddProfileViewModel(
         viewModelScope.launch {
             _uiState.value = AddProfileUiState.Loading
             try {
-                val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
-                if (currentUserUid.isNullOrBlank()) {
-                    throw IllegalStateException("Usuario no autenticado")
+                withTimeout(15_000L) {
+                    val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
+                    if (currentUserUid.isNullOrBlank()) {
+                        throw IllegalStateException("Usuario no autenticado")
+                    }
+
+                    // Generar un ID local provisorio si no esperamos el server-side ID
+                    val newProfile = Profile(
+                        profileId = UUID.randomUUID().toString(), // FirebaseProfileRepository puede o no sobrescribir esto
+                        creatorUserId = currentUserUid,
+                        fullName = fullName.trim(),
+                        profileType = profileType,
+                        relationship = relationship.trim(),
+                        birthDate = birthDate,
+                        passingDate = passingDate,
+                        avatarUrl = "", // Empty for Phase 2, Storage logic comes later
+                        status = ProfileStatus.ACTIVE
+                    )
+
+                    repository.save(newProfile)
+                    _uiState.value = AddProfileUiState.Success
                 }
-
-                // Generar un ID local provisorio si no esperamos el server-side ID
-                val newProfile = Profile(
-                    profileId = UUID.randomUUID().toString(), // FirebaseProfileRepository puede o no sobrescribir esto
-                    creatorUserId = currentUserUid,
-                    fullName = fullName.trim(),
-                    profileType = profileType,
-                    relationship = relationship.trim(),
-                    birthDate = birthDate,
-                    passingDate = passingDate,
-                    avatarUrl = "", // Empty for Phase 2, Storage logic comes later
-                    status = ProfileStatus.ACTIVE
-                )
-
-                repository.save(newProfile)
-                _uiState.value = AddProfileUiState.Success
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                _uiState.value = AddProfileUiState.Error("Tiempo de espera agotado al crear el altar. Verifica tu conexión.")
+            } catch (e: IOException) {
+                _uiState.value = AddProfileUiState.Error("No hay conexión a internet. Verifica tu red e intenta nuevamente.")
             } catch (e: Exception) {
                 Log.e("FirestoreError", "Error al guardar altar", e)
                 _uiState.value = AddProfileUiState.Error(e.localizedMessage ?: "Error desconocido al guardar")
