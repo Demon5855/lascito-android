@@ -1,5 +1,7 @@
 ﻿package com.perenniasystems.lascito.ui.screens.profile
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,18 +46,18 @@ import java.util.Locale
 private enum class ProfileTypeChoice { HUMAN, PET }
 
 /**
- * VisualTransformation que muestra dígitos crudos (máx. 8) como DD/MM/AAAA.
- * El estado subyacente solo contiene dígitos, por lo que la posición del cursor
- * es siempre correcta, sin el bug de inversión de dígitos.
+ * VisualTransformation que muestra d�gitos crudos (m�x. 8) como DD/MM/AAAA.
+ * El estado subyacente solo contiene d�gitos, por lo que la posici�n del cursor
+ * es siempre correcta, sin el bug de inversi�n de d�gitos.
  *
- * Mapeo de offsets (dígitos → formateado):
- *   0,1 → 0,1          (DD)
- *   2,3 → 3,4  +1      (MM, salta el primer '/')
- *   4..7 → 6..9  +2    (AAAA, salta ambas '/')
+ * Mapeo de offsets (d�gitos ? formateado):
+ *   0,1 ? 0,1          (DD)
+ *   2,3 ? 3,4  +1      (MM, salta el primer '/')
+ *   4..7 ? 6..9  +2    (AAAA, salta ambas '/')
  */
 private object DateVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
-        val digits = text.text          // solo dígitos, max 8
+        val digits = text.text          // solo d�gitos, max 8
         val out = buildString {
             digits.forEachIndexed { i, c ->
                 if (i == 2 || i == 4) append('/')
@@ -78,30 +80,30 @@ private object DateVisualTransformation : VisualTransformation {
     }
 }
 
-/** Extrae solo los 8 dígitos de la cadena "dd/MM/yyyy" devuelta por el picker. */
+/** Extrae solo los 8 d�gitos de la cadena "dd/MM/yyyy" devuelta por el picker. */
 private fun Long.toRawDigits(): String =
     SimpleDateFormat("ddMMyyyy", Locale.getDefault()).format(Date(this))
 
 /**
- * Valida los dígitos crudos de una fecha (máx. 8) en tiempo real.
- * Solo valida un segmento cuando tiene suficientes dígitos para juzgarlo.
- * Devuelve un mensaje de error o null si todo está bien.
+ * Valida los d�gitos crudos de una fecha (m�x. 8) en tiempo real.
+ * Solo valida un segmento cuando tiene suficientes d�gitos para juzgarlo.
+ * Devuelve un mensaje de error o null si todo est� bien.
  */
 private fun validateDateDigits(digits: String): String? {
     if (digits.length < 2) return null
     val day = digits.take(2).toInt()
-    if (day !in 1..31) return "Día inválido (01–31)"
+    if (day !in 1..31) return "D�a inv�lido (01�31)"
 
     if (digits.length < 4) return null
     val month = digits.drop(2).take(2).toInt()
-    if (month !in 1..12) return "Mes inválido (01–12)"
+    if (month !in 1..12) return "Mes inv�lido (01�12)"
 
     if (digits.length < 8) return null
     val year  = digits.drop(4).take(4).toInt()
     val maxYear = Calendar.getInstance().get(Calendar.YEAR)
-    if (year !in 1900..maxYear) return "Año fuera de rango (1900–$maxYear)"
+    if (year !in 1900..maxYear) return "A�o fuera de rango (1900�$maxYear)"
 
-    // Validar que la fecha no esté en el futuro
+    // Validar que la fecha no est� en el futuro
     val format = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
     try {
         val parsedDate = format.parse(digits)
@@ -109,10 +111,10 @@ private fun validateDateDigits(digits: String): String? {
             return "La fecha no puede ser en el futuro"
         }
     } catch (e: Exception) {
-        return "Fecha inválida"
+        return "Fecha inv�lida"
     }
 
-    return null   // válido
+    return null   // v�lido
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,7 +126,7 @@ fun AddProfileScreen(
     var rawName         by remember { mutableStateOf("") }
     var rawRelationship by remember { mutableStateOf("") }
     var selectedType    by remember { mutableStateOf(ProfileTypeChoice.HUMAN) }
-    // Estado = solo dígitos (máx. 8). La transformación visual agrega las '/'.
+    // Estado = solo d�gitos (m�x. 8). La transformaci�n visual agrega las '/'.
     var birthDigits  by remember { mutableStateOf("") }
     var passDigits   by remember { mutableStateOf("") }
     var isPresent    by remember { mutableStateOf(true) }
@@ -132,7 +134,7 @@ fun AddProfileScreen(
     var showBirthPicker   by remember { mutableStateOf(false) }
     var showPassingPicker by remember { mutableStateOf(false) }
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isLoading = uiState is AddProfileUiState.Loading
 
     // Handle success navigation
@@ -151,7 +153,7 @@ fun AddProfileScreen(
                      && birthDigits.length == 8 && birthError == null
                      && (isPresent || (passDigits.length == 8 && passError == null))
 
-    // ── Fecha de Nacimiento picker ────────────────────────────────────────────
+    // -- Fecha de Nacimiento picker --------------------------------------------
     if (showBirthPicker) {
         DatePickerDialog(
             onDismissRequest = { showBirthPicker = false },
@@ -170,7 +172,7 @@ fun AddProfileScreen(
         ) { DatePicker(state = birthPickerState) }
     }
 
-    // ── Fecha de Partida picker ───────────────────────────────────────────────
+    // -- Fecha de Partida picker -----------------------------------------------
     if (showPassingPicker) {
         DatePickerDialog(
             onDismissRequest = { showPassingPicker = false },
@@ -228,7 +230,7 @@ fun AddProfileScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
 
-            // ── Avatar Picker ─────────────────────────────────────────────────
+            // -- Avatar Picker -------------------------------------------------
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -252,7 +254,7 @@ fun AddProfileScreen(
                 }
             }
 
-            // ── Tipo: Humano / Mascota ────────────────────────────────────────
+            // -- Tipo: Humano / Mascota ----------------------------------------
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text     = stringResource(R.string.label_type),
@@ -287,7 +289,7 @@ fun AddProfileScreen(
                 }
             }
 
-            // ── Nombre Completo — capitaliza cada palabra ─────────────────────
+            // -- Nombre Completo � capitaliza cada palabra ---------------------
             LabeledField(stringResource(R.string.label_full_name_field)) {
                 OutlinedTextField(
                     value         = rawName,
@@ -316,7 +318,7 @@ fun AddProfileScreen(
                 )
             }
 
-            // ── Parentesco / Vínculo ──────────────────────────────────────────
+            // -- Parentesco / V�nculo ------------------------------------------
             LabeledField(stringResource(R.string.label_relationship)) {
                 OutlinedTextField(
                     value         = rawRelationship,
@@ -342,7 +344,7 @@ fun AddProfileScreen(
                 )
             }
 
-            // ── Fecha de Nacimiento ───────────────────────────────────────────
+            // -- Fecha de Nacimiento -------------------------------------------
             LabeledField(stringResource(R.string.label_birthdate)) {
                 OutlinedTextField(
                     value         = birthDigits,
@@ -380,7 +382,7 @@ fun AddProfileScreen(
                 }
             }
 
-            // ── Switch "Aún está con nosotros" ────────────────────────────────
+            // -- Switch "A�n est� con nosotros" --------------------------------
             Row(
                 modifier              = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                 verticalAlignment     = Alignment.CenterVertically,
@@ -411,7 +413,7 @@ fun AddProfileScreen(
                 )
             }
 
-            // ── Fecha de Partida (solo si !isPresent) ────────────────────────
+            // -- Fecha de Partida (solo si !isPresent) ------------------------
             if (!isPresent) {
                 LabeledField(stringResource(R.string.label_passing_date)) {
                     OutlinedTextField(
@@ -462,7 +464,7 @@ fun AddProfileScreen(
                 )
             }
 
-            // ── Levantar Altar Button ─────────────────────────────────────────
+            // -- Levantar Altar Button -----------------------------------------
             Button(
                 onClick  = {
                     val format = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
@@ -506,7 +508,7 @@ fun AddProfileScreen(
     }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
 @Composable
 private fun LabeledField(label: String, content: @Composable () -> Unit) {
@@ -564,3 +566,4 @@ private fun pickerColors() = DatePickerDefaults.colors(
 private fun AddProfileScreenPreview() {
     LascitoTheme { AddProfileScreen(viewModel = AddProfileViewModel()) {} }
 }
+

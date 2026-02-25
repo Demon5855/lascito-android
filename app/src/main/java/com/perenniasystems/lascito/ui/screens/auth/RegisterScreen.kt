@@ -1,4 +1,6 @@
-package com.perenniasystems.lascito.ui.screens.auth
+﻿package com.perenniasystems.lascito.ui.screens.auth
+
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -246,7 +248,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // ── Crear Cuenta — disabled (gray) until form + terms are valid ───
-            val authState by authViewModel.uiState.collectAsState()
+            val authState by authViewModel.uiState.collectAsStateWithLifecycle()
             val isLoading = authState is AuthUiState.Loading
 
             // Show Firebase error if any
@@ -291,3 +293,4 @@ fun RegisterScreen(
 private fun RegisterScreenPreview() {
     LascitoTheme { RegisterScreen(authViewModel = AuthViewModel()) }
 }
+

@@ -1,4 +1,6 @@
-package com.perenniasystems.lascito.ui.screens.auth
+﻿package com.perenniasystems.lascito.ui.screens.auth
+
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,7 +45,7 @@ fun LoginScreen(
     var password        by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    val authState by authViewModel.uiState.collectAsState()
+    val authState by authViewModel.uiState.collectAsStateWithLifecycle()
 
     // Validate format only when the field has been touched (non-empty).
     val emailError = email.isNotBlank() && !Validators.EMAIL_REGEX.matches(email)
@@ -194,3 +196,4 @@ fun LoginScreen(
 private fun LoginScreenPreview() {
     LascitoTheme { LoginScreen(authViewModel = AuthViewModel()) }
 }
+

@@ -14,7 +14,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +37,7 @@ import com.perenniasystems.lascito.data.model.Memory
 import com.perenniasystems.lascito.data.model.Profile
 import com.perenniasystems.lascito.data.model.ProfileType
 import com.perenniasystems.lascito.ui.theme.*
+import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.viewmodel.AltarUiState
 import com.perenniasystems.lascito.viewmodel.AltarViewModel
 import java.text.SimpleDateFormat
@@ -53,7 +54,7 @@ fun AltarScreen(
 ) {
     // Trigger reload when the profileId changes OR when the screen becomes active again
     LaunchedEffect(profileId, Unit) { viewModel.load(profileId) }
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         containerColor = AmoledBlack,
@@ -87,13 +88,9 @@ fun AltarScreen(
                     )
                 }
                 is AltarUiState.Error -> {
-                    Text(
-                        text      = stringResource(state.messageResId),
-                        style     = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                        modifier  = Modifier
-                            .align(Alignment.Center)
-                            .padding(32.dp)
+                    LascitoAlertDialog(
+                        messageRes = state.messageResId,
+                        onDismiss  = onNavigateBack
                     )
                 }
                 is AltarUiState.Success -> {
@@ -119,20 +116,20 @@ private fun AltarContent(
 
     val birthYear    = yearFmt.format(Date(profile.birthDate))
     val passingLabel = profile.passingDate?.let { yearFmt.format(Date(it)) } ?: "Presente"
-    val dateRange    = "$birthYear — $passingLabel"
+    val dateRange    = "$birthYear � $passingLabel"
 
     LazyColumn(
         modifier       = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 96.dp)
     ) {
-        // ── HERO ─────────────────────────────────────────────────────────────
+        // -- HERO -------------------------------------------------------------
         item {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(320.dp)
             ) {
-                // Placeholder debajo (la foto lo tapa cuando carga con éxito)
+                // Placeholder debajo (la foto lo tapa cuando carga con �xito)
                 Box(
                     modifier         = Modifier
                         .fillMaxSize()
@@ -141,7 +138,7 @@ private fun AltarContent(
                 ) {
                     if (profile.profileType == ProfileType.PET) {
                         Text(
-                            text  = "🐾",
+                            text  = "??",
                             style = MaterialTheme.typography.displayLarge.copy(color = MaterialTheme.colorScheme.primaryContainer)
                         )
                     } else {
@@ -172,7 +169,7 @@ private fun AltarContent(
                         .background(Brush.verticalGradient(listOf(Color.Transparent, AmoledBlack)))
                 )
 
-                // ── Badge tipo de perfil (esquina inferior derecha) ───────────
+                // -- Badge tipo de perfil (esquina inferior derecha) -----------
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -183,7 +180,7 @@ private fun AltarContent(
                     contentAlignment = Alignment.Center
                 ) {
                     if (profile.profileType == ProfileType.PET) {
-                        Text(text = "🐾", fontSize = 18.sp)
+                        Text(text = "??", fontSize = 18.sp)
                     } else {
                         Icon(
                             imageVector        = Icons.Default.Person,
@@ -210,7 +207,7 @@ private fun AltarContent(
             }
         }
 
-        // ── CABECERA INFO ─────────────────────────────────────────────────────
+        // -- CABECERA INFO -----------------------------------------------------
         item {
             Column(
                 modifier            = Modifier
@@ -226,7 +223,7 @@ private fun AltarContent(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text      = "${profile.relationship}  ·  $dateRange",
+                    text      = "${profile.relationship}  �  $dateRange",
                     style     = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.primaryContainer),
                     textAlign = TextAlign.Center
                 )
@@ -240,7 +237,7 @@ private fun AltarContent(
             }
         }
 
-        // ── TÍTULO ────────────────────────────────────────────────────────────
+        // -- T�TULO ------------------------------------------------------------
         item {
             Text(
                 text     = stringResource(R.string.screen_memories),
@@ -250,7 +247,7 @@ private fun AltarContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // ── MURO DE MEMORIAS ──────────────────────────────────────────────────
+        // -- MURO DE MEMORIAS --------------------------------------------------
         if (memories.isEmpty()) {
             item {
                 Box(
@@ -275,9 +272,9 @@ private fun AltarContent(
     }
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// MemoryItem — dispatcher por tipo de media
-// ────────────────────────────────────────────────────────────────────────────
+// ----------------------------------------------------------------------------
+// MemoryItem � dispatcher por tipo de media
+// ----------------------------------------------------------------------------
 
 @Composable
 private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
@@ -285,7 +282,7 @@ private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
 
         when (memory.mediaType) {
 
-            // ── IMAGE ─────────────────────────────────────────────────────────
+            // -- IMAGE ---------------------------------------------------------
             MediaType.IMAGE -> {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -300,8 +297,8 @@ private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
                 )
             }
 
-            // ── VIDEO ─────────────────────────────────────────────────────────
-            // Muestra el thumbnail con un overlay oscuro y un ícono Play centrado
+            // -- VIDEO ---------------------------------------------------------
+            // Muestra el thumbnail con un overlay oscuro y un �cono Play centrado
             MediaType.VIDEO -> {
                 Box(
                     modifier         = Modifier
@@ -309,7 +306,7 @@ private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
                         .height(260.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Thumbnail (misma URL en mock; en Fase 2 será una URL de thumbnail separada)
+                    // Thumbnail (misma URL en mock; en Fase 2 ser� una URL de thumbnail separada)
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(memory.mediaUrl)
@@ -325,7 +322,7 @@ private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
                             .fillMaxSize()
                             .background(Color(0x80000000))
                     )
-                    // Botón Play dorado
+                    // Bot�n Play dorado
                     Icon(
                         imageVector        = Icons.Default.PlayCircle,
                         contentDescription = "Reproducir video",
@@ -335,14 +332,14 @@ private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
                 }
             }
 
-            // ── AUDIO ─────────────────────────────────────────────────────────
+            // -- AUDIO ---------------------------------------------------------
             // Reproductor minimalista: play + barra de progreso + tiempo
             MediaType.AUDIO -> {
                 AudioPlayer()
             }
         }
 
-        // ── Contexto y fecha (comunes a todos los tipos) ──────────────────────
+        // -- Contexto y fecha (comunes a todos los tipos) ----------------------
         Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
             Text(
                 text  = memory.contextText,
@@ -366,9 +363,9 @@ private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
     }
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// AudioPlayer — reproductor estático minimalista (Phase 1: visual sólo)
-// ────────────────────────────────────────────────────────────────────────────
+// ----------------------------------------------------------------------------
+// AudioPlayer � reproductor est�tico minimalista (Phase 1: visual s�lo)
+// ----------------------------------------------------------------------------
 
 @Composable
 private fun AudioPlayer() {
@@ -382,7 +379,7 @@ private fun AudioPlayer() {
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Botón Play circular dorado
+        // Bot�n Play circular dorado
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -417,14 +414,14 @@ private fun AudioPlayer() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text  = "0:31",    // Phase 2: posición real
+                    text  = "0:31",    // Phase 2: posici�n real
                     style = MaterialTheme.typography.bodySmall.copy(
                         color    = TextSecondary,
                         fontSize = 11.sp
                     )
                 )
                 Text(
-                    text  = "1:24",    // Phase 2: duración real
+                    text  = "1:24",    // Phase 2: duraci�n real
                     style = MaterialTheme.typography.bodySmall.copy(
                         color      = TextSecondary,
                         fontSize   = 11.sp,
@@ -435,3 +432,4 @@ private fun AudioPlayer() {
         }
     }
 }
+

@@ -12,7 +12,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
+import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.viewmodel.DashboardUiState
 import com.perenniasystems.lascito.viewmodel.DashboardViewModel
 
@@ -36,7 +37,7 @@ fun DashboardScreen(
     onNavigateToAddProfile:   () -> Unit = {},
     onNavigateToUserSettings: () -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Trigger re-fetch every time this screen becomes active
     LaunchedEffect(Unit) {
@@ -57,7 +58,7 @@ fun DashboardScreen(
                         )
                     }
                 },
-                // Spacer igual al ancho del ícono de la derecha → título verdaderamente centrado
+                // Spacer igual al ancho del �cono de la derecha ? t�tulo verdaderamente centrado
                 navigationIcon = { Spacer(modifier = Modifier.width(48.dp)) },
                 // Settings icon as counterweight for the centered title
                 actions = {
@@ -137,25 +138,10 @@ fun DashboardScreen(
                 }
 
                 is DashboardUiState.Error -> {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_perennia_leaf_logo),
-                            contentDescription = null,
-                            tint = ErrorRed,
-                            modifier = Modifier.size(72.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text      = state.message,
-                            style     = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    LascitoAlertDialog(
+                        messageRes = state.messageResId,
+                        onDismiss  = { viewModel.resetState() }
+                    )
                 }
             }
         }

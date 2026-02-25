@@ -1,4 +1,6 @@
-package com.perenniasystems.lascito.ui.screens.settings
+﻿package com.perenniasystems.lascito.ui.screens.settings
+
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -54,7 +56,7 @@ fun UserSettingsScreen(
     onLogOut:       () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Init from LangState (which was already seeded from SharedPreferences
     // in MainActivity.onCreate before setContent was called).
@@ -611,3 +613,4 @@ private fun SecurityButton(
 private fun UserSettingsScreenPreview() {
     LascitoTheme { UserSettingsScreen() }
 }
+

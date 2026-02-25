@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import androidx.annotation.StringRes
+import com.perenniasystems.lascito.util.ErrorHandler
 import java.io.IOException
 
 /**
@@ -43,15 +45,17 @@ class DashboardViewModel(
                     _uiState.value = DashboardUiState.Success(profiles)
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                _uiState.value = DashboardUiState.Error("Tiempo de espera agotado al cargar los altares. Verifica tu conexión.")
-            } catch (e: IOException) {
-                _uiState.value = DashboardUiState.Error("No hay conexión a internet. Verifica tu red e intenta nuevamente.")
+                _uiState.value = DashboardUiState.Error(R.string.error_network)
             } catch (e: Exception) {
                 _uiState.value = DashboardUiState.Error(
-                    message = e.localizedMessage ?: "Ocurrió un error al cargar los altares."
+                    messageResId = ErrorHandler.mapExceptionToResId(e)
                 )
             }
         }
+    }
+
+    fun resetState() {
+        refresh()
     }
 }
 
@@ -59,5 +63,5 @@ class DashboardViewModel(
 sealed interface DashboardUiState {
     data object Loading : DashboardUiState
     data class Success(val profiles: List<Profile>) : DashboardUiState
-    data class Error(val message: String) : DashboardUiState
+    data class Error(@StringRes val messageResId: Int) : DashboardUiState
 }

@@ -1,5 +1,8 @@
 package com.perenniasystems.lascito.data.model
 
+import androidx.annotation.Keep
+import com.google.firebase.firestore.IgnoreExtraProperties
+
 /**
  * Represents a single Memory (media item) attached to a Profile.
  *
@@ -11,6 +14,8 @@ package com.perenniasystems.lascito.data.model
  * The no-arg constructor with defaults is required by Firestore's
  * automatic deserialization (`toObject<Memory>()`).
  */
+@Keep
+@IgnoreExtraProperties
 data class Memory(
     val memoryId: String = "",
     val profileId: String = "",
@@ -25,6 +30,7 @@ data class Memory(
     val capturedDate: Long = 0L            // Unix timestamp (ms)
 )
 
+@Keep
 enum class MediaType {
     IMAGE,
     VIDEO,

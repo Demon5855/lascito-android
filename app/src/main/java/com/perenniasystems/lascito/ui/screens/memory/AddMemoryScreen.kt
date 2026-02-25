@@ -1,5 +1,7 @@
 ﻿package com.perenniasystems.lascito.ui.screens.memory
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -42,7 +44,7 @@ fun AddMemoryScreen(
     onNavigateBack: () -> Unit = {}
 ) {
     var contextText by remember { mutableStateOf("") }
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isLoading = uiState is AddMemoryUiState.Loading
 
     LaunchedEffect(uiState) {
@@ -95,7 +97,7 @@ fun AddMemoryScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
-            // ── Media Picker Area ─────────────────────────────────────────────
+            // -- Media Picker Area ---------------------------------------------
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,7 +116,7 @@ fun AddMemoryScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Tres íconos centrados horizontalmente
+                    // Tres �conos centrados horizontalmente
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(24.dp),
                         verticalAlignment     = androidx.compose.ui.Alignment.CenterVertically
@@ -146,7 +148,7 @@ fun AddMemoryScreen(
                 }
             }
 
-            // ── Diary-style Text Field ────────────────────────────────────────
+            // -- Diary-style Text Field ----------------------------------------
             OutlinedTextField(
                 value         = contextText,
                 onValueChange = { contextText = it },
@@ -190,7 +192,7 @@ fun AddMemoryScreen(
                 )
             }
 
-            // ── Save Button ───────────────────────────────────────────────────
+            // -- Save Button ---------------------------------------------------
             Button(
                 onClick  = {
                     viewModel.saveMemory(profileId = profileId, contextText = contextText)
@@ -200,7 +202,7 @@ fun AddMemoryScreen(
                 colors   = ButtonDefaults.buttonColors(
                     containerColor         = MaterialTheme.colorScheme.primary,
                     contentColor           = AmoledBlack,
-                    disabledContainerColor = SurfaceVariant,   // gray — clearly blocked
+                    disabledContainerColor = SurfaceVariant,   // gray � clearly blocked
                     disabledContentColor   = TextDisabled
                 ),
                 modifier = Modifier
@@ -231,3 +233,4 @@ fun AddMemoryScreen(
 private fun AddMemoryScreenPreview() {
     LascitoTheme { AddMemoryScreen(profileId = "prof-001") }
 }
+

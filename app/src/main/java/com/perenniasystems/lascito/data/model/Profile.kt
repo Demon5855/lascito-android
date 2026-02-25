@@ -1,5 +1,8 @@
 package com.perenniasystems.lascito.data.model
 
+import androidx.annotation.Keep
+import com.google.firebase.firestore.IgnoreExtraProperties
+
 /**
  * Represents a Commemorative Profile for a loved one (human or pet).
  *
@@ -9,6 +12,8 @@ package com.perenniasystems.lascito.data.model
  * The no-arg constructor with defaults is required by Firestore's
  * automatic deserialization (`toObject<Profile>()`).
  */
+@Keep
+@IgnoreExtraProperties
 data class Profile(
     val profileId: String = "",
     val creatorUserId: String = "",
@@ -21,11 +26,13 @@ data class Profile(
     val status: ProfileStatus = ProfileStatus.ACTIVE
 )
 
+@Keep
 enum class ProfileType {
     HUMAN,
     PET
 }
 
+@Keep
 enum class ProfileStatus {
     /** Editable by the creator. */
     ACTIVE,
