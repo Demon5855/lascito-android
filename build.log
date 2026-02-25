@@ -2,262 +2,38 @@
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
-> Task :app:processDebugGoogleServices UP-TO-DATE
-> Task :app:generateDebugResValues UP-TO-DATE
-> Task :app:javaPreCompileDebug UP-TO-DATE
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:processDebugGoogleServices UP-TO-DATE
 > Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
-> Task :app:desugarDebugFileDependencies UP-TO-DATE
 > Task :app:mergeDebugShaders UP-TO-DATE
-> Task :app:mergeDebugJniLibFolders UP-TO-DATE
-> Task :app:writeDebugAppMetadata UP-TO-DATE
-> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
 > Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugResources UP-TO-DATE
 > Task :app:extractDeepLinksDebug UP-TO-DATE
-> Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:packageDebugResources UP-TO-DATE
-> Task :app:parseDebugLocalResources UP-TO-DATE
-> Task :app:checkDebugAarMetadata UP-TO-DATE
-> Task :app:checkDebugDuplicateClasses UP-TO-DATE
-> Task :app:mergeDebugAssets UP-TO-DATE
 > Task :app:mapDebugSourceSetPaths UP-TO-DATE
-> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
 > Task :app:mergeDebugResources UP-TO-DATE
-> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
 > Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
 > Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
 > Task :app:processDebugMainManifest UP-TO-DATE
 > Task :app:processDebugManifest UP-TO-DATE
-> Task :app:processDebugManifestForPackage UP-TO-DATE
 > Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
 > Task :app:processDebugResources UP-TO-DATE
 
 > Task :app:compileDebugKotlin FAILED
-.\gradlew : e: file:///C:/Perennia%20Syst
-ems/Lascito/app/src/main/java/com/perenni
-asystems/lascito/ui/screens/memory/AddMem
-oryScreen.kt:305:20 Unresolved reference 
-'MediaBottomSheetItem'.
-At line:1 char:35
-+ ... d 'c:\Perennia Systems\Lascito'; 
-.\gradlew assembleDebug 2>&1 | Out-F ...
-+                                      
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecifi 
-   ed: (e: file:///C:/P...ttomSheetItem  
-  '.:String) [], RemoteException
-    + FullyQualifiedErrorId : NativeComm 
-   andError
- 
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/memory/AddMemoryScreen.kt
-:318:20 Unresolved reference 
-'MediaBottomSheetItem'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/memory/AddMemoryScreen.kt
-:329:20 Unresolved reference 
-'MediaBottomSheetItem'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/memory/AddMemoryScreen.kt
-:348:12 Modifier 'private' is not 
-applicable to 'local function'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/memory/AddMemoryScreen.kt
-:376:12 Modifier 'private' is not 
-applicable to 'local function'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/memory/AddMemoryScreen.kt
-:379:1 Syntax error: Expecting '}'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:190:21 Unresolved reference 
-'pickerColors'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:209:21 Unresolved reference 
-'pickerColors'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:331:12 Unresolved reference 
-'LabeledField'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:332:16 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:345:46 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:354:29 Unresolved reference 
-'diaryFieldColors'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:360:12 Unresolved reference 
-'LabeledField'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:361:16 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:374:46 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:380:29 Unresolved reference 
-'diaryFieldColors'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:386:12 Unresolved reference 
-'LabeledField'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:387:16 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:395:58 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:410:53 Unresolved reference 
-'errorFieldColors'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:410:77 Unresolved reference 
-'diaryFieldColors'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:414:20 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:417:49 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:456:16 Unresolved reference 
-'LabeledField'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:457:20 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:465:62 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:480:56 Unresolved reference 
-'errorFieldColors'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:480:80 Unresolved reference 
-'diaryFieldColors'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:484:24 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:487:53 @Composable invocations can 
-only happen from the context of a 
-@Composable function
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:573:12 Modifier 'private' is not 
-applicable to 'local function'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:585:12 Modifier 'private' is not 
-applicable to 'local function'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:594:12 Modifier 'private' is not 
-applicable to 'local function'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:605:12 Modifier 'private' is not 
-applicable to 'local function'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:625:12 Modifier 'private' is not 
-applicable to 'local function'.
-e: file:///C:/Perennia%20Systems/Lascito/
-app/src/main/java/com/perenniasystems/las
-cito/ui/screens/profile/AddProfileScreen.
-kt:628:1 Syntax error: Expecting '}'.
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task 
-':app:compileDebugKotlin'.
-> A failure occurred while executing org.
-jetbrains.kotlin.compilerRunner.GradleCom
-pilerRunnerWithWorkers$GradleKotlinCompil
-erWorkAction
-   > Compilation error. See log for more 
-details
-
-* Try:
-> Run with --stacktrace option to get 
-the stack trace.
-> Run with --info or --debug option to 
-get more log output.
-> Run with --scan to get full insights.
-> Get more help at 
-https://help.gradle.org.
-
-BUILD FAILED in 1s
 29 actionable tasks: 1 executed, 28 up-to-date
 Configuration cache entry reused.

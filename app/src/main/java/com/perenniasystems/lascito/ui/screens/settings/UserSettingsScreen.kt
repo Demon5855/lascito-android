@@ -189,16 +189,18 @@ private fun ProfileSection(state: UserSettingsUiState) {
                 modifier           = Modifier.size(48.dp)
             )
         }
+        val nameText = state.displayNameRaw ?: state.displayNameRes?.let { stringResource(it) } ?: ""
         Text(
-            text  = state.displayName,
+            text  = nameText,
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontFamily = PlayfairDisplay,
                 color      = TextPrimary
             ),
             textAlign = TextAlign.Center
         )
+        val emailText = state.emailRaw ?: state.emailRes?.let { stringResource(it) } ?: ""
         Text(
-            text  = state.email,
+            text  = emailText,
             style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
             textAlign = TextAlign.Center
         )
@@ -254,7 +256,7 @@ private fun MausoleumStatusCard(state: UserSettingsUiState) {
                         style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
                     )
                     Text(
-                        text  = "${state.storageUsedStr} / ${state.storageMaxStr}",
+                        text  = "${stringResource(state.storageUsedStrRes)} / ${stringResource(state.storageMaxStrRes)}",
                         style = MaterialTheme.typography.bodySmall.copy(color = TextPrimary)
                     )
                 }

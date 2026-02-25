@@ -53,15 +53,15 @@
     <string name="terms_privacy">Privacy Policy</string>
 
     <!-- ── Dashboard ─────────────────────────────────────────────────────── -->
-    <string name="screen_my_altars">Your Altars</string>
-    <string name="desc_create_altar">Create altar</string>
-    <string name="empty_altars">No altars yet.\nPress + to create the first one.</string>
-    <string name="error_load_altars">Could not load altars.</string>
+    <string name="screen_my_altars">Your Legacies</string>
+    <string name="desc_create_altar">Create legacy</string>
+    <string name="empty_altars">Your vault is empty.\nPress + to immortalize your first legacy.</string>
+    <string name="error_load_altars">Could not load legacies.</string>
 
     <!-- ── Altar ─────────────────────────────────────────────────────────── -->
     <string name="screen_memories">Memories</string>
     <string name="desc_add_memory">Add memory</string>
-    <string name="empty_memories">No memories yet.\nPress + to add the first one.</string>
+    <string name="empty_memories">No memories yet.\nPress + to preserve the first one.</string>
     <string name="desc_play_video">Play video</string>
     <string name="desc_play_audio">Play voice note</string>
 
@@ -75,7 +75,7 @@
     <string name="btn_preserve_memory">Preserve Memory</string>
 
     <!-- ── AddProfile ─────────────────────────────────────────────────────── -->
-    <string name="screen_new_altar">New Altar</string>
+    <string name="screen_new_altar">New Legacy</string>
     <string name="label_type">Type</string>
     <string name="type_human">Human</string>
     <string name="type_pet">Pet</string>
@@ -87,25 +87,27 @@
     <string name="placeholder_pet_rel">Faithful companion</string>
     <string name="label_birthdate">Date of Birth</string>
     <string name="label_still_with_us">Still with us</string>
-    <string name="label_departed">Has departed</string>
-    <string name="label_passing_date_hint">Enter the date of departure</string>
-    <string name="label_passing_date">Date of Departure</string>
-    <string name="btn_create_altar">Create Altar</string>
+    <string name="label_departed">Passed away</string>
+    <string name="label_passing_date_hint">Enter the date of passing</string>
+    <string name="label_passing_date">Date of Passing</string>
+    <string name="btn_create_altar">Immortalize Legacy</string>
     <string name="desc_upload_photo">Upload photo</string>
     <!-- Validation -->
     <string name="error_day">Invalid day (01–31)</string>
     <string name="error_month">Invalid month (01–12)</string>
     <string name="error_year">Year out of range (1900–%1$d)</string>
+    <string name="error_future_date">Date cannot be in the future</string>
+    <string name="error_invalid_date">Invalid date</string>
 
     <!-- ── My Account (UserSettings) ─────────────────────────────────────── -->
     <string name="screen_my_account">My Account</string>
     <string name="section_mausoleum">Mausoleum Status</string>
     <string name="plan_lifetime">Active Lifetime Plan</string>
-    <string name="label_storage_used">Protected memories</string>
+    <string name="label_storage_used">Safeguarded memories</string>
     <string name="label_storage_amount">%1$.1f GB / %2$d GB</string>
     <string name="section_guardian">Legacy Guardian</string>
     <string name="hint_guardian_email">Heir\'s email…</string>
-    <string name="guardian_help_text">In case of prolonged inactivity, this person will receive read-only access to your altars.</string>
+    <string name="guardian_help_text">In case of prolonged inactivity, this person will receive read-only access to your legacies.</string>
     <string name="btn_save_guardian">Save guardian</string>
     <string name="section_personalization">Sanctuary Personalization</string>
     <string name="label_language">Language</string>
@@ -127,4 +129,14 @@
     <string name="toast_delete_soon">Coming soon — Delete account</string>
     <string name="toast_lang_changed">Language updated to: %1$s</string>
     <string name="toast_accent_changed">Accent updated: %1$s</string>
+    <!-- ViewModels & State Helpers -->
+    <string name="state_loading">Loading...</string>
+    <string name="state_calculating">Calculating...</string>
+    <string name="state_calculating_storage">Calculating...</string>
+    <string name="state_offline">Offline</string>
+    <string name="state_unauthenticated">Not authenticated</string>
+    <string name="state_default_user">User</string>
+    <string name="state_no_email">No email</string>
+    <string name="state_storage_empty">0 GB</string>
+    <string name="state_storage_max">10 GB</string>
 </resources>

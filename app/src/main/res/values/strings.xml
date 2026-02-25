@@ -40,7 +40,7 @@
     <string name="error_login">Correo o contraseña incorrectos</string>
     <!-- Register screen -->
     <string name="screen_register">Crear Cuenta</string>
-    <string name="subtitle_register">Preserva sus memorias para siempre.</string>
+    <string name="subtitle_register">Preserva sus recuerdos para siempre.</string>
     <string name="error_invalid_email">Introduce un correo válido</string>
     <string name="error_passwords_no_match">Las contraseñas no coinciden</string>
     <string name="error_password_strength">Mínimo 8 caracteres: 1 mayúscula, 1 minúscula, 1 número y 1 símbolo</string>
@@ -53,13 +53,13 @@
     <string name="terms_privacy">Política de Privacidad</string>
 
     <!-- ── Dashboard ────────────────────────────────────────────────────────── -->
-    <string name="screen_my_altars">Tus Altares</string>
-    <string name="desc_create_altar">Crear altar</string>
-    <string name="empty_altars">Aún no hay altares.\nPresiona + para crear el primero.</string>
-    <string name="error_load_altars">No se pudieron cargar los altares.</string>
+    <string name="screen_my_altars">Tus Legados</string>
+    <string name="desc_create_altar">Crear legado</string>
+    <string name="empty_altars">Aún no hay legados.\nPresiona + para crear el primero.</string>
+    <string name="error_load_altars">No se pudieron cargar los legados.</string>
 
     <!-- ── Altar ─────────────────────────────────────────────────────────────── -->
-    <string name="screen_memories">Memorias</string>
+    <string name="screen_memories">Recuerdos</string>
     <string name="desc_add_memory">Añadir recuerdo</string>
     <string name="empty_memories">Aún no hay recuerdos.\nPresiona + para añadir el primero.</string>
     <string name="desc_play_video">Reproducir video</string>
@@ -75,7 +75,7 @@
     <string name="btn_preserve_memory">Preservar Recuerdo</string>
 
     <!-- ── AddProfile ────────────────────────────────────────────────────────── -->
-    <string name="screen_new_altar">Nuevo Altar</string>
+    <string name="screen_new_altar">Nuevo Legado</string>
     <string name="label_type">Tipo</string>
     <string name="type_human">Humano</string>
     <string name="type_pet">Mascota</string>
@@ -90,22 +90,24 @@
     <string name="label_departed">Ha partido</string>
     <string name="label_passing_date_hint">Ingresa la fecha de partida</string>
     <string name="label_passing_date">Fecha de Partida</string>
-    <string name="btn_create_altar">Levantar Altar</string>
+    <string name="btn_create_altar">Inmortalizar Legado</string>
     <string name="desc_upload_photo">Subir foto</string>
     <!-- Validation -->
     <string name="error_day">Día inválido (01–31)</string>
     <string name="error_month">Mes inválido (01–12)</string>
     <string name="error_year">Año fuera de rango (1900–%1$d)</string>
+    <string name="error_future_date">La fecha no puede ser en el futuro</string>
+    <string name="error_invalid_date">Fecha inválida</string>
 
     <!-- ── Mi Cuenta (UserSettings) ─────────────────────────────────────────── -->
     <string name="screen_my_account">Mi Cuenta</string>
     <string name="section_mausoleum">Estado del Mausoleo</string>
     <string name="plan_lifetime">Plan Vitalicio Activo</string>
-    <string name="label_storage_used">Memorias resguardadas</string>
+    <string name="label_storage_used">Recuerdos resguardados</string>
     <string name="label_storage_amount">%1$.1f GB / %2$d GB</string>
     <string name="section_guardian">Guardián del Legado</string>
     <string name="hint_guardian_email">Correo del heredero…</string>
-    <string name="guardian_help_text">En caso de inactividad prolongada, esta persona recibirá acceso de solo lectura a tus altares.</string>
+    <string name="guardian_help_text">En caso de inactividad prolongada, esta persona recibirá acceso de solo lectura a tus legados.</string>
     <string name="btn_save_guardian">Guardar guardián</string>
     <string name="section_personalization">Personalización del Santuario</string>
     <string name="label_language">Idioma</string>
@@ -116,15 +118,25 @@
     <string name="accent_silver">Plata</string>
     <string name="accent_bronze">Bronce</string>
     <string name="section_security">Seguridad y Privacidad</string>
-    <string name="btn_export">Exportar mis memorias</string>
+    <string name="btn_export">Exportar mis recuerdos</string>
     <string name="btn_privacy">Políticas de Privacidad</string>
     <string name="btn_logout">Cerrar Sesión</string>
     <string name="btn_delete_account">Eliminar Cuenta</string>
     <!-- Toasts -->
     <string name="toast_guardian_saved">Guardián actualizado</string>
-    <string name="toast_exporting">Exportando memorias…</string>
+    <string name="toast_exporting">Exportando recuerdos…</string>
     <string name="toast_privacy_soon">Próximamente — Políticas de Privacidad</string>
     <string name="toast_delete_soon">Próximamente — Eliminar cuenta</string>
     <string name="toast_lang_changed">Idioma actualizado a: %1$s</string>
     <string name="toast_accent_changed">Acento actualizado: %1$s</string>
+    <!-- ViewModels & State Helpers -->
+    <string name="state_loading">Cargando...</string>
+    <string name="state_calculating">Calculando...</string>
+    <string name="state_calculating_storage">Calculando...</string>
+    <string name="state_offline">Sin conexión</string>
+    <string name="state_unauthenticated">No autenticado</string>
+    <string name="state_default_user">Usuario</string>
+    <string name="state_no_email">Sin correo</string>
+    <string name="state_storage_empty">0 GB</string>
+    <string name="state_storage_max">10 GB</string>
 </resources>

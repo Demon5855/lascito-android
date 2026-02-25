@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.annotation.StringRes
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.ui.theme.*
@@ -95,36 +96,38 @@ private fun Long.toRawDigits(): String =
     SimpleDateFormat("ddMMyyyy", Locale.getDefault()).format(Date(this))
 
 /**
- * Valida los digitos crudos de una fecha (max. 8) en tiempo real.
- * Solo valida un segmento cuando tiene suficientes digitos para juzgarlo.
- * Devuelve un mensaje de error o null si todo esta bien.
+ * Valida los dígitos crudos de una fecha (máx. 8) en tiempo real.
+ * Solo valida un segmento cuando tiene suficientes dígitos para juzgarlo.
+ * Devuelve un identificador de recurso StringRes o null si todo está bien.
  */
-private fun validateDateDigits(digits: String): String? {
+@StringRes
+private fun validateDateDigits(digits: String): Int? {
     if (digits.length < 2) return null
     val day = digits.take(2).toInt()
-    if (day !in 1..31) return "D�a inv�lido (01�31)"
+    if (day !in 1..31) return R.string.error_day
 
     if (digits.length < 4) return null
     val month = digits.drop(2).take(2).toInt()
-    if (month !in 1..12) return "Mes inv�lido (01�12)"
+    if (month !in 1..12) return R.string.error_month
 
     if (digits.length < 8) return null
     val year  = digits.drop(4).take(4).toInt()
     val maxYear = Calendar.getInstance().get(Calendar.YEAR)
-    if (year !in 1900..maxYear) return "A�o fuera de rango (1900�$maxYear)"
+    // Usamos R.string.error_year, la UI deberá formatear si requiere %1$d
+    if (year !in 1900..maxYear) return R.string.error_year
 
-    // Validar que la fecha no est� en el futuro
+    // Validar que la fecha no esté en el futuro
     val format = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
     try {
         val parsedDate = format.parse(digits)
         if (parsedDate != null && parsedDate.after(Date())) {
-            return "La fecha no puede ser en el futuro"
+            return R.string.error_future_date
         }
     } catch (e: Exception) {
-        return "Fecha inv�lida"
+        return R.string.error_invalid_date
     }
 
-    return null   // v�lido
+    return null   // válido
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -136,7 +139,7 @@ fun AddProfileScreen(
     var rawName         by remember { mutableStateOf("") }
     var rawRelationship by remember { mutableStateOf("") }
     var selectedType    by remember { mutableStateOf(ProfileTypeChoice.HUMAN) }
-    // Estado = solo d�gitos (m�x. 8). La transformaci�n visual agrega las '/'.
+    // Estado = solo digitos (max. 8). La transformacion visual agrega las '/'.
     var birthDigits  by remember { mutableStateOf("") }
     var passDigits   by remember { mutableStateOf("") }
     var isPresent    by remember { mutableStateOf(true) }
@@ -327,7 +330,7 @@ fun AddProfileScreen(
                 }
             }
 
-            // -- Nombre Completo � capitaliza cada palabra ---------------------
+            // -- Nombre Completo  capitaliza cada palabra ---------------------
             LabeledField(stringResource(R.string.label_full_name_field)) {
                 OutlinedTextField(
                     value         = rawName,
@@ -356,7 +359,7 @@ fun AddProfileScreen(
                 )
             }
 
-            // -- Parentesco / V�nculo ------------------------------------------
+            // -- Parentesco / Vnculo ------------------------------------------
             LabeledField(stringResource(R.string.label_relationship)) {
                 OutlinedTextField(
                     value         = rawRelationship,
@@ -401,7 +404,7 @@ fun AddProfileScreen(
                         IconButton(onClick = { showBirthPicker = true }) {
                             Icon(
                                 Icons.Default.CalendarMonth,
-                                contentDescription = "Seleccionar fecha",
+                                contentDescription = stringResource(R.string.desc_select_date),
                                 tint     = if (birthError != null) ErrorRed else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -411,8 +414,13 @@ fun AddProfileScreen(
                     shape  = RoundedCornerShape(10.dp)
                 )
                 if (birthError != null) {
+                    val errorText = if (birthError == R.string.error_year) {
+                        stringResource(birthError, Calendar.getInstance().get(Calendar.YEAR))
+                    } else {
+                        stringResource(birthError)
+                    }
                     Text(
-                        text     = birthError,
+                        text     = errorText,
                         color    = ErrorRed,
                         style    = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -420,7 +428,7 @@ fun AddProfileScreen(
                 }
             }
 
-            // -- Switch "A�n est� con nosotros" --------------------------------
+            // -- Switch "Aún está con nosotros" --------------------------------
             Row(
                 modifier              = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                 verticalAlignment     = Alignment.CenterVertically,
@@ -471,7 +479,7 @@ fun AddProfileScreen(
                             IconButton(onClick = { showPassingPicker = true }) {
                                 Icon(
                                     Icons.Default.CalendarMonth,
-                                    contentDescription = "Seleccionar fecha",
+                                    contentDescription = stringResource(R.string.desc_select_date),
                                     tint     = if (passError != null) ErrorRed else MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -481,8 +489,13 @@ fun AddProfileScreen(
                         shape  = RoundedCornerShape(10.dp)
                     )
                     if (passError != null) {
+                        val errorText = if (passError == R.string.error_year) {
+                            stringResource(passError, Calendar.getInstance().get(Calendar.YEAR))
+                        } else {
+                            stringResource(passError)
+                        }
                         Text(
-                            text     = passError,
+                            text     = errorText,
                             color    = ErrorRed,
                             style    = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 4.dp, top = 2.dp)

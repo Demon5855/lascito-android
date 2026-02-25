@@ -12,11 +12,18 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import java.io.IOException
 
+import androidx.annotation.StringRes
+import com.perenniasystems.lascito.R
+
 data class UserSettingsUiState(
-    val displayName: String = "Cargando...",
-    val email: String = "Cargando...",
-    val storageUsedStr: String = "Calculando...",
-    val storageMaxStr: String = "10 GB"
+    @StringRes val displayNameRes: Int? = R.string.state_loading,
+    val displayNameRaw: String? = null,
+    
+    @StringRes val emailRes: Int? = R.string.state_loading,
+    val emailRaw: String? = null,
+    
+    @StringRes val storageUsedStrRes: Int = R.string.state_calculating,
+    @StringRes val storageMaxStrRes: Int = R.string.state_storage_max
 )
 
 class UserSettingsViewModel(
@@ -46,24 +53,30 @@ class UserSettingsViewModel(
                             name = doc.getString("displayName")
                         }
                     } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                        name = "Sin conexión"
+                        _uiState.value = _uiState.value.copy(displayNameRes = R.string.state_offline, displayNameRaw = null)
+                        return@launch
                     } catch (e: IOException) {
-                        name = "Sin conexión"
+                        _uiState.value = _uiState.value.copy(displayNameRes = R.string.state_offline, displayNameRaw = null)
+                        return@launch
                     } catch (e: Exception) {
                         // Keep as null if fetch fails, will fallback below
                     }
                 }
 
                 _uiState.value = _uiState.value.copy(
-                    displayName = if (name.isNullOrBlank()) "Usuario" else name!!,
-                    email = userEmail,
-                    storageUsedStr = "Calculando..." // Placeholder for future phase
+                    displayNameRes = if (name.isNullOrBlank()) R.string.state_default_user else null,
+                    displayNameRaw = name,
+                    emailRes = null,
+                    emailRaw = userEmail,
+                    storageUsedStrRes = R.string.state_calculating // Placeholder for future phase
                 )
             } else {
                 _uiState.value = _uiState.value.copy(
-                    displayName = "No autenticado",
-                    email = "Sin correo",
-                    storageUsedStr = "0 GB"
+                    displayNameRes = R.string.state_unauthenticated,
+                    displayNameRaw = null,
+                    emailRes = R.string.state_no_email,
+                    emailRaw = null,
+                    storageUsedStrRes = R.string.state_storage_empty
                 )
             }
         }
