@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import java.io.IOException
+import com.perenniasystems.lascito.util.ErrorHandler
 
 sealed class AltarUiState {
     data object Loading : AltarUiState()
@@ -51,6 +52,20 @@ class AltarViewModel(
                 _uiState.value = AltarUiState.Error(
                     if (e.message?.equals("not_found") == true) R.string.error_profile_not_found
                     else                                        R.string.error_load_altars
+                )
+            }
+        }
+    }
+
+    fun deleteMemory(memoryId: String, currentProfileId: String, mediaUrl: String) {
+        viewModelScope.launch {
+            _uiState.value = AltarUiState.Loading
+            try {
+                memoryRepo.deleteMemory(memoryId, currentProfileId, mediaUrl)
+                load(currentProfileId) // Reload list after successful deletion
+            } catch (e: Exception) {
+                _uiState.value = AltarUiState.Error(
+                    messageResId = ErrorHandler.mapExceptionToResId(e)
                 )
             }
         }

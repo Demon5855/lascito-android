@@ -12,6 +12,12 @@ interface FirebaseStorageRepository {
      * @return The download URL of the uploaded image.
      */
     suspend fun uploadImage(bytes: ByteArray, path: String): String
+
+    /**
+     * Deletes the image at the given [imageUrl].
+     * Tolerates "object-not-found" errors to avoid breaking cascade deletions.
+     */
+    suspend fun deleteImage(imageUrl: String): Result<Unit>
 }
 
 /**
@@ -27,5 +33,20 @@ class FirebaseStorageRepositoryImpl(
         storageRef.putBytes(bytes).await()
         // Retrieve and return the download URL
         return storageRef.downloadUrl.await().toString()
+    }
+
+    override suspend fun deleteImage(imageUrl: String): Result<Unit> {
+        return try {
+            val storageRef = storage.getReferenceFromUrl(imageUrl)
+            storageRef.delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            if (e is com.google.firebase.storage.StorageException && e.errorCode == com.google.firebase.storage.StorageException.ERROR_OBJECT_NOT_FOUND) {
+                // Fault tolerance: if it's already gone, consider it a success
+                Result.success(Unit)
+            } else {
+                Result.failure(e)
+            }
+        }
     }
 }

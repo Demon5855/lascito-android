@@ -139,4 +139,17 @@
     <string name="state_no_email">Sin correo</string>
     <string name="state_storage_empty">0 GB</string>
     <string name="state_storage_max">10 GB</string>
+
+    <!-- ── Context Menus & Dialogs ─────────────────────────────────────────── -->
+    <string name="action_edit">Editar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="confirm_delete_profile_title">Eliminar Legado</string>
+    <string name="confirm_delete_profile_text">¿Estás seguro de que deseas eliminar el legado de %1$s? \nEsta acción es irreversible y borrará todos sus recuerdos para siempre.</string>
+    <string name="confirm_delete_memory_title">Eliminar Recuerdo</string>
+    <string name="confirm_delete_memory_text">¿Estás seguro de que deseas eliminar este recuerdo? \nEsta acción no se puede deshacer y el archivo multimedia se perderá de tu bóveda.</string>
+    <string name="action_add_photo">Añadir Fotografía</string>
+    <string name="action_add_video">Añadir Video</string>
+    <string name="action_add_voice_note">Añadir Nota de Voz</string>
+    <string name="toast_video_soon">Video: Próximamente (Fase 3B)</string>
+    <string name="toast_audio_soon">Audio: Próximamente (Fase 3B)</string>
 </resources>

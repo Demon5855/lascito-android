@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.ImageNotSupported
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.*
@@ -52,11 +53,14 @@ fun AltarScreen(
     profileId:      String,
     onNavigateBack: () -> Unit = {},
     onAddMemory:    () -> Unit = {},
+    onEditMemory:   (String) -> Unit = {},
+    onDeleteMemory: (String) -> Unit = {},
     viewModel:      AltarViewModel = viewModel()
 ) {
     // Trigger reload when the profileId changes OR when the screen becomes active again
     LaunchedEffect(profileId, Unit) { viewModel.load(profileId) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var memoryToDelete by remember { mutableStateOf<Memory?>(null) }
 
     Scaffold(
         containerColor = AmoledBlack,
@@ -99,9 +103,41 @@ fun AltarScreen(
                     AltarContent(
                         profile        = state.profile,
                         memories       = state.memories,
-                        onNavigateBack = onNavigateBack
+                        onNavigateBack = onNavigateBack,
+                        onEditMemory   = onEditMemory,
+                        onDeleteMemory = { memoryId ->
+                            memoryToDelete = state.memories.find { it.memoryId == memoryId }
+                        }
                     )
                 }
+            }
+
+            if (memoryToDelete != null) {
+                AlertDialog(
+                    onDismissRequest = { memoryToDelete = null },
+                    containerColor = SurfaceDark,
+                    titleContentColor = ErrorRed,
+                    textContentColor = TextPrimary,
+                    title = { Text(stringResource(R.string.confirm_delete_memory_title)) },
+                    text = { Text(stringResource(R.string.confirm_delete_memory_text)) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                memoryToDelete?.let {
+                                    viewModel.deleteMemory(it.memoryId, profileId, it.mediaUrl)
+                                }
+                                memoryToDelete = null
+                            }
+                        ) {
+                            Text(stringResource(R.string.action_delete), color = ErrorRed)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { memoryToDelete = null }) {
+                            Text(stringResource(R.string.btn_cancel), color = TextSecondary)
+                        }
+                    }
+                )
             }
         }
     }
@@ -111,7 +147,9 @@ fun AltarScreen(
 private fun AltarContent(
     profile:       Profile,
     memories:      List<Memory>,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onEditMemory:   (String) -> Unit,
+    onDeleteMemory: (String) -> Unit
 ) {
     val yearFmt = SimpleDateFormat("yyyy", Locale.getDefault())
     val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -269,7 +307,12 @@ private fun AltarContent(
             }
         } else {
             items(memories, key = { it.memoryId }) { memory ->
-                MemoryItem(memory = memory, dateFmt = dateFmt)
+                MemoryItem(
+                    memory = memory, 
+                    dateFmt = dateFmt,
+                    onEdit = { onEditMemory(memory.memoryId) },
+                    onDelete = { onDeleteMemory(memory.memoryId) }
+                )
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
@@ -281,7 +324,14 @@ private fun AltarContent(
 // ----------------------------------------------------------------------------
 
 @Composable
-private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
+private fun MemoryItem(
+    memory: Memory, 
+    dateFmt: SimpleDateFormat,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxWidth()) {
 
         when (memory.mediaType) {
@@ -376,19 +426,57 @@ private fun MemoryItem(memory: Memory, dateFmt: SimpleDateFormat) {
         }
 
         // -- Contexto y fecha (comunes a todos los tipos) ----------------------
-        Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
-            Text(
-                text  = memory.contextText,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color      = TextPrimary,
-                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text  = memory.contextText,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color      = TextPrimary,
+                        lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
+                    )
                 )
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text  = dateFmt.format(Date(memory.capturedDate)),
-                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primaryContainer)
-            )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text  = dateFmt.format(Date(memory.capturedDate)),
+                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primaryContainer)
+                )
+            }
+            
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Opciones",
+                        tint = TextSecondary
+                    )
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false },
+                    modifier = Modifier.background(SurfaceDark)
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_edit), color = TextPrimary) },
+                        onClick = {
+                            showMenu = false
+                            onEdit()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_delete), color = ErrorRed) },
+                        onClick = {
+                            showMenu = false
+                            onDelete()
+                        }
+                    )
+                }
+            }
         }
 
         HorizontalDivider(

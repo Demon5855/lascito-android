@@ -6,9 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -48,8 +49,11 @@ import java.util.Locale
 fun ProfileCard(
     profile:  Profile,
     modifier: Modifier = Modifier,
-    onClick:  () -> Unit = {}
+    onClick:  () -> Unit = {},
+    onEdit:   () -> Unit = {},
+    onDelete: () -> Unit = {}
 ) {
+    var showMenu by remember { mutableStateOf(false) }
     val cardShape = RoundedCornerShape(16.dp)
     val yearFmt   = SimpleDateFormat("yyyy", Locale.getDefault())
 
@@ -182,15 +186,47 @@ fun ProfileCard(
                 }
             }
 
-            // ── Capa 6: Badge READ_ONLY (esquina superior derecha) ────────────
-            if (profile.status == ProfileStatus.READ_ONLY) {
-                Text(
-                    text     = "⚯",
-                    style    = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primaryContainer),
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                )
+            // ── Capa 6: Dropdown Menu & READ_ONLY Badge (esquina superior derecha) ─────
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+            ) {
+                if (profile.status == ProfileStatus.ACTIVE) {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Opciones",
+                            tint = Color.White
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        modifier = Modifier.background(SurfaceDark)
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_edit), color = TextPrimary) },
+                            onClick = {
+                                showMenu = false
+                                onEdit()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_delete), color = ErrorRed) },
+                            onClick = {
+                                showMenu = false
+                                onDelete()
+                            }
+                        )
+                    }
+                } else if (profile.status == ProfileStatus.READ_ONLY) {
+                    Text(
+                        text     = "⚯",
+                        style    = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primaryContainer),
+                        modifier = Modifier.padding(4.dp)
+                    )
+                }
             }
         }
     }

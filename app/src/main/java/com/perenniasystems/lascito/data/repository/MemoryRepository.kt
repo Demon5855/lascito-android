@@ -10,4 +10,7 @@ interface MemoryRepository {
     suspend fun getMemoriesByProfile(profileId: String): List<Memory>
     /** Persist a new memory. Returns the generated document ID. */
     suspend fun save(memory: Memory): String
+    
+    /** Deletes the memory document and its associated media from Storage. */
+    suspend fun deleteMemory(memoryId: String, profileId: String, mediaUrl: String?)
 }

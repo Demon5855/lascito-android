@@ -69,10 +69,18 @@ fun AddMemoryScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isLoading = uiState is AddMemoryUiState.Loading
 
+    // Handle initial load and success navigation
     LaunchedEffect(uiState) {
-        if (uiState is AddMemoryUiState.Success) {
-            viewModel.resetState()
-            onNavigateBack()
+        when (uiState) {
+            is AddMemoryUiState.Success -> {
+                viewModel.resetState()
+                onNavigateBack()
+            }
+            is AddMemoryUiState.Loaded -> {
+                val memory = (uiState as AddMemoryUiState.Loaded).memory
+                contextText = memory.contextText
+            }
+            else -> {}
         }
     }
 
@@ -142,10 +150,18 @@ fun AddMemoryScreen(
                     },
                 contentAlignment = Alignment.Center
             ) {
+                val currentMemory = (uiState as? AddMemoryUiState.Loaded)?.memory
                 if (selectedImageUri != null) {
                     AsyncImage(
                         model = selectedImageUri,
                         contentDescription = "Foto elegida",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else if (currentMemory != null && currentMemory.mediaUrl.isNotBlank()) {
+                     AsyncImage(
+                        model = currentMemory.mediaUrl,
+                        contentDescription = "Media actual",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -230,8 +246,8 @@ fun AddMemoryScreen(
                     onDismiss  = { viewModel.resetState() }
                 )
             }
-
             // -- Save Button ---------------------------------------------------
+            val canSave = contextText.isNotBlank() && (selectedImageUri != null || (uiState as? AddMemoryUiState.Loaded)?.memory?.mediaUrl?.isNotBlank() == true) && !isLoading
             Button(
                 onClick  = {
                     coroutineScope.launch {
@@ -295,7 +311,7 @@ fun AddMemoryScreen(
                     ) {
                         MediaBottomSheetItem(
                             icon = Icons.Default.PhotoCamera,
-                            text = "Añadir Fotografía",
+                            text = stringResource(R.string.action_add_photo),
                             onClick = {
                                 coroutineScope.launch {
                                     sheetState.hide()
@@ -308,23 +324,23 @@ fun AddMemoryScreen(
                         )
                         MediaBottomSheetItem(
                             icon = Icons.Default.Videocam,
-                            text = "Añadir Video",
+                            text = stringResource(R.string.action_add_video),
                             onClick = {
                                 coroutineScope.launch {
                                     sheetState.hide()
                                     showBottomSheet = false
-                                    android.widget.Toast.makeText(context, "Video: Próximamente (Fase 3B)", android.widget.Toast.LENGTH_SHORT).show()
+                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_video_soon), android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             }
                         )
                         MediaBottomSheetItem(
                             icon = Icons.Default.Mic,
-                            text = "Añadir Nota de Voz",
+                            text = stringResource(R.string.action_add_voice_note),
                             onClick = {
                                 coroutineScope.launch {
                                     sheetState.hide()
                                     showBottomSheet = false
-                                    android.widget.Toast.makeText(context, "Audio: Próximamente (Fase 3B)", android.widget.Toast.LENGTH_SHORT).show()
+                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_audio_soon), android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             }
                         )

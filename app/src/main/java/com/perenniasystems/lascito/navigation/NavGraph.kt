@@ -15,6 +15,7 @@ import com.perenniasystems.lascito.ui.screens.dashboard.DashboardScreen
 import com.perenniasystems.lascito.ui.screens.memory.AddMemoryScreen
 import com.perenniasystems.lascito.ui.screens.profile.AddProfileScreen
 import com.perenniasystems.lascito.ui.screens.settings.UserSettingsScreen
+import com.perenniasystems.lascito.viewmodel.AddMemoryViewModel
 import com.perenniasystems.lascito.viewmodel.AddProfileViewModel
 import com.perenniasystems.lascito.viewmodel.AuthViewModel
 
@@ -78,8 +79,8 @@ fun LascitoNavGraph(
                 onNavigateToAltar        = { profileId ->
                     navController.navigate(Screen.Altar.createRoute(profileId))
                 },
-                onNavigateToAddProfile   = {
-                    navController.navigate(Screen.AddProfile.route)
+                onNavigateToAddProfile   = { profileId ->
+                    navController.navigate(Screen.AddProfile.createRoute(profileId))
                 },
                 onNavigateToUserSettings = {
                     navController.navigate(Screen.UserSettings.route)
@@ -87,8 +88,23 @@ fun LascitoNavGraph(
             )
         }
 
-        composable(Screen.AddProfile.route) {
+        composable(
+            route = Screen.AddProfile.route,
+            arguments = listOf(navArgument("profileId") { 
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null 
+            })
+        ) { backStackEntry ->
+            val profileId = backStackEntry.arguments?.getString("profileId")
             val addProfileViewModel: AddProfileViewModel = viewModel()
+            
+            LaunchedEffect(profileId) {
+                if (profileId != null) {
+                    addProfileViewModel.loadProfile(profileId)
+                }
+            }
+
             AddProfileScreen(
                 viewModel      = addProfileViewModel,
                 onNavigateBack = { navController.popBackStack() }
@@ -103,17 +119,35 @@ fun LascitoNavGraph(
             AltarScreen(
                 profileId      = profileId,
                 onNavigateBack = { navController.popBackStack() },
-                onAddMemory    = { navController.navigate(Screen.AddMemory.createRoute(profileId)) }
+                onAddMemory    = { navController.navigate(Screen.AddMemory.createRoute(profileId)) },
+                onEditMemory   = { memoryId -> navController.navigate(Screen.AddMemory.createRoute(profileId, memoryId)) }
             )
         }
 
         composable(
             route     = Screen.AddMemory.route,
-            arguments = listOf(navArgument("profileId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("profileId") { type = NavType.StringType },
+                navArgument("memoryId") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
         ) { backStackEntry ->
             val profileId = backStackEntry.arguments?.getString("profileId") ?: return@composable
+            val memoryId  = backStackEntry.arguments?.getString("memoryId")
+            val addMemoryViewModel: AddMemoryViewModel = viewModel()
+
+            LaunchedEffect(memoryId) {
+                if (memoryId != null) {
+                    addMemoryViewModel.loadMemory(memoryId, profileId)
+                }
+            }
+
             AddMemoryScreen(
                 profileId      = profileId,
+                viewModel      = addMemoryViewModel,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

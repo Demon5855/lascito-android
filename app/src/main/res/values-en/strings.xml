@@ -139,4 +139,16 @@
     <string name="state_no_email">No email</string>
     <string name="state_storage_empty">0 GB</string>
     <string name="state_storage_max">10 GB</string>
+
+    <!-- ── Context Menus & Dialogs ─────────────────────────────────────────── -->
+    <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
+    <string name="confirm_delete_profile_title">Delete Legacy</string>
+    <string name="confirm_delete_profile_text">Are you sure you want to delete the legacy of %1$s? \nThis action is irreversible and will erase all their memories forever.</string>
+    <string name="confirm_delete_memory_title">Delete Memory</string>
+    <string name="confirm_delete_memory_text">Are you sure you want to delete this memory? \nThis action cannot be undone and the media file will be permanently lost from your vault.</string>    <string name="action_add_photo">Add Photo</string>
+    <string name="action_add_video">Add Video</string>
+    <string name="action_add_voice_note">Add Voice Note</string>
+    <string name="toast_video_soon">Video: Coming soon (Phase 3B)</string>
+    <string name="toast_audio_soon">Audio: Coming soon (Phase 3B)</string>
 </resources>

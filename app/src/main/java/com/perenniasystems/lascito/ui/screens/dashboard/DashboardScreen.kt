@@ -12,8 +12,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,10 +34,11 @@ import com.perenniasystems.lascito.viewmodel.DashboardViewModel
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
     onNavigateToAltar:        (String) -> Unit = {},
-    onNavigateToAddProfile:   () -> Unit = {},
+    onNavigateToAddProfile:   (String?) -> Unit = {},
     onNavigateToUserSettings: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var profileToDelete by remember { mutableStateOf<com.perenniasystems.lascito.data.model.Profile?>(null) }
 
     // Trigger re-fetch every time this screen becomes active
     LaunchedEffect(Unit) {
@@ -78,7 +79,7 @@ fun DashboardScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick        = onNavigateToAddProfile,
+                onClick        = { onNavigateToAddProfile(null) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor   = AmoledBlack,
                 shape          = CircleShape,
@@ -130,7 +131,11 @@ fun DashboardScreen(
                             ) { profile ->
                                 ProfileCard(
                                     profile = profile,
-                                    onClick = { onNavigateToAltar(profile.profileId) }
+                                    onClick = { onNavigateToAltar(profile.profileId) },
+                                    onEdit = { 
+                                        onNavigateToAddProfile(profile.profileId)
+                                    },
+                                    onDelete = { profileToDelete = profile }
                                 )
                             }
                         }
@@ -143,6 +148,34 @@ fun DashboardScreen(
                         onDismiss  = { viewModel.resetState() }
                     )
                 }
+            }
+
+            if (profileToDelete != null) {
+                AlertDialog(
+                    onDismissRequest = { profileToDelete = null },
+                    containerColor = SurfaceDark,
+                    titleContentColor = ErrorRed,
+                    textContentColor = TextPrimary,
+                    title = { Text(stringResource(R.string.confirm_delete_profile_title)) },
+                    text = { Text(stringResource(R.string.confirm_delete_profile_text, profileToDelete?.fullName ?: "")) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                profileToDelete?.let {
+                                    viewModel.deleteProfile(it.profileId, it.avatarUrl)
+                                }
+                                profileToDelete = null
+                            }
+                        ) {
+                            Text(stringResource(R.string.action_delete), color = ErrorRed)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { profileToDelete = null }) {
+                            Text(stringResource(R.string.btn_cancel), color = TextSecondary)
+                        }
+                    }
+                )
             }
         }
     }

@@ -54,6 +54,20 @@ class DashboardViewModel(
         }
     }
 
+    fun deleteProfile(profileId: String, imageUrl: String?) {
+        viewModelScope.launch {
+            _uiState.value = DashboardUiState.Loading
+            try {
+                repository.deleteProfile(profileId, imageUrl)
+                refresh() // Reload list after successful deletion
+            } catch (e: Exception) {
+                _uiState.value = DashboardUiState.Error(
+                    messageResId = ErrorHandler.mapExceptionToResId(e)
+                )
+            }
+        }
+    }
+
     fun resetState() {
         refresh()
     }

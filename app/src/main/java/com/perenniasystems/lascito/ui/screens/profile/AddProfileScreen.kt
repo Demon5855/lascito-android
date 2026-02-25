@@ -159,11 +159,35 @@ fun AddProfileScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isLoading = uiState is AddProfileUiState.Loading
 
-    // Handle success navigation
+    // Handle initial load and success navigation
     LaunchedEffect(uiState) {
-        if (uiState is AddProfileUiState.Success) {
-            viewModel.resetState()
-            onNavigateBack()
+        when (uiState) {
+            is AddProfileUiState.Success -> {
+                viewModel.resetState()
+                onNavigateBack()
+            }
+            is AddProfileUiState.Loaded -> {
+                val profile = (uiState as AddProfileUiState.Loaded).profile
+                rawName = profile.fullName
+                rawRelationship = profile.relationship
+                selectedType = if (profile.profileType == ProfileType.HUMAN) ProfileTypeChoice.HUMAN else ProfileTypeChoice.PET
+                
+                // Construct DDMMYYYY dates
+                val format = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
+                birthDigits = format.format(Date(profile.birthDate))
+                
+                if (profile.passingDate != null) {
+                    isPresent = false
+                    passDigits = format.format(Date(profile.passingDate))
+                } else {
+                    isPresent = true
+                    passDigits = ""
+                }
+                
+                // we can't set selectedImageUri to a remote URL directly and use it seamlessly 
+                // in the same way as a local picked URI without some logic later.
+            }
+            else -> {}
         }
     }
     val birthPickerState   = rememberDatePickerState()
@@ -272,10 +296,18 @@ fun AddProfileScreen(
                     },
                 contentAlignment = Alignment.Center
             ) {
+                val currentProfile = (uiState as? AddProfileUiState.Loaded)?.profile
                 if (selectedImageUri != null) {
                     AsyncImage(
                         model = selectedImageUri,
                         contentDescription = "Foto elegida",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else if (currentProfile != null && currentProfile.avatarUrl.isNotBlank()) {
+                     AsyncImage(
+                        model = currentProfile.avatarUrl,
+                        contentDescription = "Foto actual",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )

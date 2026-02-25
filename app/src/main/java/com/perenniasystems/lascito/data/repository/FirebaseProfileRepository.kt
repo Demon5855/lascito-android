@@ -15,7 +15,8 @@ import kotlinx.coroutines.tasks.await
  * currently authenticated user.
  */
 class FirebaseProfileRepository(
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val storageRepo: FirebaseStorageRepository = FirebaseStorageRepositoryImpl()
 ) : ProfileRepository {
 
     private val collection get() = db.collection("profiles")
@@ -48,5 +49,23 @@ class FirebaseProfileRepository(
         }
         docRef.set(finalProfile).await()
         return docRef.id
+    }
+
+    override suspend fun deleteProfile(profileId: String, imageUrl: String?) {
+        // Cascade step 1: Delete image if it exists
+        if (!imageUrl.isNullOrBlank()) {
+            val result = storageRepo.deleteImage(imageUrl)
+            if (result.isFailure) {
+                // If it's a real failure (not object-not-found), you could throw it here
+                // to halt the document deletion, depending on strictness.
+                // The Architect requirement strictly states:
+                // "If image deletion is successful (or absent), call collection.document(id).delete()"
+                val exception = result.exceptionOrNull()
+                throw exception ?: Exception("Failed to delete image for profile cascade")
+            }
+        }
+        
+        // Cascade step 2: Delete document
+        collection.document(profileId).delete().await()
     }
 }
