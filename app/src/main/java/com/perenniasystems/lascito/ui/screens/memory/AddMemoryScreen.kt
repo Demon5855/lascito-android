@@ -28,7 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
+import com.perenniasystems.lascito.ui.theme.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.viewmodel.AddMemoryUiState
 import com.perenniasystems.lascito.viewmodel.AddMemoryViewModel
 
@@ -181,11 +183,10 @@ fun AddMemoryScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             if (uiState is AddMemoryUiState.Error) {
-                Text(
-                    text     = (uiState as AddMemoryUiState.Error).message,
-                    color    = ErrorRed,
-                    style    = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 8.dp).align(Alignment.CenterHorizontally)
+                val errState = uiState as AddMemoryUiState.Error
+                LascitoAlertDialog(
+                    messageRes = errState.messageResId,
+                    onDismiss  = { viewModel.resetState() }
                 )
             }
 

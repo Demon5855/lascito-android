@@ -17,10 +17,18 @@ object LocaleHelper {
     private const val PREF_NAME = "lascito_prefs"
     private const val PREF_LANG = "language_tag"
 
-    /** Returns the persisted language tag, defaulting to "es" (Spanish). */
-    fun getSavedTag(context: Context): String =
-        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            .getString(PREF_LANG, "es") ?: "es"
+    /**
+     * Returns the persisted language tag.
+     * If none is saved, defaults to Spanish ("es") if the user's OS is Spanish.
+     * For any other OS language (English, Italian, Portuguese, etc.), it defaults to English ("en").
+     */
+    fun getSavedTag(context: Context): String {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(PREF_LANG, null) ?: run {
+            val systemLang = Locale.getDefault().language
+            if (systemLang.startsWith("es")) "es" else "en"
+        }
+    }
 
     /** Persists the chosen language tag to SharedPreferences. */
     fun save(context: Context, tag: String) {

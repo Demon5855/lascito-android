@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import androidx.annotation.StringRes
+import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.util.ErrorHandler
 import java.io.IOException
 
 /**
@@ -31,14 +34,16 @@ class AuthViewModel(
                 withTimeout(15_000L) {
                     repo.login(email, password)
                         .onSuccess { _uiState.value = AuthUiState.Success }
-                        .onFailure { _uiState.value = AuthUiState.Error(it.localizedMessage ?: "Credenciales incorrectas o error de autenticación") }
+                        .onFailure { t ->
+                            _uiState.value = AuthUiState.Error(
+                                ErrorHandler.mapExceptionToResId(t as? Exception ?: Exception(t))
+                            )
+                        }
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                _uiState.value = AuthUiState.Error("Tiempo de espera agotado. Verifica tu conexión a internet.")
-            } catch (e: IOException) {
-                _uiState.value = AuthUiState.Error("No hay conexión a internet. Verifica tu red y vuelve a intentarlo.")
+                _uiState.value = AuthUiState.Error(R.string.error_network)
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(e.localizedMessage ?: "Ocurrió un error inesperado al iniciar sesión")
+                _uiState.value = AuthUiState.Error(ErrorHandler.mapExceptionToResId(e))
             }
         }
     }
@@ -50,14 +55,16 @@ class AuthViewModel(
                 withTimeout(15_000L) {
                     repo.register(name, email, password)
                         .onSuccess { _uiState.value = AuthUiState.Success }
-                        .onFailure { _uiState.value = AuthUiState.Error(it.localizedMessage ?: "No se pudo registrar la cuenta") }
+                        .onFailure { t ->
+                            _uiState.value = AuthUiState.Error(
+                                ErrorHandler.mapExceptionToResId(t as? Exception ?: Exception(t))
+                            )
+                        }
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                _uiState.value = AuthUiState.Error("Tiempo de espera agotado. Verifica tu conexión a internet.")
-            } catch (e: IOException) {
-                _uiState.value = AuthUiState.Error("No hay conexión a internet. Verifica tu red y vuelve a intentarlo.")
+                _uiState.value = AuthUiState.Error(R.string.error_network)
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(e.localizedMessage ?: "Ocurrió un error inesperado al registrarse")
+                _uiState.value = AuthUiState.Error(ErrorHandler.mapExceptionToResId(e))
             }
         }
     }
@@ -77,5 +84,5 @@ sealed interface AuthUiState {
     data object Idle    : AuthUiState
     data object Loading : AuthUiState
     data object Success : AuthUiState
-    data class  Error(val message: String) : AuthUiState
+    data class  Error(@StringRes val messageResId: Int) : AuthUiState
 }

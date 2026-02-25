@@ -15,11 +15,17 @@
     <string name="btn_back">Volver</string>
     <string name="btn_ok">Aceptar</string>
     <string name="btn_cancel">Cancelar</string>
+    <string name="btn_understood">Entendido</string>
     <string name="label_present">Presente</string>
     <string name="desc_select_date">Seleccionar fecha</string>
     <string name="hint_date_format">DD/MM/AAAA</string>
     <string name="label_photo">Foto</string>
     <string name="error_profile_not_found">Perfil no encontrado</string>
+
+    <!-- ── Error Handling Global ───────────────────────────────────────────── -->
+    <string name="error_auth_invalid">Correo o contraseña incorrectos.</string>
+    <string name="error_network">No hay conexión a internet. Verifica tu red.</string>
+    <string name="error_generic">Ha ocurrido un error inesperado. Inténtalo más tarde.</string>
 
     <!-- ── Auth ────────────────────────────────────────────────────────────── -->
     <string name="label_email">Correo electrónico</string>

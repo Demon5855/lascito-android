@@ -31,7 +31,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
+import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.data.model.ProfileType
+import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.viewmodel.AddProfileUiState
 import com.perenniasystems.lascito.viewmodel.AddProfileViewModel
 import java.text.SimpleDateFormat
@@ -451,13 +453,12 @@ fun AddProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Show error if any
+            // Show error if any (Delegated to ErrorHandler + LascitoAlertDialog)
             if (uiState is AddProfileUiState.Error) {
-                Text(
-                    text     = (uiState as AddProfileUiState.Error).message,
-                    color    = ErrorRed,
-                    style    = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 8.dp).align(Alignment.CenterHorizontally)
+                val errState = uiState as AddProfileUiState.Error
+                LascitoAlertDialog(
+                    messageRes = errState.messageResId,
+                    onDismiss  = { viewModel.resetState() }
                 )
             }
 

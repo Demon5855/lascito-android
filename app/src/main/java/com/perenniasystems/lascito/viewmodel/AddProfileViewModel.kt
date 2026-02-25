@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import androidx.annotation.StringRes
+import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.util.ErrorHandler
 import java.io.IOException
 import java.util.UUID
 
@@ -21,7 +24,7 @@ sealed interface AddProfileUiState {
     data object Idle : AddProfileUiState
     data object Loading : AddProfileUiState
     data object Success : AddProfileUiState
-    data class Error(val message: String) : AddProfileUiState
+    data class Error(@StringRes val messageResId: Int) : AddProfileUiState
 }
 
 class AddProfileViewModel(
@@ -68,12 +71,10 @@ class AddProfileViewModel(
                     _uiState.value = AddProfileUiState.Success
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                _uiState.value = AddProfileUiState.Error("Tiempo de espera agotado al crear el altar. Verifica tu conexión.")
-            } catch (e: IOException) {
-                _uiState.value = AddProfileUiState.Error("No hay conexión a internet. Verifica tu red e intenta nuevamente.")
+                _uiState.value = AddProfileUiState.Error(R.string.error_network)
             } catch (e: Exception) {
                 Log.e("FirestoreError", "Error al guardar altar", e)
-                _uiState.value = AddProfileUiState.Error(e.localizedMessage ?: "Error desconocido al guardar")
+                _uiState.value = AddProfileUiState.Error(ErrorHandler.mapExceptionToResId(e))
             }
         }
     }

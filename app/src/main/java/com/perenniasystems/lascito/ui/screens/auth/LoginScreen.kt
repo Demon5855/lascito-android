@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.components.LascitoPrimaryButton
 import com.perenniasystems.lascito.ui.components.LascitoTextField
 import com.perenniasystems.lascito.ui.theme.*
@@ -146,15 +147,12 @@ fun LoginScreen(
                 }
             )
 
-            // Error de credenciales inválidas
+            // Error de credenciales inválidas o de autenticación (Delegado a ErrorHandler + LascitoAlertDialog)
             if (authState is AuthUiState.Error) {
-                Text(
-                    text  = (authState as AuthUiState.Error).message,
-                    color = ErrorRed,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 4.dp, top = 4.dp)
+                val errorState = authState as AuthUiState.Error
+                LascitoAlertDialog(
+                    messageRes = errorState.messageResId,
+                    onDismiss = { authViewModel.resetState() }
                 )
             }
 

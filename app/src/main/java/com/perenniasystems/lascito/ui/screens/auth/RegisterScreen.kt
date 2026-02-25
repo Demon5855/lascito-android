@@ -27,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.components.LascitoPrimaryButton
 import com.perenniasystems.lascito.ui.components.LascitoTextField
 import com.perenniasystems.lascito.ui.theme.*
@@ -250,13 +251,10 @@ fun RegisterScreen(
 
             // Show Firebase error if any
             if (authState is AuthUiState.Error) {
-                Text(
-                    text     = (authState as AuthUiState.Error).message,
-                    color    = ErrorRed,
-                    style    = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 4.dp, bottom = 8.dp)
+                val errorState = authState as AuthUiState.Error
+                LascitoAlertDialog(
+                    messageRes = errorState.messageResId,
+                    onDismiss = { authViewModel.resetState() }
                 )
             }
 

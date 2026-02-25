@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import androidx.annotation.StringRes
+import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.util.ErrorHandler
 import java.io.IOException
 import java.util.UUID
 
@@ -20,7 +23,7 @@ sealed interface AddMemoryUiState {
     data object Idle : AddMemoryUiState
     data object Loading : AddMemoryUiState
     data object Success : AddMemoryUiState
-    data class Error(val message: String) : AddMemoryUiState
+    data class Error(@StringRes val messageResId: Int) : AddMemoryUiState
 }
 
 class AddMemoryViewModel(
@@ -58,12 +61,10 @@ class AddMemoryViewModel(
                     _uiState.value = AddMemoryUiState.Success
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                _uiState.value = AddMemoryUiState.Error("Tiempo de espera agotado al guardar el recuerdo. Verifica tu conexión.")
-            } catch (e: IOException) {
-                _uiState.value = AddMemoryUiState.Error("No hay conexión a internet. Verifica tu red e intenta nuevamente.")
+                _uiState.value = AddMemoryUiState.Error(R.string.error_network)
             } catch (e: Exception) {
                 Log.e("FirestoreError", "Error al guardar memoria", e)
-                _uiState.value = AddMemoryUiState.Error(e.localizedMessage ?: "Error al subir memoria")
+                _uiState.value = AddMemoryUiState.Error(ErrorHandler.mapExceptionToResId(e))
             }
         }
     }
