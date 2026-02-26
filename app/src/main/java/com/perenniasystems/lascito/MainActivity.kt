@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
  * subtree — no [Activity.recreate()] needed, no UI flicker.
  */
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

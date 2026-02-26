@@ -4,7 +4,7 @@
     <string name="company_name">Perennia Systems</string>
 
     <!-- ── Onboarding ─────────────────────────────────────────────────────── -->
-    <string name="onboarding_slide1">Welcome to Lascito. \nYour private digital mausoleum.</string>
+    <string name="onboarding_slide1">Welcome to Lascito. \nYour private digital sanctuary.</string>
     <string name="onboarding_slide2">They are not just photos or videos. \nPreserve the context and history of each moment.</string>
     <string name="onboarding_slide3">Your legacy, \nsecured for eternity.</string>
     <string name="btn_skip">Skip</string>
@@ -26,6 +26,7 @@
     <string name="error_auth_invalid">Incorrect email or password.</string>
     <string name="error_network">No internet connection. Please check your network.</string>
     <string name="error_generic">An unexpected error occurred. Please try again later.</string>
+    <string name="error_recent_login_required">For security reasons, please log out, log back in, and try this action again.</string>
 
     <!-- ── Auth ──────────────────────────────────────────────────────────── -->
     <string name="label_email">Email address</string>
@@ -101,8 +102,8 @@
 
     <!-- ── My Account (UserSettings) ─────────────────────────────────────── -->
     <string name="screen_my_account">My Account</string>
-    <string name="section_mausoleum">Mausoleum Status</string>
-    <string name="plan_lifetime">Active Lifetime Plan</string>
+    <string name="section_mausoleum">Sanctuary Status</string>
+    <string name="plan_lifetime">Perpetual Custody Plan</string>
     <string name="label_storage_used">Safeguarded memories</string>
     <string name="label_storage_amount">%1$.1f GB / %2$d GB</string>
     <string name="section_guardian">Legacy Guardian</string>
@@ -146,9 +147,12 @@
     <string name="confirm_delete_profile_title">Delete Legacy</string>
     <string name="confirm_delete_profile_text">Are you sure you want to delete the legacy of %1$s? \nThis action is irreversible and will erase all their memories forever.</string>
     <string name="confirm_delete_memory_title">Delete Memory</string>
-    <string name="confirm_delete_memory_text">Are you sure you want to delete this memory? \nThis action cannot be undone and the media file will be permanently lost from your vault.</string>    <string name="action_add_photo">Add Photo</string>
+    <string name="confirm_delete_memory_text">Are you sure you want to delete this memory? \nThis action cannot be undone and the media file will be permanently lost from your vault.</string>
+    <string name="action_add_photo">Add Photo</string>
     <string name="action_add_video">Add Video</string>
     <string name="action_add_voice_note">Add Voice Note</string>
     <string name="toast_video_soon">Video: Coming soon (Phase 3B)</string>
     <string name="toast_audio_soon">Audio: Coming soon (Phase 3B)</string>
+    <string name="dialog_delete_account_title">Destroy Sanctuary</string>
+    <string name="dialog_delete_account_text">Are you absolutely sure? This action will permanently delete your account, all your legacies, memories, and media files. It is irreversible.</string>
 </resources>

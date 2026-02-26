@@ -4,6 +4,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.perenniasystems.lascito.data.model.Profile
 import kotlinx.coroutines.tasks.await
+import android.util.Log
 
 /**
  * Firestore implementation of [ProfileRepository].
@@ -52,20 +53,46 @@ class FirebaseProfileRepository(
     }
 
     override suspend fun deleteProfile(profileId: String, imageUrl: String?) {
-        // Cascade step 1: Delete image if it exists
+        val memoriesCollection = collection.document(profileId).collection("memories")
+        
+        // 1. Fetch all memories associated with this profile
+        val memoriesSnapshot = memoriesCollection.get().await()
+        
+        // 2. Iterate through each memory to delete its media and document
+        for (document in memoriesSnapshot.documents) {
+            val mediaUrl = document.getString("mediaUrl")
+            
+            // 3. Delete the memory's media from Storage if it exists
+            if (!mediaUrl.isNullOrBlank()) {
+                val result = storageRepo.deleteImage(mediaUrl)
+                if (result.isFailure) {
+                    // Log or handle non-object-not-found errors if strictness is required,
+                    // but we continue the loop to ensure maximum cleanup effort.
+                    val exception = result.exceptionOrNull()
+                    if (exception !is com.google.firebase.storage.StorageException || 
+                        exception.errorCode != com.google.firebase.storage.StorageException.ERROR_OBJECT_NOT_FOUND) {
+                        Log.e("FirebaseProfileRepo", "Warning: Failed to delete media for memory ${document.id}", exception)
+                    }
+                }
+            }
+            
+            // 4. Delete the memory document from Firestore
+            document.reference.delete().await()
+        }
+        
+        // 5. Delete the main profile's cover image from Storage if it exists
         if (!imageUrl.isNullOrBlank()) {
             val result = storageRepo.deleteImage(imageUrl)
             if (result.isFailure) {
-                // If it's a real failure (not object-not-found), you could throw it here
-                // to halt the document deletion, depending on strictness.
-                // The Architect requirement strictly states:
-                // "If image deletion is successful (or absent), call collection.document(id).delete()"
                 val exception = result.exceptionOrNull()
-                throw exception ?: Exception("Failed to delete image for profile cascade")
+                if (exception !is com.google.firebase.storage.StorageException || 
+                    exception.errorCode != com.google.firebase.storage.StorageException.ERROR_OBJECT_NOT_FOUND) {
+                    Log.e("FirebaseProfileRepo", "Warning: Failed to delete cover image for profile $profileId", exception)
+                }
             }
         }
         
-        // Cascade step 2: Delete document
+        // 6. Delete the main profile document
         collection.document(profileId).delete().await()
     }
 }

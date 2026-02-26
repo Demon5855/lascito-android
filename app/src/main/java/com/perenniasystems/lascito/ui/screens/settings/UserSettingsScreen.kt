@@ -39,8 +39,10 @@ import com.perenniasystems.lascito.util.LocaleHelper
 import com.perenniasystems.lascito.util.Validators
 
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.viewmodel.UserSettingsUiState
 import com.perenniasystems.lascito.viewmodel.UserSettingsViewModel
+import com.perenniasystems.lascito.viewmodel.DeleteAccountState
 
 // ── Language options ──────────────────────────────────────────────────────────
 enum class AppLanguage(val labelRes: Int, val tag: String) {
@@ -74,6 +76,14 @@ fun UserSettingsScreen(
 
     fun toast(msg: String) = Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
     var guardianEmail by remember { mutableStateOf("") }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.deleteState) {
+        if (uiState.deleteState is DeleteAccountState.Success) {
+            viewModel.resetDeleteState()
+            onLogOut()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -139,7 +149,7 @@ fun UserSettingsScreen(
                 onLangChange  = { lang ->
                     selectedLang = lang
                     LocaleHelper.save(context, lang.tag)
-                    LangState.selectedTag = lang.tag  // instant recomposition, no recreate
+                    LangState.selectedTag = lang.tag
                 },
                 onMetalChange = { metal ->
                     ThemeState.selectedMetal = metal   // triggers recomposition everywhere
@@ -155,10 +165,57 @@ fun UserSettingsScreen(
                 onExport  = { toast(context.getString(R.string.toast_exporting)) },
                 onPrivacy = { toast(context.getString(R.string.toast_privacy_soon)) },
                 onLogOut  = onLogOut,
-                onDelete  = { toast(context.getString(R.string.toast_delete_soon)) }
+                onDelete  = { showDeleteAccountDialog = true }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // Overlay & Dialogs 
+        if (showDeleteAccountDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteAccountDialog = false },
+                containerColor = SurfaceDark,
+                titleContentColor = ErrorRed,
+                textContentColor = TextPrimary,
+                title = { Text(stringResource(R.string.dialog_delete_account_title)) },
+                text = { Text(stringResource(R.string.dialog_delete_account_text)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showDeleteAccountDialog = false
+                            viewModel.deleteAccount()
+                        }
+                    ) {
+                        Text(stringResource(R.string.btn_delete_account), color = ErrorRed)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteAccountDialog = false }) {
+                        Text(stringResource(R.string.btn_cancel), color = TextSecondary)
+                    }
+                }
+            )
+        }
+
+        if (uiState.deleteState is DeleteAccountState.Error) {
+            val errState = uiState.deleteState as DeleteAccountState.Error
+            LascitoAlertDialog(
+                messageRes = errState.messageResId,
+                onDismiss  = { viewModel.resetDeleteState() }
+            )
+        }
+
+        if (uiState.deleteState is DeleteAccountState.Loading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(AmoledBlack.copy(alpha = 0.85f))
+                    .clickable(enabled = false) {}, // Block UI interaction
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = DangerRed)
+            }
         }
     }
 }

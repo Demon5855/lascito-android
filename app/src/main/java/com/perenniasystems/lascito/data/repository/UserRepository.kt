@@ -18,4 +18,10 @@ interface UserRepository {
 
     /** Sign out the current user. */
     fun logout()
+
+    /** Verifies and deletes the user document from Firestore */
+    suspend fun deleteUserDocument(userId: String): Result<Unit>
+
+    /** Deletes the Auth account completely */
+    suspend fun deleteAccount(): Result<Unit>
 }

@@ -51,4 +51,13 @@ class FirebaseAuthRepository(
     override fun currentUserId(): String? = auth.currentUser?.uid
 
     override fun logout() { auth.signOut() }
+
+    override suspend fun deleteUserDocument(userId: String): Result<Unit> = runCatching {
+        db.collection("users").document(userId).delete().await()
+    }
+
+    override suspend fun deleteAccount(): Result<Unit> = runCatching {
+        val user = auth.currentUser ?: throw Exception("No authenticated user")
+        user.delete().await()
+    }
 }

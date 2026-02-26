@@ -13,7 +13,19 @@ import kotlinx.coroutines.withTimeout
 import java.io.IOException
 
 import androidx.annotation.StringRes
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.data.repository.ProfileRepository
+import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
+import com.perenniasystems.lascito.data.repository.UserRepository
+import com.perenniasystems.lascito.data.repository.FirebaseAuthRepository
+
+sealed class DeleteAccountState {
+    object Idle : DeleteAccountState()
+    object Loading : DeleteAccountState()
+    object Success : DeleteAccountState()
+    data class Error(@StringRes val messageResId: Int) : DeleteAccountState()
+}
 
 data class UserSettingsUiState(
     @StringRes val displayNameRes: Int? = R.string.state_loading,
@@ -23,12 +35,16 @@ data class UserSettingsUiState(
     val emailRaw: String? = null,
     
     @StringRes val storageUsedStrRes: Int = R.string.state_calculating,
-    @StringRes val storageMaxStrRes: Int = R.string.state_storage_max
+    @StringRes val storageMaxStrRes: Int = R.string.state_storage_max,
+    
+    val deleteState: DeleteAccountState = DeleteAccountState.Idle
 )
 
 class UserSettingsViewModel(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val userRepository: UserRepository = FirebaseAuthRepository(),
+    private val profileRepository: ProfileRepository = FirebaseProfileRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UserSettingsUiState())
@@ -80,5 +96,53 @@ class UserSettingsViewModel(
                 )
             }
         }
+    }
+
+    fun deleteAccount() {
+        viewModelScope.launch {
+            val uid = auth.currentUser?.uid
+            if (uid == null) {
+                _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Error(R.string.error_generic))
+                return@launch
+            }
+            
+            _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Loading)
+            
+            try {
+                // 1. Obtener todos los perfiles
+                val profiles = profileRepository.getProfiles(uid)
+                
+                // 2. Ejecutar la cascada profunda para cada perfil
+                for (profile in profiles) {
+                    profileRepository.deleteProfile(profile.profileId, profile.avatarUrl)
+                }
+                
+                // 3. Borrar el registro del usuario (documento Firestore)
+                userRepository.deleteUserDocument(uid)
+                
+                // 4. Eliminar la cuenta en Firebase Auth
+                val result = userRepository.deleteAccount()
+                if (result.isFailure) {
+                    val exception = result.exceptionOrNull()
+                    if (exception is FirebaseAuthRecentLoginRequiredException) {
+                        _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Error(R.string.error_recent_login_required))
+                        return@launch
+                    }
+                    throw exception ?: Exception("Failed to delete Auth account")
+                }
+                
+                _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Success)
+            } catch (e: Exception) {
+                if (e is FirebaseAuthRecentLoginRequiredException) {
+                    _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Error(R.string.error_recent_login_required))
+                } else {
+                    _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Error(R.string.error_generic))
+                }
+            }
+        }
+    }
+
+    fun resetDeleteState() {
+        _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Idle)
     }
 }
