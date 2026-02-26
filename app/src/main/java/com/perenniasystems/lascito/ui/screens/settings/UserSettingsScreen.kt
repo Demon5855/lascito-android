@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -59,7 +58,8 @@ enum class AppLanguage(val labelRes: Int, val tag: String) {
 fun UserSettingsScreen(
     viewModel: UserSettingsViewModel = viewModel(),
     onNavigateBack: () -> Unit = {},
-    onLogOut:       () -> Unit = {}
+    onLogOut:       () -> Unit = {},
+    onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -80,7 +80,6 @@ fun UserSettingsScreen(
     // propagates instantly through LascitoTheme to the whole tree.
     val selectedMetal = ThemeState.selectedMetal
 
-    fun toast(msg: String) = Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
     var guardianEmail by remember { mutableStateOf("") }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
 
@@ -143,7 +142,7 @@ fun UserSettingsScreen(
             GuardianSection(
                 email         = guardianEmail,
                 onEmailChange = { guardianEmail = it },
-                onSave        = { toast(context.getString(R.string.toast_guardian_saved)) }
+                onSave        = { onShowSnackbar(context.getString(R.string.toast_guardian_saved), null) {} }
             )
 
             HorizontalDivider(color = CardBorder, thickness = 0.5.dp)
@@ -166,8 +165,8 @@ fun UserSettingsScreen(
                     scope.launch {
                         themeRepository.saveThemeColor(metal.name)
                     }
-                    toast(context.getString(R.string.toast_accent_changed,
-                        context.getString(metal.labelRes)))
+                    onShowSnackbar(context.getString(R.string.toast_accent_changed,
+                        context.getString(metal.labelRes)), null) {}
                 }
             )
 
@@ -175,8 +174,8 @@ fun UserSettingsScreen(
 
             // ── § 5 Seguridad y Privacidad ─────────────────────────────────────
             SecuritySection(
-                onExport  = { toast(context.getString(R.string.toast_exporting)) },
-                onPrivacy = { toast(context.getString(R.string.toast_privacy_soon)) },
+                onExport  = { onShowSnackbar(context.getString(R.string.toast_exporting), null) {} },
+                onPrivacy = { onShowSnackbar(context.getString(R.string.toast_privacy_soon), null) {} },
                 onLogOut  = onLogOut,
                 onDelete  = { showDeleteAccountDialog = true }
             )

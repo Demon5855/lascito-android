@@ -58,6 +58,8 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import android.content.Intent
+import android.provider.Settings
 import com.perenniasystems.lascito.util.ImageCompressor
 import com.perenniasystems.lascito.util.AudioRecorderHelper
 import com.perenniasystems.lascito.data.model.MediaType
@@ -73,7 +75,8 @@ private const val MAX_CONTEXT_LENGTH = 1000
 fun AddMemoryScreen(
     profileId:      String,
     viewModel:      AddMemoryViewModel = viewModel(),
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
     var contextText by remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -103,7 +106,16 @@ fun AddMemoryScreen(
                 viewModel.setRecordingState(isRecording = true, duration = "00:00")
             }
         } else {
-            android.widget.Toast.makeText(context, "Permiso de micrófono denegado", android.widget.Toast.LENGTH_SHORT).show()
+            onShowSnackbar(
+                context.getString(R.string.error_mic_permission_denied),
+                context.getString(R.string.action_settings)
+            ) {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(intent)
+            }
         }
     }
     

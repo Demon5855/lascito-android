@@ -34,7 +34,8 @@ import com.perenniasystems.lascito.ui.screens.onboarding.OnboardingScreen
 fun LascitoNavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Login.route,
-    onFinishOnboarding: () -> Unit = {}
+    onFinishOnboarding: () -> Unit = {},
+    onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
     // Shared AuthViewModel — survives across Login ↔ Register navigation
     val authViewModel: AuthViewModel = viewModel()
@@ -150,7 +151,8 @@ fun LascitoNavGraph(
             AddMemoryScreen(
                 profileId      = profileId,
                 viewModel      = addMemoryViewModel,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onShowSnackbar = onShowSnackbar
             )
         }
 
@@ -162,7 +164,8 @@ fun LascitoNavGraph(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
+                onShowSnackbar = onShowSnackbar
             )
         }
     }

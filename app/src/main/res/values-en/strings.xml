@@ -27,6 +27,8 @@
     <string name="error_network">No internet connection. Please check your network.</string>
     <string name="error_generic">An unexpected error occurred. Please try again later.</string>
     <string name="error_recent_login_required">For security reasons, please log out, log back in, and try this action again.</string>
+    <string name="error_mic_permission_denied">Microphone permission denied</string>
+
 
     <!-- ── Auth ──────────────────────────────────────────────────────────── -->
     <string name="label_email">Email address</string>
@@ -158,6 +160,7 @@
     <string name="dialog_delete_audio_title">Delete Audio</string>
     <string name="dialog_delete_audio_text">This voice note will be lost. Do you wish to remove it from this Memory?</string>
     <string name="action_remove">Remove</string>
+    <string name="action_settings">Settings</string>
     <string name="action_add_photo">Add Photo</string>
     <string name="action_add_video">Add Video</string>
     <string name="action_add_voice_note">Add Voice Note</string>

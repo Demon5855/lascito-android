@@ -24,7 +24,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import com.perenniasystems.lascito.data.repository.ThemeRepository
 import com.perenniasystems.lascito.ui.theme.AccentMetal
 import com.perenniasystems.lascito.ui.theme.ThemeState
@@ -103,19 +106,51 @@ class MainActivity : ComponentActivity() {
                     } else {
                         val navController = rememberNavController()
                         val startDest = if (hasSeenOnboarding == true) Screen.Login.route else Screen.Onboarding.route
+                        val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
 
-                        LascitoNavGraph(
-                            navController = navController,
-                            startDestination = startDest,
-                            onFinishOnboarding = {
-                                scope.launch {
-                                    onboardingPreferences.saveOnboardingState(true)
-                                }
-                                navController.navigate(Screen.Login.route) {
-                                    popUpTo(Screen.Onboarding.route) { inclusive = true }
+                        androidx.compose.material3.Scaffold(
+                            snackbarHost = { 
+                                androidx.compose.material3.SnackbarHost(snackbarHostState) { data ->
+                                    androidx.compose.material3.Snackbar(
+                                        modifier = Modifier.padding(bottom = 24.dp),
+                                        snackbarData = data,
+                                        containerColor = com.perenniasystems.lascito.ui.theme.SurfaceVariant,
+                                        contentColor = com.perenniasystems.lascito.ui.theme.TextPrimary,
+                                        actionColor = com.perenniasystems.lascito.ui.theme.ThemeState.selectedMetal.color,
+                                        actionContentColor = com.perenniasystems.lascito.ui.theme.ThemeState.selectedMetal.color,
+                                        dismissActionContentColor = com.perenniasystems.lascito.ui.theme.TextSecondary,
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                                    )
                                 }
                             }
-                        )
+                        ) { paddingValues ->
+                            Box(modifier = Modifier.padding(paddingValues)) {
+                                LascitoNavGraph(
+                                    navController = navController,
+                                    startDestination = startDest,
+                                    onFinishOnboarding = {
+                                        scope.launch {
+                                            onboardingPreferences.saveOnboardingState(true)
+                                        }
+                                        navController.navigate(Screen.Login.route) {
+                                            popUpTo(Screen.Onboarding.route) { inclusive = true }
+                                        }
+                                    },
+                                    onShowSnackbar = { message, actionLabel, onAction ->
+                                        scope.launch {
+                                            val result = snackbarHostState.showSnackbar(
+                                                message = message,
+                                                actionLabel = actionLabel,
+                                                withDismissAction = true
+                                            )
+                                            if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                                                onAction()
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }

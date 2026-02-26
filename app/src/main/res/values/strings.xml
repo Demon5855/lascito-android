@@ -27,6 +27,7 @@
     <string name="error_network">No hay conexión a internet. Verifica tu red.</string>
     <string name="error_generic">Ha ocurrido un error inesperado. Inténtalo más tarde.</string>
     <string name="error_recent_login_required">Por seguridad, cierra sesión, vuelve a ingresar e intenta esta acción de nuevo.</string>
+    <string name="error_mic_permission_denied">Permiso de micrófono denegado</string>
 
     <!-- ── Auth ────────────────────────────────────────────────────────────── -->
     <string name="label_email">Correo electrónico</string>
@@ -158,6 +159,7 @@
     <string name="dialog_delete_audio_title">Eliminar Audio</string>
     <string name="dialog_delete_audio_text">Esta nota de voz se perderá. ¿Deseas quitarla de este Recuerdo?</string>
     <string name="action_remove">Quitar</string>
+    <string name="action_settings">Ajustes</string>
     <string name="action_add_photo">Añadir Fotografía</string>
     <string name="action_add_video">Añadir Video</string>
     <string name="action_add_voice_note">Añadir Nota de Voz</string>
