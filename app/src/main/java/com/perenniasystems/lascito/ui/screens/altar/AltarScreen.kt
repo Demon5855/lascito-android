@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -46,6 +47,12 @@ import com.perenniasystems.lascito.viewmodel.AltarViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.net.Uri
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
+import androidx.media3.ui.AspectRatioFrameLayout
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -368,60 +375,26 @@ private fun MemoryItem(
             }
 
             // -- VIDEO ---------------------------------------------------------
-            // Muestra el thumbnail con un overlay oscuro y un ícono Play centrado
             MediaType.VIDEO -> {
                 Box(
-                    modifier         = Modifier
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .height(260.dp),
+                        .height(260.dp)
+                        .clipToBounds(),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Thumbnail
-                    SubcomposeAsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(memory.mediaUrl.takeIf { it.isNotBlank() })
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = null,
-                        contentScale       = ContentScale.Crop,
-                        modifier           = Modifier.fillMaxSize(),
-                        loading = {
-                            Box(modifier = Modifier.fillMaxSize().shimmerEffect())
-                        },
-                        error = {
-                            Box(
-                                modifier         = Modifier.fillMaxSize().background(SurfaceVariant),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector        = Icons.Default.ImageNotSupported,
-                                    contentDescription = null,
-                                    tint               = MaterialTheme.colorScheme.primaryContainer,
-                                    modifier           = Modifier.size(48.dp)
-                                )
-                            }
-                        }
-                    )
-                    // Oscurecimiento sutil
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0x80000000))
-                    )
-                    // Botón Play dorado
-                    Icon(
-                        imageVector        = Icons.Default.PlayCircle,
-                        contentDescription = "Reproducir video",
-                        tint               = MaterialTheme.colorScheme.primary,
-                        modifier           = Modifier.size(72.dp)
-                    )
+                    FeedMediaItem(url = memory.mediaUrl, isAudioOnly = false)
                 }
             }
 
             // -- AUDIO ---------------------------------------------------------
-            // Reproductor minimalista: play + barra de progreso + tiempo
             MediaType.AUDIO -> {
-                AudioPlayer()
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(80.dp).padding(horizontal = 24.dp, vertical = 4.dp).clip(RoundedCornerShape(14.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    FeedMediaItem(url = memory.mediaUrl, isAudioOnly = true)
+                }
             }
         }
 
@@ -488,71 +461,42 @@ private fun MemoryItem(
 }
 
 // ----------------------------------------------------------------------------
-// AudioPlayer — reproductor estático minimalista (Phase 1: visual sólo)
+// FeedMediaItem — Dynamic AV renderer with safe ExoPlayer lifting
 // ----------------------------------------------------------------------------
-
 @Composable
-private fun AudioPlayer() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(SurfaceDark)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment     = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        // Botón Play circular dorado
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector        = Icons.Default.PlayCircle,
-                contentDescription = "Reproducir nota de voz",
-                tint               = MaterialTheme.colorScheme.primary,
-                modifier           = Modifier.size(32.dp)
-            )
-        }
+private fun FeedMediaItem(url: String, isAudioOnly: Boolean) {
+    if (url.isBlank()) return
 
-        // Barra de progreso + tiempo
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            LinearProgressIndicator(
-                progress            = { 0.35f },   // Phase 2: progreso real del player
-                modifier            = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
-                color               = MaterialTheme.colorScheme.primary,
-                trackColor          = CardBorder,
-                strokeCap           = StrokeCap.Round
-            )
-            Row(
-                modifier              = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text  = "0:31",    // Phase 2: posición real
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color    = TextSecondary,
-                        fontSize = 11.sp
-                    )
-                )
-                Text(
-                    text  = "1:24",    // Phase 2: duración real
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color      = TextSecondary,
-                        fontSize   = 11.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                )
-            }
+    val context = LocalContext.current
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            setMediaItem(MediaItem.fromUri(Uri.parse(url)))
+            prepare()
+            playWhenReady = false
         }
     }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
+    AndroidView(
+        factory = { ctx ->
+            PlayerView(ctx).apply {
+                player = exoPlayer
+                if (isAudioOnly) {
+                    controllerAutoShow = true
+                    controllerShowTimeoutMs = -1
+                    setShowNextButton(false)
+                    setShowPreviousButton(false)
+                    setBackgroundColor(android.graphics.Color.parseColor("#1A1A1A"))
+                } else {
+                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                }
+            }
+        },
+        modifier = Modifier.fillMaxSize()
+    )
 }

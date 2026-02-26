@@ -58,6 +58,11 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.material.icons)
+    
+    // ── Media3 (ExoPlayer) ──────────────────────────────────────────────────
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
+
     // ── Firebase ──────────────────────────────────────────────────────────────
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

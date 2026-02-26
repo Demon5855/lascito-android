@@ -88,7 +88,7 @@ class AddProfileViewModel(
                     var avatarUrl = currentAvatarUrl ?: ""
 
                     if (imageBytes != null) {
-                        val path = "images/profiles/${currentUserUid}_${profileId}.jpg"
+                        val path = "profiles/covers/${profileId}.jpg"
                         val newUrl = storage.uploadImage(imageBytes, path)
                         
                         // Delete old image if it exists and is different from the new one

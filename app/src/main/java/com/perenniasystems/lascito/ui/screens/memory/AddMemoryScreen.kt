@@ -37,12 +37,19 @@ import com.perenniasystems.lascito.viewmodel.AddMemoryUiState
 import com.perenniasystems.lascito.viewmodel.AddMemoryViewModel
 
 import android.net.Uri
+import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import com.perenniasystems.lascito.util.ImageCompressor
+import com.perenniasystems.lascito.util.AudioRecorderHelper
+import com.perenniasystems.lascito.data.model.MediaType
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
@@ -54,12 +61,33 @@ fun AddMemoryScreen(
     onNavigateBack: () -> Unit = {}
 ) {
     var contextText by remember { mutableStateOf("") }
+    val context = LocalContext.current
     
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val selectedMediaUri by viewModel.selectedMediaUri.collectAsStateWithLifecycle()
+    val selectedMediaType by viewModel.selectedMediaType.collectAsStateWithLifecycle()
+    val isRecording by viewModel.isRecording.collectAsStateWithLifecycle()
+    val recordingDuration by viewModel.recordingDuration.collectAsStateWithLifecycle()
+    
+    val audioRecorder = remember { AudioRecorderHelper(context) }
+
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri -> if (uri != null) selectedImageUri = uri }
-    val context = LocalContext.current
+    ) { uri -> if (uri != null) viewModel.updateSelectedMedia(uri, MediaType.IMAGE) }
+    
+    val videoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri -> if (uri != null) viewModel.updateSelectedMedia(uri, MediaType.VIDEO) }
+
+    val micPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val started = audioRecorder.startRecording()
+            if (started) viewModel.setRecordingState(isRecording = true, duration = "Grabando...")
+        } else {
+            android.widget.Toast.makeText(context, "Permiso de micrófono denegado", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
     val coroutineScope = rememberCoroutineScope()
 
     var isPickerLaunchEnabled by remember { mutableStateOf(true) }
@@ -84,7 +112,7 @@ fun AddMemoryScreen(
         }
     }
 
-    val canSave = contextText.isNotBlank() && selectedImageUri != null && !isLoading
+    val canSave = contextText.isNotBlank() && selectedMediaUri != null && !isLoading && !isRecording
 
     Scaffold(
         topBar = {
@@ -151,15 +179,54 @@ fun AddMemoryScreen(
                 contentAlignment = Alignment.Center
             ) {
                 val currentMemory = (uiState as? AddMemoryUiState.Loaded)?.memory
-                if (selectedImageUri != null) {
-                    AsyncImage(
-                        model = selectedImageUri,
-                        contentDescription = "Foto elegida",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                
+                if (isRecording) {
+                    Column(
+                        modifier = Modifier.fillMaxSize().clickable {
+                            val uri = audioRecorder.stopRecording()
+                            viewModel.setRecordingState(isRecording = false)
+                            if (uri != null) {
+                                viewModel.updateSelectedMedia(uri, MediaType.AUDIO)
+                            }
+                        },
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = "Grabando",
+                            tint = Color.Red,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = recordingDuration,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.Red
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Toca para detener y guardar",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondary
+                        )
+                    }
+                } else if (selectedMediaUri != null) {
+                    when (selectedMediaType) {
+                        MediaType.IMAGE -> {
+                            AsyncImage(
+                                model = selectedMediaUri,
+                                contentDescription = "Foto elegida",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        MediaType.VIDEO, MediaType.AUDIO -> {
+                            MediaPreviewPlayer(uri = selectedMediaUri!!, isAudioOnly = selectedMediaType == MediaType.AUDIO)
+                        }
+                    }
                 } else if (currentMemory != null && currentMemory.mediaUrl.isNotBlank()) {
-                     AsyncImage(
+                     AsyncImage( // For simplicity right now, treating old memories as images, can update later
                         model = currentMemory.mediaUrl,
                         contentDescription = "Media actual",
                         contentScale = ContentScale.Crop,
@@ -247,19 +314,24 @@ fun AddMemoryScreen(
                 )
             }
             // -- Save Button ---------------------------------------------------
-            val canSave = contextText.isNotBlank() && (selectedImageUri != null || (uiState as? AddMemoryUiState.Loaded)?.memory?.mediaUrl?.isNotBlank() == true) && !isLoading
+            val canSaveBtn = contextText.isNotBlank() && (selectedMediaUri != null || (uiState as? AddMemoryUiState.Loaded)?.memory?.mediaUrl?.isNotBlank() == true) && !isLoading && !isRecording
             Button(
                 onClick  = {
                     coroutineScope.launch {
-                        val bytes = selectedImageUri?.let { ImageCompressor.compressImage(context, it) }
+                        val bytes = if (selectedMediaType == MediaType.IMAGE && selectedMediaUri != null) {
+                             ImageCompressor.compressImage(context, selectedMediaUri!!)
+                        } else null
+                        
                         viewModel.saveMemory(
                             profileId = profileId,
                             contextText = contextText,
-                            imageBytes = bytes
+                            mediaType = selectedMediaType,
+                            imageBytes = bytes,
+                            mediaUri = selectedMediaUri
                         )
                     }
                 },
-                enabled  = canSave,
+                enabled  = canSaveBtn,
                 shape    = RoundedCornerShape(8.dp),
                 colors   = ButtonDefaults.buttonColors(
                     containerColor         = MaterialTheme.colorScheme.primary,
@@ -329,7 +401,9 @@ fun AddMemoryScreen(
                                 coroutineScope.launch {
                                     sheetState.hide()
                                     showBottomSheet = false
-                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_video_soon), android.widget.Toast.LENGTH_SHORT).show()
+                                    videoPickerLauncher.launch(
+                                        androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)
+                                    )
                                 }
                             }
                         )
@@ -340,7 +414,7 @@ fun AddMemoryScreen(
                                 coroutineScope.launch {
                                     sheetState.hide()
                                     showBottomSheet = false
-                                    android.widget.Toast.makeText(context, context.getString(R.string.toast_audio_soon), android.widget.Toast.LENGTH_SHORT).show()
+                                    micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                                 }
                             }
                         )
@@ -352,6 +426,41 @@ fun AddMemoryScreen(
 }
 
 // -- Helpers -------------------------------------------------------------------
+
+@Composable
+private fun MediaPreviewPlayer(uri: Uri, isAudioOnly: Boolean = false) {
+    val context = LocalContext.current
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            setMediaItem(MediaItem.fromUri(uri))
+            prepare()
+            playWhenReady = false
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
+    AndroidView(
+        factory = { ctx ->
+            PlayerView(ctx).apply {
+                player = exoPlayer
+                if (isAudioOnly) {
+                    // Hide UI that implies video if it's strictly audio
+                    controllerAutoShow = true
+                    controllerShowTimeoutMs = -1 // Don't hide the controls
+                    setShowNextButton(false)
+                    setShowPreviousButton(false)
+                    setBackgroundColor(android.graphics.Color.parseColor("#1A1A1A"))
+                }
+            }
+        },
+        modifier = Modifier.fillMaxSize()
+    )
+}
 
 @Composable
 private fun MediaBottomSheetItem(

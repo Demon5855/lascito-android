@@ -20,6 +20,7 @@ import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.util.ErrorHandler
 import java.io.IOException
 import java.util.UUID
+import android.net.Uri
 
 sealed interface AddMemoryUiState {
     data object Idle : AddMemoryUiState
@@ -40,6 +41,28 @@ class AddMemoryViewModel(
     private var currentMemoryId: String? = null
     private var currentMediaUrl: String? = null
     private var currentCapturedDate: Long? = null
+
+    private val _selectedMediaUri = MutableStateFlow<Uri?>(null)
+    val selectedMediaUri: StateFlow<Uri?> = _selectedMediaUri.asStateFlow()
+
+    private val _selectedMediaType = MutableStateFlow<MediaType>(MediaType.IMAGE)
+    val selectedMediaType: StateFlow<MediaType> = _selectedMediaType.asStateFlow()
+
+    private val _isRecording = MutableStateFlow(false)
+    val isRecording: StateFlow<Boolean> = _isRecording.asStateFlow()
+
+    private val _recordingDuration = MutableStateFlow("00:00")
+    val recordingDuration: StateFlow<String> = _recordingDuration.asStateFlow()
+
+    fun updateSelectedMedia(uri: Uri?, type: MediaType) {
+        _selectedMediaUri.value = uri
+        _selectedMediaType.value = type
+    }
+
+    fun setRecordingState(isRecording: Boolean, duration: String = "00:00") {
+        _isRecording.value = isRecording
+        _recordingDuration.value = duration
+    }
 
     fun resetState() {
         _uiState.value = AddMemoryUiState.Idle
@@ -74,11 +97,12 @@ class AddMemoryViewModel(
         }
     }
 
-    fun saveMemory(profileId: String, contextText: String, mediaType: MediaType = MediaType.IMAGE, imageBytes: ByteArray?) {
+    fun saveMemory(profileId: String, contextText: String, mediaType: MediaType = MediaType.IMAGE, imageBytes: ByteArray?, mediaUri: Uri? = null) {
         viewModelScope.launch {
             _uiState.value = AddMemoryUiState.Loading
             try {
-                withTimeout(15_000L) {
+                // Extended timeout for large files (videos)
+                withTimeout(120_000L) {
                     val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
                     if (currentUserUid.isNullOrBlank()) {
                         throw IllegalStateException("Usuario no autenticado")
@@ -87,8 +111,8 @@ class AddMemoryViewModel(
                     val memoryId = currentMemoryId ?: UUID.randomUUID().toString()
                     var mediaUrl = currentMediaUrl ?: ""
 
-                    if (imageBytes != null) {
-                        val path = "images/memories/${profileId}/${memoryId}.jpg"
+                    if (mediaType == MediaType.IMAGE && imageBytes != null) {
+                        val path = "memories/${profileId}/images/${memoryId}.jpg"
                         val newUrl = storage.uploadImage(imageBytes, path)
                         
                         // Delete old image if it exists and is different from the new one
@@ -96,6 +120,22 @@ class AddMemoryViewModel(
                             storage.deleteImage(currentMediaUrl!!)
                         }
                         mediaUrl = newUrl
+                    } else if ((mediaType == MediaType.VIDEO || mediaType == MediaType.AUDIO) && mediaUri != null) {
+                        val result = storage.uploadMediaFile(mediaUri, mediaType, profileId)
+                        if (result.isSuccess) {
+                            val newUrl = result.getOrThrow()
+                            if (!currentMediaUrl.isNullOrBlank() && currentMediaUrl != newUrl) {
+                                storage.deleteImage(currentMediaUrl!!)
+                            }
+                            mediaUrl = newUrl
+                            
+                            // Cleanup local audio cache file
+                            if (mediaType == MediaType.AUDIO && mediaUri.scheme == "file") {
+                                mediaUri.path?.let { java.io.File(it).delete() }
+                            }
+                        } else {
+                            throw result.exceptionOrNull() ?: Exception("Upload error")
+                        }
                     }
 
                     val newMemory = Memory(

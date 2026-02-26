@@ -1,0 +1,73 @@
+package com.perenniasystems.lascito.util
+
+import android.content.Context
+import android.media.MediaRecorder
+import android.net.Uri
+import android.os.Build
+import android.util.Log
+import java.io.File
+import java.io.IOException
+
+class AudioRecorderHelper(private val context: Context) {
+
+    private var recorder: MediaRecorder? = null
+    private var outputFile: File? = null
+
+    fun startRecording(): Boolean {
+        return try {
+            outputFile = File(context.cacheDir, "audio_memory_${System.currentTimeMillis()}.m4a")
+            
+            recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                MediaRecorder(context)
+            } else {
+                @Suppress("DEPRECATION")
+                MediaRecorder()
+            }.apply {
+                setAudioSource(MediaRecorder.AudioSource.MIC)
+                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                setOutputFile(outputFile?.absolutePath)
+                prepare()
+                start()
+            }
+            true
+        } catch (e: IOException) {
+            Log.e("AudioRecorderHelper", "prepare() failed", e)
+            false
+        } catch (e: Exception) {
+            Log.e("AudioRecorderHelper", "start() failed", e)
+            false
+        }
+    }
+
+    fun stopRecording(): Uri? {
+        return try {
+            recorder?.apply {
+                stop()
+                release()
+            }
+            recorder = null
+            outputFile?.let { Uri.fromFile(it) }
+        } catch (e: Exception) {
+            Log.e("AudioRecorderHelper", "stop() failed", e)
+            recorder?.release()
+            recorder = null
+            null
+        }
+    }
+    
+    fun cancelRecording() {
+        try {
+            recorder?.apply {
+                stop()
+                release()
+            }
+        } catch (e: Exception) {
+            Log.e("AudioRecorderHelper", "cancel() stop failed", e)
+        } finally {
+            recorder = null
+            outputFile?.delete()
+            outputFile = null
+        }
+    }
+}
