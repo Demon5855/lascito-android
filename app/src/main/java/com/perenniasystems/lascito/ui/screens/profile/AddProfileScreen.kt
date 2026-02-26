@@ -34,9 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.annotation.StringRes
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
-import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.data.model.ProfileType
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
+import com.perenniasystems.lascito.ui.components.UploadProgressOverlay
 import com.perenniasystems.lascito.viewmodel.AddProfileUiState
 import com.perenniasystems.lascito.viewmodel.AddProfileViewModel
 import java.text.SimpleDateFormat
@@ -49,10 +49,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import coil.compose.AsyncImage
 import com.perenniasystems.lascito.util.ImageCompressor
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+
+private const val MAX_NAME_LENGTH = 60
+private const val MAX_RELATIONSHIP_LENGTH = 60
 
 private enum class ProfileTypeChoice { HUMAN, PET }
 
@@ -155,9 +159,11 @@ fun AddProfileScreen(
     ) { uri -> if (uri != null) selectedImageUri = uri }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val currentLangTag = com.perenniasystems.lascito.ui.theme.LangState.selectedTag
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isLoading = uiState is AddProfileUiState.Loading
+    val uploadProgress by viewModel.uploadProgress.collectAsStateWithLifecycle()
 
     // Handle initial load and success navigation
     LaunchedEffect(uiState) {
@@ -190,8 +196,7 @@ fun AddProfileScreen(
             else -> {}
         }
     }
-    val birthPickerState   = rememberDatePickerState()
-    val passingPickerState = rememberDatePickerState()
+
 
     val birthError = validateDateDigits(birthDigits)
     val passError  = if (!isPresent) validateDateDigits(passDigits) else null
@@ -201,40 +206,66 @@ fun AddProfileScreen(
 
     // -- Fecha de Nacimiento picker --------------------------------------------
     if (showBirthPicker) {
-        DatePickerDialog(
-            onDismissRequest = { showBirthPicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    birthPickerState.selectedDateMillis?.let { birthDigits = it.toRawDigits() }
-                    showBirthPicker = false
-                }) { Text("Aceptar", color = MaterialTheme.colorScheme.primary) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showBirthPicker = false }) {
-                    Text("Cancelar", color = TextSecondary)
-                }
-            },
-            colors = pickerColors()
-        ) { DatePicker(state = birthPickerState) }
+        key(currentLangTag) {
+            val contextLoc = LocalContext.current
+            val locale = java.util.Locale(currentLangTag)
+            val configuration = android.content.res.Configuration(contextLoc.resources.configuration)
+            configuration.setLocale(locale)
+            val localizedContext = contextLoc.createConfigurationContext(configuration)
+            CompositionLocalProvider(
+                LocalContext provides localizedContext,
+                LocalConfiguration provides configuration
+            ) {
+                val birthPickerState = rememberDatePickerState()
+                DatePickerDialog(
+                    onDismissRequest = { showBirthPicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            birthPickerState.selectedDateMillis?.let { birthDigits = it.toRawDigits() }
+                            showBirthPicker = false
+                        }) { Text("Aceptar", color = MaterialTheme.colorScheme.primary) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showBirthPicker = false }) {
+                            Text("Cancelar", color = TextSecondary)
+                        }
+                    },
+                    colors = pickerColors()
+                ) { DatePicker(state = birthPickerState) }
+            }
+        }
     }
 
     // -- Fecha de Partida picker -----------------------------------------------
     if (showPassingPicker) {
-        DatePickerDialog(
-            onDismissRequest = { showPassingPicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    passingPickerState.selectedDateMillis?.let { passDigits = it.toRawDigits() }
-                    showPassingPicker = false
-                }) { Text("Aceptar", color = MaterialTheme.colorScheme.primary) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showPassingPicker = false }) {
-                    Text("Cancelar", color = TextSecondary)
-                }
-            },
-            colors = pickerColors()
-        ) { DatePicker(state = passingPickerState) }
+        key(currentLangTag) {
+            val contextLoc = LocalContext.current
+            val locale = java.util.Locale(currentLangTag)
+            val configuration = android.content.res.Configuration(contextLoc.resources.configuration)
+            configuration.setLocale(locale)
+            val localizedContext = contextLoc.createConfigurationContext(configuration)
+            CompositionLocalProvider(
+                LocalContext provides localizedContext,
+                LocalConfiguration provides configuration
+            ) {
+                val passingPickerState = rememberDatePickerState()
+                DatePickerDialog(
+                    onDismissRequest = { showPassingPicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            passingPickerState.selectedDateMillis?.let { passDigits = it.toRawDigits() }
+                            showPassingPicker = false
+                        }) { Text("Aceptar", color = MaterialTheme.colorScheme.primary) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showPassingPicker = false }) {
+                            Text("Cancelar", color = TextSecondary)
+                        }
+                    },
+                    colors = pickerColors()
+                ) { DatePicker(state = passingPickerState) }
+            }
+        }
     }
 
     Scaffold(
@@ -245,7 +276,8 @@ fun AddProfileScreen(
                         modifier         = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(stringResource(R.string.screen_new_altar), style = MaterialTheme.typography.headlineLarge)
+                        val titleText = if (uiState is AddProfileUiState.Loaded) stringResource(R.string.screen_edit_altar) else stringResource(R.string.screen_new_altar)
+                        Text(titleText, style = MaterialTheme.typography.headlineLarge)
                     }
                 },
                 navigationIcon = {
@@ -366,7 +398,7 @@ fun AddProfileScreen(
             LabeledField(stringResource(R.string.label_full_name_field)) {
                 OutlinedTextField(
                     value         = rawName,
-                    onValueChange = { rawName = it },
+                    onValueChange = { if (it.length <= MAX_NAME_LENGTH) rawName = it },
                     modifier      = Modifier.fillMaxWidth(),
                     placeholder   = {
                         Text(
@@ -387,7 +419,14 @@ fun AddProfileScreen(
                         imeAction      = ImeAction.Next
                     ),
                     colors = diaryFieldColors(),
-                    shape  = RoundedCornerShape(10.dp)
+                    shape  = RoundedCornerShape(10.dp),
+                    supportingText = {
+                        Text(
+                            text = "${rawName.length} / $MAX_NAME_LENGTH",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End
+                        )
+                    }
                 )
             }
 
@@ -395,7 +434,7 @@ fun AddProfileScreen(
             LabeledField(stringResource(R.string.label_relationship)) {
                 OutlinedTextField(
                     value         = rawRelationship,
-                    onValueChange = { rawRelationship = it },
+                    onValueChange = { if (it.length <= MAX_RELATIONSHIP_LENGTH) rawRelationship = it },
                     modifier      = Modifier.fillMaxWidth(),
                     placeholder   = {
                         Text(
@@ -413,7 +452,14 @@ fun AddProfileScreen(
                         imeAction      = ImeAction.Next
                     ),
                     colors = diaryFieldColors(),
-                    shape  = RoundedCornerShape(10.dp)
+                    shape  = RoundedCornerShape(10.dp),
+                    supportingText = {
+                        Text(
+                            text = "${rawRelationship.length} / $MAX_RELATIONSHIP_LENGTH",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End
+                        )
+                    }
                 )
             }
 
@@ -588,19 +634,10 @@ fun AddProfileScreen(
 
             // -- Loading Overlay ---------------------------------------------------
             if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(AmoledBlack.copy(alpha = 0.6f))
-                        .clickable(enabled = false) { /* Block clicks */ },
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(48.dp),
-                        strokeWidth = 4.dp
-                    )
-                }
+                UploadProgressOverlay(
+                    progress = uploadProgress,
+                    message = stringResource(R.string.msg_uploading_profile)
+                )
             }
         } // End of outer Box
     } // End of Scaffold Container

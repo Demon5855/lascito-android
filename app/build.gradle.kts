@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.material.icons)
+    implementation("androidx.exifinterface:exifinterface:1.3.6")
     
     // ── Media3 (ExoPlayer) ──────────────────────────────────────────────────
     implementation("androidx.media3:media3-exoplayer:1.3.1")

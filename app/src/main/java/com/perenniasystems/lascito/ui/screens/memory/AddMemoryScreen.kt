@@ -1,5 +1,9 @@
 ﻿package com.perenniasystems.lascito.ui.screens.memory
 
+import androidx.compose.animation.core.*
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.alpha
+import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.foundation.background
@@ -8,12 +12,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,13 +33,17 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.ui.theme.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.perenniasystems.lascito.ui.components.CustomAudioPlayer
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
+import com.perenniasystems.lascito.ui.components.MediaPreviewPlayer
+import com.perenniasystems.lascito.ui.components.UploadProgressOverlay
 import com.perenniasystems.lascito.viewmodel.AddMemoryUiState
 import com.perenniasystems.lascito.viewmodel.AddMemoryViewModel
 
@@ -52,6 +63,10 @@ import com.perenniasystems.lascito.util.AudioRecorderHelper
 import com.perenniasystems.lascito.data.model.MediaType
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import java.util.Locale
+
+private const val MAX_CONTEXT_LENGTH = 1000
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,11 +98,29 @@ fun AddMemoryScreen(
     ) { isGranted ->
         if (isGranted) {
             val started = audioRecorder.startRecording()
-            if (started) viewModel.setRecordingState(isRecording = true, duration = "Grabando...")
+            if (started) {
+                viewModel.updateSelectedMedia(null, MediaType.AUDIO)
+                viewModel.setRecordingState(isRecording = true, duration = "00:00")
+            }
         } else {
             android.widget.Toast.makeText(context, "Permiso de micrófono denegado", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
+    
+    var recordingSeconds by remember { mutableIntStateOf(0) }
+    LaunchedEffect(isRecording) {
+        if (isRecording) {
+            recordingSeconds = 0
+            while (isActive) {
+                delay(1000)
+                recordingSeconds++
+                val min = recordingSeconds / 60
+                val sec = recordingSeconds % 60
+                viewModel.setRecordingState(true, String.format(Locale.getDefault(), "%02d:%02d", min, sec))
+            }
+        }
+    }
+
     val coroutineScope = rememberCoroutineScope()
 
     var isPickerLaunchEnabled by remember { mutableStateOf(true) }
@@ -96,6 +129,8 @@ fun AddMemoryScreen(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isLoading = uiState is AddMemoryUiState.Loading
+    val uploadProgress by viewModel.uploadProgress.collectAsStateWithLifecycle()
+    var showDeleteAudioWarning by remember { mutableStateOf(false) }
 
     // Handle initial load and success navigation
     LaunchedEffect(uiState) {
@@ -122,8 +157,9 @@ fun AddMemoryScreen(
                         modifier         = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
+                        val titleText = if (uiState is AddMemoryUiState.Loaded) stringResource(R.string.screen_edit_memory) else stringResource(R.string.screen_new_memory)
                         Text(
-                            text  = stringResource(R.string.screen_new_memory),
+                            text  = titleText,
                             style = MaterialTheme.typography.headlineLarge
                         )
                     }
@@ -157,6 +193,9 @@ fun AddMemoryScreen(
             ) {
 
             // -- Media Picker Area ---------------------------------------------
+            val currentMemory = (uiState as? AddMemoryUiState.Loaded)?.memory
+            val cloudUrl = currentMemory?.mediaUrl
+            
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -168,7 +207,7 @@ fun AddMemoryScreen(
                         color = CardBorder,
                         shape = RoundedCornerShape(16.dp)
                     )
-                    .clickable(enabled = isPickerLaunchEnabled) { 
+                    .clickable(enabled = isPickerLaunchEnabled && !isRecording && selectedMediaUri == null && cloudUrl.isNullOrBlank()) { 
                         coroutineScope.launch {
                             isPickerLaunchEnabled = false
                             showBottomSheet = true
@@ -178,60 +217,140 @@ fun AddMemoryScreen(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                val currentMemory = (uiState as? AddMemoryUiState.Loaded)?.memory
                 
-                if (isRecording) {
-                    Column(
-                        modifier = Modifier.fillMaxSize().clickable {
-                            val uri = audioRecorder.stopRecording()
-                            viewModel.setRecordingState(isRecording = false)
-                            if (uri != null) {
-                                viewModel.updateSelectedMedia(uri, MediaType.AUDIO)
-                            }
-                        },
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                val isAudioSetupMode = selectedMediaType == MediaType.AUDIO && selectedMediaUri == null && cloudUrl.isNullOrBlank()
+
+                if (isAudioSetupMode || isRecording) {
+                    val infiniteTransition = rememberInfiniteTransition()
+                    val pulseScale by infiniteTransition.animateFloat(
+                        initialValue = 1f,
+                        targetValue = 1.6f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1000, easing = LinearOutSlowInEasing),
+                            repeatMode = RepeatMode.Restart
+                        )
+                    )
+                    val pulseAlpha by infiniteTransition.animateFloat(
+                        initialValue = 0.5f,
+                        targetValue = 0f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1000, easing = LinearOutSlowInEasing),
+                            repeatMode = RepeatMode.Restart
+                        )
+                    )
+
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Mic,
-                            contentDescription = "Grabando",
-                            tint = Color.Red,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        // Text Timer at top
                         Text(
-                            text = recordingDuration,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.Red
+                            text = if (isRecording) recordingDuration else "00:00",
+                            style = MaterialTheme.typography.displaySmall.copy(
+                                fontFamily = PlayfairDisplay,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(top = 24.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Toca para detener y guardar",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary
-                        )
+
+                        // Studio Microphone
+                        Box(contentAlignment = Alignment.Center) {
+                            if (isRecording) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .scale(pulseScale)
+                                        .alpha(pulseAlpha)
+                                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                )
+                            }
+
+                            IconButton(
+                                onClick = {
+                                    if (isRecording) {
+                                        val uri = audioRecorder.stopRecording()
+                                        viewModel.setRecordingState(isRecording = false)
+                                        if (uri != null) {
+                                            viewModel.updateSelectedMedia(uri, MediaType.AUDIO)
+                                        }
+                                    } else {
+                                        micPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), CircleShape)
+                                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = if (isRecording) Icons.Default.Check else Icons.Default.Mic,
+                                    contentDescription = if (isRecording) "Detener" else "Grabar",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(40.dp)
+                                )
+                            }
+                        }
+
+                        // Trash button to cancel
+                        if (isRecording || isAudioSetupMode) {
+                            val showTrash = isRecording
+                            if (showTrash) {
+                                IconButton(
+                                    onClick = {
+                                        audioRecorder.cancelRecording()
+                                        viewModel.setRecordingState(isRecording = false)
+                                        viewModel.updateSelectedMedia(null, MediaType.IMAGE)
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .padding(24.dp)
+                                        .size(48.dp)
+                                        .background(SurfaceDark.copy(alpha=0.8f), CircleShape)
+                                        .border(1.dp, CardBorder, CircleShape)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Clear,
+                                        contentDescription = "Cancelar",
+                                        tint = Color(0xFFFF5252)
+                                    )
+                                }
+                            }
+                        }
                     }
-                } else if (selectedMediaUri != null) {
+                } else if (selectedMediaUri != null || !cloudUrl.isNullOrBlank()) {
+                    val urlToPlay = selectedMediaUri?.toString() ?: cloudUrl!!
                     when (selectedMediaType) {
                         MediaType.IMAGE -> {
                             AsyncImage(
-                                model = selectedMediaUri,
+                                model = selectedMediaUri ?: cloudUrl,
                                 contentDescription = "Foto elegida",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
-                        MediaType.VIDEO, MediaType.AUDIO -> {
-                            MediaPreviewPlayer(uri = selectedMediaUri!!, isAudioOnly = selectedMediaType == MediaType.AUDIO)
+                        MediaType.AUDIO -> {
+                            CustomAudioPlayer(url = urlToPlay)
+                        }
+                        MediaType.VIDEO -> {
+                            MediaPreviewPlayer(uri = Uri.parse(urlToPlay), isAudioOnly = false)
                         }
                     }
-                } else if (currentMemory != null && currentMemory.mediaUrl.isNotBlank()) {
-                     AsyncImage( // For simplicity right now, treating old memories as images, can update later
-                        model = currentMemory.mediaUrl,
-                        contentDescription = "Media actual",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
+
+                    // Botón "X" Global
+                    IconButton(
+                        onClick = {
+                            if (selectedMediaType == MediaType.AUDIO) showDeleteAudioWarning = true else viewModel.clearMedia()
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp)
+                            .background(AmoledBlack.copy(alpha=0.6f), CircleShape)
+                    ) {
+                        Icon(Icons.Default.Clear, contentDescription = "Quitar", tint = Color.White)
+                    }
                 } else {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -273,7 +392,7 @@ fun AddMemoryScreen(
             // -- Diary-style Text Field ----------------------------------------
             OutlinedTextField(
                 value         = contextText,
-                onValueChange = { contextText = it },
+                onValueChange = { if (it.length <= MAX_CONTEXT_LENGTH) contextText = it },
                 modifier      = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 200.dp),
@@ -301,7 +420,14 @@ fun AddMemoryScreen(
                     focusedContainerColor   = SurfaceDark.copy(alpha = 0.4f),
                     unfocusedContainerColor = Color.Transparent
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                supportingText = {
+                    Text(
+                        text = "${contextText.length} / $MAX_CONTEXT_LENGTH",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -311,6 +437,35 @@ fun AddMemoryScreen(
                 LascitoAlertDialog(
                     messageRes = errState.messageResId,
                     onDismiss  = { viewModel.resetState() }
+                )
+            }
+
+            if (showDeleteAudioWarning) {
+                val titleAudio = stringResource(R.string.dialog_delete_audio_title)
+                val textAudio = stringResource(R.string.dialog_delete_audio_text)
+                val textRemove = stringResource(R.string.action_remove)
+                val textCancel = stringResource(R.string.btn_cancel)
+                
+                AlertDialog(
+                    onDismissRequest = { showDeleteAudioWarning = false },
+                    title = { Text(titleAudio) },
+                    text = { Text(textAudio) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.clearMedia()
+                            showDeleteAudioWarning = false
+                        }) {
+                            Text(textRemove, color = Color(0xFFFF5252))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteAudioWarning = false }) {
+                            Text(textCancel, color = TextSecondary)
+                        }
+                    },
+                    containerColor = SurfaceDark,
+                    titleContentColor = TextPrimary,
+                    textContentColor = TextSecondary
                 )
             }
             // -- Save Button ---------------------------------------------------
@@ -353,23 +508,18 @@ fun AddMemoryScreen(
 
             // -- Loading Overlay ---------------------------------------------------
             if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(AmoledBlack.copy(alpha = 0.6f))
-                        .clickable(enabled = false) { /* Block clicks */ },
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(48.dp),
-                        strokeWidth = 4.dp
-                    )
-                }
+                UploadProgressOverlay(
+                    progress = uploadProgress,
+                    message = stringResource(R.string.msg_uploading_memory)
+                )
             }
 
             // -- Bottom Sheet Menu ---------------------------------------------
             if (showBottomSheet) {
+                val labelPhoto = stringResource(R.string.action_add_photo)
+                val labelVideo = stringResource(R.string.action_add_video)
+                val labelAudio = stringResource(R.string.action_add_voice_note)
+                
                 ModalBottomSheet(
                     onDismissRequest = { showBottomSheet = false },
                     sheetState = sheetState,
@@ -383,7 +533,7 @@ fun AddMemoryScreen(
                     ) {
                         MediaBottomSheetItem(
                             icon = Icons.Default.PhotoCamera,
-                            text = stringResource(R.string.action_add_photo),
+                            text = labelPhoto,
                             onClick = {
                                 coroutineScope.launch {
                                     sheetState.hide()
@@ -396,7 +546,7 @@ fun AddMemoryScreen(
                         )
                         MediaBottomSheetItem(
                             icon = Icons.Default.Videocam,
-                            text = stringResource(R.string.action_add_video),
+                            text = labelVideo,
                             onClick = {
                                 coroutineScope.launch {
                                     sheetState.hide()
@@ -409,12 +559,13 @@ fun AddMemoryScreen(
                         )
                         MediaBottomSheetItem(
                             icon = Icons.Default.Mic,
-                            text = stringResource(R.string.action_add_voice_note),
+                            text = labelAudio,
                             onClick = {
                                 coroutineScope.launch {
                                     sheetState.hide()
                                     showBottomSheet = false
-                                    micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                    viewModel.updateSelectedMedia(null, MediaType.AUDIO)
+                                    micPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
                                 }
                             }
                         )
@@ -426,41 +577,6 @@ fun AddMemoryScreen(
 }
 
 // -- Helpers -------------------------------------------------------------------
-
-@Composable
-private fun MediaPreviewPlayer(uri: Uri, isAudioOnly: Boolean = false) {
-    val context = LocalContext.current
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(uri))
-            prepare()
-            playWhenReady = false
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            exoPlayer.release()
-        }
-    }
-
-    AndroidView(
-        factory = { ctx ->
-            PlayerView(ctx).apply {
-                player = exoPlayer
-                if (isAudioOnly) {
-                    // Hide UI that implies video if it's strictly audio
-                    controllerAutoShow = true
-                    controllerShowTimeoutMs = -1 // Don't hide the controls
-                    setShowNextButton(false)
-                    setShowPreviousButton(false)
-                    setBackgroundColor(android.graphics.Color.parseColor("#1A1A1A"))
-                }
-            }
-        },
-        modifier = Modifier.fillMaxSize()
-    )
-}
 
 @Composable
 private fun MediaBottomSheetItem(

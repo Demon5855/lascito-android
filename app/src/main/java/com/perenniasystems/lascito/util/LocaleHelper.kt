@@ -47,8 +47,11 @@ object LocaleHelper {
      */
     fun wrapContext(base: Context, tag: String): Context {
         val locale = Locale.forLanguageTag(tag)
-        val config = Configuration(base.resources.configuration)
-        config.setLocale(locale)
+        Locale.setDefault(locale) // Fix core: force system default
+        val config = Configuration(base.resources.configuration).apply {
+            setLocale(locale)
+            setLayoutDirection(locale) // Fix core: Force layout direction
+        }
         return base.createConfigurationContext(config)
     }
 }

@@ -17,8 +17,9 @@ interface FirebaseStorageRepository {
 
     /**
      * Uploads a large media file (Video/Audio) via URI stream directly to Firebase Storage.
+     * Optionally reports progress from 0.0 to 1.0.
      */
-    suspend fun uploadMediaFile(uri: Uri, mediaType: MediaType, profileId: String): Result<String>
+    suspend fun uploadMediaFile(uri: Uri, mediaType: MediaType, profileId: String, onProgress: (Float) -> Unit = {}): Result<String>
 
     /**
      * Deletes the image at the given [imageUrl].
@@ -42,7 +43,7 @@ class FirebaseStorageRepositoryImpl(
         return storageRef.downloadUrl.await().toString()
     }
 
-    override suspend fun uploadMediaFile(uri: Uri, mediaType: MediaType, profileId: String): Result<String> {
+    override suspend fun uploadMediaFile(uri: Uri, mediaType: MediaType, profileId: String, onProgress: (Float) -> Unit): Result<String> {
         return try {
             val extension = if (mediaType == MediaType.VIDEO) "mp4" else "m4a"
             val folder = if (mediaType == MediaType.VIDEO) "videos" else "audio"
@@ -51,9 +52,14 @@ class FirebaseStorageRepositoryImpl(
 
             val storageRef = storage.reference.child(path)
             
-            // The Firebase putFile uses an InputStream under the hood
-            // Content-Type is inferred by Firebase or from extension, but stream is handled safely.
-            storageRef.putFile(uri).await()
+            val uploadTask = storageRef.putFile(uri)
+            
+            uploadTask.addOnProgressListener { snapshot ->
+                val progress = snapshot.bytesTransferred.toFloat() / snapshot.totalByteCount.toFloat()
+                onProgress(progress)
+            }
+            
+            uploadTask.await()
             val downloadUrl = storageRef.downloadUrl.await().toString()
             
             Result.success(downloadUrl)

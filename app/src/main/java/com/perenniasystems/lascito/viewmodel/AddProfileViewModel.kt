@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.delay
 import androidx.annotation.StringRes
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.util.ErrorHandler
@@ -40,6 +41,9 @@ class AddProfileViewModel(
 
     private var currentProfileId: String? = null
     private var currentAvatarUrl: String? = null
+
+    private val _uploadProgress = MutableStateFlow(0f)
+    val uploadProgress: StateFlow<Float> = _uploadProgress.asStateFlow()
 
     fun resetState() {
         _uiState.value = AddProfileUiState.Idle
@@ -77,6 +81,7 @@ class AddProfileViewModel(
     ) {
         viewModelScope.launch {
             _uiState.value = AddProfileUiState.Loading
+            _uploadProgress.value = 0f
             try {
                 withTimeout(15_000L) {
                     val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
@@ -84,23 +89,15 @@ class AddProfileViewModel(
                         throw IllegalStateException("Usuario no autenticado")
                     }
 
+                    _uploadProgress.value = 0.3f
                     val profileId = currentProfileId ?: UUID.randomUUID().toString()
-                    var avatarUrl = currentAvatarUrl ?: ""
-
-                    if (imageBytes != null) {
+                    val finalAvatarUrl = if (imageBytes != null) {
                         val path = "profiles/covers/${profileId}.jpg"
-                        val newUrl = storage.uploadImage(imageBytes, path)
-                        
-                        // Delete old image if it exists and is different from the new one
-                        // (Though the path is the same, this handles cases where the path might change in the future,
-                        // or ensures the object is cleanly overwritten/handled).
-                        // Since Firebase Storage overwrites objects at the same path, deleting is optional if path matches, 
-                        // but if we ever use unique UUIDs per upload, this is critical. 
-                        // The Architect asked: "delete old image on upload of new". We will try to delete the old URL.
-                        if (!currentAvatarUrl.isNullOrBlank() && currentAvatarUrl != newUrl) {
-                             storage.deleteImage(currentAvatarUrl!!)
-                        }
-                        avatarUrl = newUrl
+                        val url = storage.uploadImage(imageBytes, path)
+                        _uploadProgress.value = 0.6f
+                        url
+                    } else {
+                        currentAvatarUrl ?: ""
                     }
 
                     // Generar un ID local provisorio si no esperamos el server-side ID
@@ -112,11 +109,13 @@ class AddProfileViewModel(
                         relationship = relationship.trim(),
                         birthDate = birthDate,
                         passingDate = passingDate,
-                        avatarUrl = avatarUrl,
+                        avatarUrl = finalAvatarUrl,
                         status = ProfileStatus.ACTIVE
                     )
 
                     repository.save(newProfile)
+                    _uploadProgress.value = 1f
+                    delay(400)
                     _uiState.value = AddProfileUiState.Success
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {

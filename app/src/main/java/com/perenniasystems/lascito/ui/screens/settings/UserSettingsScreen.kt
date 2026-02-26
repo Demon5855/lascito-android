@@ -1,5 +1,7 @@
 ﻿package com.perenniasystems.lascito.ui.screens.settings
 
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import android.widget.Toast
@@ -37,6 +39,8 @@ import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.util.LocaleHelper
 import com.perenniasystems.lascito.util.Validators
+import com.perenniasystems.lascito.data.repository.ThemeRepository
+import kotlinx.coroutines.launch
 
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
@@ -59,6 +63,8 @@ fun UserSettingsScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val themeRepository = remember { ThemeRepository(context) }
 
     // Init from LangState (which was already seeded from SharedPreferences
     // in MainActivity.onCreate before setContent was called).
@@ -149,10 +155,17 @@ fun UserSettingsScreen(
                 onLangChange  = { lang ->
                     selectedLang = lang
                     LocaleHelper.save(context, lang.tag)
+                    java.util.Locale.setDefault(java.util.Locale.forLanguageTag(lang.tag))
                     LangState.selectedTag = lang.tag
+                    
+                    val localeList = LocaleListCompat.forLanguageTags(lang.tag)
+                    AppCompatDelegate.setApplicationLocales(localeList)
                 },
                 onMetalChange = { metal ->
                     ThemeState.selectedMetal = metal   // triggers recomposition everywhere
+                    scope.launch {
+                        themeRepository.saveThemeColor(metal.name)
+                    }
                     toast(context.getString(R.string.toast_accent_changed,
                         context.getString(metal.labelRes)))
                 }
@@ -173,13 +186,18 @@ fun UserSettingsScreen(
 
         // Overlay & Dialogs 
         if (showDeleteAccountDialog) {
+            val titleText = stringResource(R.string.dialog_delete_account_title)
+            val bodyText = stringResource(R.string.dialog_delete_account_text)
+            val btnDelete = stringResource(R.string.btn_delete_account)
+            val btnCancel = stringResource(R.string.btn_cancel)
+            
             AlertDialog(
                 onDismissRequest = { showDeleteAccountDialog = false },
                 containerColor = SurfaceDark,
                 titleContentColor = ErrorRed,
                 textContentColor = TextPrimary,
-                title = { Text(stringResource(R.string.dialog_delete_account_title)) },
-                text = { Text(stringResource(R.string.dialog_delete_account_text)) },
+                title = { Text(titleText) },
+                text = { Text(bodyText) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -187,12 +205,12 @@ fun UserSettingsScreen(
                             viewModel.deleteAccount()
                         }
                     ) {
-                        Text(stringResource(R.string.btn_delete_account), color = ErrorRed)
+                        Text(btnDelete, color = ErrorRed)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteAccountDialog = false }) {
-                        Text(stringResource(R.string.btn_cancel), color = TextSecondary)
+                        Text(btnCancel, color = TextSecondary)
                     }
                 }
             )

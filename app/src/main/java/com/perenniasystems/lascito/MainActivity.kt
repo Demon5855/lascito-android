@@ -7,6 +7,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -19,10 +20,14 @@ import com.perenniasystems.lascito.util.LocaleHelper
 import com.perenniasystems.lascito.data.local.OnboardingPreferences
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.background
 import androidx.compose.ui.Modifier
+import com.perenniasystems.lascito.data.repository.ThemeRepository
+import com.perenniasystems.lascito.ui.theme.AccentMetal
+import com.perenniasystems.lascito.ui.theme.ThemeState
 
 /**
  * Single-Activity entry point for Lascito.
@@ -71,8 +76,19 @@ class MainActivity : ComponentActivity() {
             val onboardingPreferences = remember { OnboardingPreferences(baseContext) }
             val hasSeenOnboarding by onboardingPreferences.hasSeenOnboarding.collectAsState(initial = null)
             val scope = rememberCoroutineScope()
+            
+            // Theme setup
+            val themeRepository = remember { ThemeRepository(baseContext) }
+            val savedThemeColor by themeRepository.themeColorFlow.collectAsState(initial = "GOLD")
+            
+            // Map string name to Enum and update ThemeState
+            LaunchedEffect(savedThemeColor) {
+                val metal = AccentMetal.entries.find { it.name == savedThemeColor } ?: AccentMetal.GOLD
+                ThemeState.selectedMetal = metal
+            }
 
             CompositionLocalProvider(
+                LocalConfiguration provides localizedContext.resources.configuration,
                 LocalContext provides localizedContext,
                 androidx.activity.compose.LocalActivityResultRegistryOwner provides (registryOwner ?: this)
             ) {

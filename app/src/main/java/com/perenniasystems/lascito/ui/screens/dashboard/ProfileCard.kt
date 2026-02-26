@@ -3,6 +3,7 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -12,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -187,38 +189,49 @@ fun ProfileCard(
             }
 
             // ── Capa 6: Dropdown Menu & READ_ONLY Badge (esquina superior derecha) ─────
+            val textEdit = stringResource(R.string.action_edit)
+            val textDelete = stringResource(R.string.action_delete)
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(4.dp)
+                    .padding(end = 8.dp, top = 8.dp)
             ) {
                 if (profile.status == ProfileStatus.ACTIVE) {
-                    IconButton(onClick = { showMenu = true }) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .background(AmoledBlack.copy(alpha = 0.72f), CircleShape)
+                            .border(0.8.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                            .clip(CircleShape)
+                            .clickable { showMenu = true },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "Opciones",
-                            tint = Color.White
+                            tint = TextPrimary,
+                            modifier = Modifier.size(16.dp)
                         )
-                    }
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false },
-                        modifier = Modifier.background(SurfaceDark)
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_edit), color = TextPrimary) },
-                            onClick = {
-                                showMenu = false
-                                onEdit()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_delete), color = ErrorRed) },
-                            onClick = {
-                                showMenu = false
-                                onDelete()
-                            }
-                        )
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            modifier = Modifier.background(SurfaceDark)
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(textEdit, color = TextPrimary) },
+                                onClick = {
+                                    showMenu = false
+                                    onEdit()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(textDelete, color = ErrorRed) },
+                                onClick = {
+                                    showMenu = false
+                                    onDelete()
+                                }
+                            )
+                        }
                     }
                 } else if (profile.status == ProfileStatus.READ_ONLY) {
                     Text(

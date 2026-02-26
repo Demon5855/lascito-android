@@ -70,4 +70,18 @@ class AltarViewModel(
             }
         }
     }
+
+    fun deleteProfile(profileId: String, avatarUrl: String?, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _uiState.value = AltarUiState.Loading
+            try {
+                profileRepo.deleteProfile(profileId, avatarUrl)
+                onSuccess()
+            } catch (e: Exception) {
+                _uiState.value = AltarUiState.Error(
+                    messageResId = ErrorHandler.mapExceptionToResId(e)
+                )
+            }
+        }
+    }
 }

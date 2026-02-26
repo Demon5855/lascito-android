@@ -68,6 +68,7 @@
 
     <!-- ── AddMemory ─────────────────────────────────────────────────────────── -->
     <string name="screen_new_memory">Nuevo Recuerdo</string>
+    <string name="screen_edit_memory">Refinar Recuerdo</string>
     <string name="desc_photo">Foto</string>
     <string name="desc_video">Video</string>
     <string name="desc_voice_note">Nota de voz</string>
@@ -77,6 +78,7 @@
 
     <!-- ── AddProfile ────────────────────────────────────────────────────────── -->
     <string name="screen_new_altar">Nuevo Legado</string>
+    <string name="screen_edit_altar">Enriquecer Legado</string>
     <string name="label_type">Tipo</string>
     <string name="type_human">Humano</string>
     <string name="type_pet">Mascota</string>
@@ -123,6 +125,11 @@
     <string name="btn_privacy">Políticas de Privacidad</string>
     <string name="btn_logout">Cerrar Sesión</string>
     <string name="btn_delete_account">Eliminar Cuenta</string>
+
+    <!-- Upload Progress -->
+    <string name="msg_uploading_profile">Subiendo al Santuario…</string>
+    <string name="msg_uploading_memory">Inmortalizando Recuerdo…</string>
+
     <!-- Toasts -->
     <string name="toast_guardian_saved">Guardián actualizado</string>
     <string name="toast_exporting">Exportando recuerdos…</string>
@@ -142,12 +149,15 @@
     <string name="state_storage_max">10 GB</string>
 
     <!-- ── Context Menus & Dialogs ─────────────────────────────────────────── -->
-    <string name="action_edit">Editar</string>
+    <string name="action_edit">Modificar</string>
     <string name="action_delete">Eliminar</string>
     <string name="confirm_delete_profile_title">Eliminar Legado</string>
     <string name="confirm_delete_profile_text">¿Estás seguro de que deseas eliminar el legado de %1$s? \nEsta acción es irreversible y borrará todos sus recuerdos para siempre.</string>
     <string name="confirm_delete_memory_title">Eliminar Recuerdo</string>
     <string name="confirm_delete_memory_text">¿Estás seguro de que deseas eliminar este recuerdo? \nEsta acción no se puede deshacer y el archivo multimedia se perderá de tu bóveda.</string>
+    <string name="dialog_delete_audio_title">Eliminar Audio</string>
+    <string name="dialog_delete_audio_text">Esta nota de voz se perderá. ¿Deseas quitarla de este Recuerdo?</string>
+    <string name="action_remove">Quitar</string>
     <string name="action_add_photo">Añadir Fotografía</string>
     <string name="action_add_video">Añadir Video</string>
     <string name="action_add_voice_note">Añadir Nota de Voz</string>
@@ -156,4 +166,7 @@
 
     <string name="dialog_delete_account_title">Destruir Santuario</string>
     <string name="dialog_delete_account_text">¿Estás absolutamente seguro? Esta acción borrará permanentemente tu cuenta, todos tus legados, recuerdos y archivos multimedia. Es irreversible.</string>
+
+    <string name="action_see_more">Ver más…</string>
+    <string name="action_see_less">Ver menos…</string>
 </resources>

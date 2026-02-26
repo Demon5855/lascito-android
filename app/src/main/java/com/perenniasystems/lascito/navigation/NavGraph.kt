@@ -120,7 +120,9 @@ fun LascitoNavGraph(
                 profileId      = profileId,
                 onNavigateBack = { navController.popBackStack() },
                 onAddMemory    = { navController.navigate(Screen.AddMemory.createRoute(profileId)) },
-                onEditMemory   = { memoryId -> navController.navigate(Screen.AddMemory.createRoute(profileId, memoryId)) }
+                onEditMemory   = { memoryId -> navController.navigate(Screen.AddMemory.createRoute(profileId, memoryId)) },
+                onEditProfileClick = { navController.navigate(Screen.AddProfile.createRoute(profileId)) },
+                onDeleteProfileClick = { navController.popBackStack() }
             )
         }
 

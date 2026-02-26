@@ -1,8 +1,10 @@
 ﻿package com.perenniasystems.lascito.ui.screens.altar
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -14,6 +16,7 @@ import androidx.compose.material.icons.filled.ImageNotSupported
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,6 +43,7 @@ import com.perenniasystems.lascito.data.model.Memory
 import com.perenniasystems.lascito.data.model.Profile
 import com.perenniasystems.lascito.data.model.ProfileType
 import com.perenniasystems.lascito.ui.theme.*
+import com.perenniasystems.lascito.ui.components.CustomAudioPlayer
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.components.shimmerEffect
 import com.perenniasystems.lascito.viewmodel.AltarUiState
@@ -50,9 +54,12 @@ import java.util.Locale
 import android.net.Uri
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.AspectRatioFrameLayout
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,12 +69,15 @@ fun AltarScreen(
     onAddMemory:    () -> Unit = {},
     onEditMemory:   (String) -> Unit = {},
     onDeleteMemory: (String) -> Unit = {},
+    onEditProfileClick: () -> Unit = {},
+    onDeleteProfileClick: () -> Unit = {},
     viewModel:      AltarViewModel = viewModel()
 ) {
     // Trigger reload when the profileId changes OR when the screen becomes active again
     LaunchedEffect(profileId, Unit) { viewModel.load(profileId) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var memoryToDelete by remember { mutableStateOf<Memory?>(null) }
+    var showDeleteProfileDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = AmoledBlack,
@@ -111,6 +121,8 @@ fun AltarScreen(
                         profile        = state.profile,
                         memories       = state.memories,
                         onNavigateBack = onNavigateBack,
+                        onEditProfileClick = onEditProfileClick,
+                        onDeleteProfileClick = { showDeleteProfileDialog = true },
                         onEditMemory   = onEditMemory,
                         onDeleteMemory = { memoryId ->
                             memoryToDelete = state.memories.find { it.memoryId == memoryId }
@@ -120,13 +132,18 @@ fun AltarScreen(
             }
 
             if (memoryToDelete != null) {
+                val titleMem = stringResource(R.string.confirm_delete_memory_title)
+                val textMem = stringResource(R.string.confirm_delete_memory_text)
+                val btnDeleteMem = stringResource(R.string.action_delete)
+                val btnCancelMem = stringResource(R.string.btn_cancel)
+                
                 AlertDialog(
                     onDismissRequest = { memoryToDelete = null },
                     containerColor = SurfaceDark,
                     titleContentColor = ErrorRed,
                     textContentColor = TextPrimary,
-                    title = { Text(stringResource(R.string.confirm_delete_memory_title)) },
-                    text = { Text(stringResource(R.string.confirm_delete_memory_text)) },
+                    title = { Text(titleMem) },
+                    text = { Text(textMem) },
                     confirmButton = {
                         TextButton(
                             onClick = {
@@ -136,12 +153,52 @@ fun AltarScreen(
                                 memoryToDelete = null
                             }
                         ) {
-                            Text(stringResource(R.string.action_delete), color = ErrorRed)
+                            Text(btnDeleteMem, color = ErrorRed)
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { memoryToDelete = null }) {
-                            Text(stringResource(R.string.btn_cancel), color = TextSecondary)
+                            Text(btnCancelMem, color = TextSecondary)
+                        }
+                    }
+                )
+            }
+
+            if (showDeleteProfileDialog) {
+                val profile = (uiState as? AltarUiState.Success)?.profile
+                if (profile == null) {
+                    Box(modifier = Modifier.fillMaxSize())
+                    return@Scaffold
+                }
+                val titleProf = stringResource(R.string.confirm_delete_profile_title)
+                val textProf = stringResource(R.string.confirm_delete_profile_text, profile?.fullName ?: "")
+                val btnDeleteProf = stringResource(R.string.action_delete)
+                val btnCancelProf = stringResource(R.string.btn_cancel)
+                
+                AlertDialog(
+                    onDismissRequest = { showDeleteProfileDialog = false },
+                    containerColor = SurfaceDark,
+                    titleContentColor = ErrorRed,
+                    textContentColor = TextPrimary,
+                    title = { Text(titleProf) },
+                    text = { Text(textProf) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                profile?.let {
+                                    viewModel.deleteProfile(it.profileId, it.avatarUrl, onSuccess = {
+                                        onDeleteProfileClick()
+                                    })
+                                }
+                                showDeleteProfileDialog = false
+                            }
+                        ) {
+                            Text(btnDeleteProf, color = ErrorRed)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteProfileDialog = false }) {
+                            Text(btnCancelProf, color = TextSecondary)
                         }
                     }
                 )
@@ -155,9 +212,15 @@ private fun AltarContent(
     profile:       Profile,
     memories:      List<Memory>,
     onNavigateBack: () -> Unit,
+    onEditProfileClick: () -> Unit,
+    onDeleteProfileClick: () -> Unit,
     onEditMemory:   (String) -> Unit,
     onDeleteMemory: (String) -> Unit
 ) {
+    var showProfileMenu by remember { mutableStateOf(false) }
+    val textRefineProfile = stringResource(R.string.action_edit)
+    val textDeleteProfile = stringResource(R.string.action_delete)
+
     val yearFmt = SimpleDateFormat("yyyy", Locale.getDefault())
     val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
@@ -253,6 +316,44 @@ private fun AltarContent(
                         tint               = TextPrimary
                     )
                 }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp)
+                        .wrapContentSize(Alignment.TopEnd)
+                ) {
+                    IconButton(
+                        onClick = { showProfileMenu = true },
+                        modifier = Modifier.background(AmoledBlack.copy(alpha = 0.55f), CircleShape)
+                    ) {
+                        Icon(
+                            imageVector        = Icons.Default.MoreVert,
+                            contentDescription = "Opciones",
+                            tint               = TextPrimary
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showProfileMenu,
+                        onDismissRequest = { showProfileMenu = false },
+                        modifier = Modifier.background(SurfaceDark)
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(textRefineProfile, color = TextPrimary) },
+                            onClick = {
+                                showProfileMenu = false
+                                onEditProfileClick()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(textDeleteProfile, color = ErrorRed) },
+                            onClick = {
+                                showProfileMenu = false
+                                onDeleteProfileClick()
+                            }
+                        )
+                    }
+                }
             }
         }
 
@@ -272,7 +373,7 @@ private fun AltarContent(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text      = "${profile.relationship}  •  $dateRange",
+                    text      = "${profile.relationship}\n$dateRange",
                     style     = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.primaryContainer),
                     textAlign = TextAlign.Center
                 )
@@ -389,12 +490,7 @@ private fun MemoryItem(
 
             // -- AUDIO ---------------------------------------------------------
             MediaType.AUDIO -> {
-                Box(
-                    modifier = Modifier.fillMaxWidth().height(80.dp).padding(horizontal = 24.dp, vertical = 4.dp).clip(RoundedCornerShape(14.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    FeedMediaItem(url = memory.mediaUrl, isAudioOnly = true)
-                }
+                CustomAudioPlayer(url = memory.mediaUrl)
             }
         }
 
@@ -406,14 +502,35 @@ private fun MemoryItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f).animateContentSize()) {
+                var isExpanded by remember { mutableStateOf(false) }
+                var showSeeMore by remember { mutableStateOf(false) }
+                
                 Text(
                     text  = memory.contextText,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         color      = TextPrimary,
                         lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
-                    )
+                    ),
+                    maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    onTextLayout = { textLayoutResult ->
+                        if (textLayoutResult.hasVisualOverflow) {
+                            showSeeMore = true
+                        }
+                    }
                 )
+                
+                if (showSeeMore || isExpanded) {
+                    Text(
+                        text = if (isExpanded) stringResource(R.string.action_see_less) else stringResource(R.string.action_see_more),
+                        style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                            .clickable { isExpanded = !isExpanded }
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text  = dateFmt.format(Date(memory.capturedDate)),
@@ -421,6 +538,10 @@ private fun MemoryItem(
                 )
             }
             
+            var showMenu by remember { mutableStateOf(false) }
+            val textEditMem = stringResource(R.string.action_edit)
+            val textDeleteMem = stringResource(R.string.action_delete)
+
             Box {
                 IconButton(onClick = { showMenu = true }) {
                     Icon(
@@ -435,14 +556,14 @@ private fun MemoryItem(
                     modifier = Modifier.background(SurfaceDark)
                 ) {
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.action_edit), color = TextPrimary) },
+                        text = { Text(textEditMem, color = TextPrimary) },
                         onClick = {
                             showMenu = false
                             onEdit()
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.action_delete), color = ErrorRed) },
+                        text = { Text(textDeleteMem, color = ErrorRed) },
                         onClick = {
                             showMenu = false
                             onDelete()
@@ -500,3 +621,5 @@ private fun FeedMediaItem(url: String, isAudioOnly: Boolean) {
         modifier = Modifier.fillMaxSize()
     )
 }
+
+

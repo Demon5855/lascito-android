@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.delay
 import androidx.annotation.StringRes
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.util.ErrorHandler
@@ -54,6 +55,9 @@ class AddMemoryViewModel(
     private val _recordingDuration = MutableStateFlow("00:00")
     val recordingDuration: StateFlow<String> = _recordingDuration.asStateFlow()
 
+    private val _uploadProgress = MutableStateFlow(0f)
+    val uploadProgress: StateFlow<Float> = _uploadProgress.asStateFlow()
+
     fun updateSelectedMedia(uri: Uri?, type: MediaType) {
         _selectedMediaUri.value = uri
         _selectedMediaType.value = type
@@ -62,6 +66,20 @@ class AddMemoryViewModel(
     fun setRecordingState(isRecording: Boolean, duration: String = "00:00") {
         _isRecording.value = isRecording
         _recordingDuration.value = duration
+    }
+
+    fun clearMedia() {
+        _selectedMediaUri.value = null
+        _selectedMediaType.value = MediaType.IMAGE
+        currentMediaUrl = null
+        
+        val currentState = _uiState.value
+        if (currentState is AddMemoryUiState.Loaded) {
+            // Copiamos el recuerdo actual pero con la URL vacía
+            _uiState.value = AddMemoryUiState.Loaded(
+                currentState.memory.copy(mediaUrl = "")
+            )
+        }
     }
 
     fun resetState() {
@@ -85,6 +103,7 @@ class AddMemoryViewModel(
                         currentMemoryId = memory.memoryId
                         currentMediaUrl = memory.mediaUrl
                         currentCapturedDate = memory.capturedDate
+                        _selectedMediaType.value = memory.mediaType // Vital para pintar Video, Audio o Imagen al editar
                         _uiState.value = AddMemoryUiState.Loaded(memory)
                     } else {
                         // Resusing a generic profile not found or just generic error
@@ -100,6 +119,7 @@ class AddMemoryViewModel(
     fun saveMemory(profileId: String, contextText: String, mediaType: MediaType = MediaType.IMAGE, imageBytes: ByteArray?, mediaUri: Uri? = null) {
         viewModelScope.launch {
             _uiState.value = AddMemoryUiState.Loading
+            _uploadProgress.value = 0f
             try {
                 // Extended timeout for large files (videos)
                 withTimeout(120_000L) {
@@ -121,7 +141,9 @@ class AddMemoryViewModel(
                         }
                         mediaUrl = newUrl
                     } else if ((mediaType == MediaType.VIDEO || mediaType == MediaType.AUDIO) && mediaUri != null) {
-                        val result = storage.uploadMediaFile(mediaUri, mediaType, profileId)
+                        val result = storage.uploadMediaFile(mediaUri, mediaType, profileId, onProgress = { progress ->
+                            _uploadProgress.value = progress
+                        })
                         if (result.isSuccess) {
                             val newUrl = result.getOrThrow()
                             if (!currentMediaUrl.isNullOrBlank() && currentMediaUrl != newUrl) {
@@ -149,6 +171,8 @@ class AddMemoryViewModel(
                     )
 
                     repository.save(newMemory)
+                    _uploadProgress.value = 1f
+                    delay(400) // Pequeña pausa psicológica
                     _uiState.value = AddMemoryUiState.Success
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
