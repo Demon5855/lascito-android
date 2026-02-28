@@ -333,9 +333,6 @@ Lascito usa un sistema de **temas metálicos premium** con persistencia en DataS
 | 🥇 **Gold** | `#C9A96E` | Default, elegancia clásica |
 | 🥈 **Silver** | `#C0C0C0` | Minimalismo moderno |
 | 🥉 **Bronze** | `#CD7F32` | Calidez terrestre |
-| 💎 **Platinum** | `#E5E4E2` | Lujo sofisticado |
-| 🌹 **Rose Gold** | `#E0BFB8` | Delicadeza femenina |
-| 💚 **Emerald** | `#50C878` | Vitalidad natural |
 
 **Cambio instantáneo**: El usuario puede cambiar el tema desde Settings sin reiniciar la app.
 
@@ -444,7 +441,7 @@ Este código es confidencial y propiedad de Perennia Systems. Cualquier distribu
 
 ## 📞 Soporte
 
-**Email Corporativo**: support@perenniasystems.com  
+**Email Corporativo**: support@perenniasys.com  
 **GitHub Issues**: [lascito-android/issues](https://github.com/Demon5855/lascito-android/issues)  
 **Documentación**: Ver `/docs` (próximamente)
 
