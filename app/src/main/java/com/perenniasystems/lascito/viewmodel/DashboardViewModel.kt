@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import androidx.annotation.StringRes
 import com.perenniasystems.lascito.util.ErrorHandler
@@ -33,6 +34,12 @@ class DashboardViewModel(
     // ── Email Verification State ──────────────────────────────────────────────
     private val _isEmailVerified = MutableStateFlow(true)
     val isEmailVerified: StateFlow<Boolean> = _isEmailVerified.asStateFlow()
+
+    private val _isSendingVerification = MutableStateFlow(false)
+    val isSendingVerification: StateFlow<Boolean> = _isSendingVerification.asStateFlow()
+
+    private val _verificationEmailSent = MutableStateFlow(false)
+    val verificationEmailSent: StateFlow<Boolean> = _verificationEmailSent.asStateFlow()
 
     init {
         refresh()
@@ -83,10 +90,28 @@ class DashboardViewModel(
         refresh()
     }
 
-    fun resendVerificationEmail(onSent: () -> Unit = {}, onError: (Exception) -> Unit = {}) {
-        FirebaseAuth.getInstance().currentUser?.sendEmailVerification()
-            ?.addOnSuccessListener { onSent() }
-            ?.addOnFailureListener { e -> onError(e) }
+    fun resetVerificationBannerState() {
+        _verificationEmailSent.value = false
+    }
+
+    fun resendVerificationEmail() {
+        viewModelScope.launch {
+            _isSendingVerification.value = true
+            try {
+                val user = FirebaseAuth.getInstance().currentUser 
+                    ?: throw Exception("Not authenticated")
+                
+                user.sendEmailVerification().await()
+                _verificationEmailSent.value = true
+                
+            } catch (e: Exception) {
+                _uiState.value = DashboardUiState.Error(
+                    messageResId = ErrorHandler.mapExceptionToResId(e)
+                )
+            } finally {
+                _isSendingVerification.value = false
+            }
+        }
     }
 }
 

@@ -39,11 +39,20 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isEmailVerified by viewModel.isEmailVerified.collectAsStateWithLifecycle()
+    val isSendingVerification by viewModel.isSendingVerification.collectAsStateWithLifecycle()
+    val verificationEmailSent by viewModel.verificationEmailSent.collectAsStateWithLifecycle()
     var profileToDelete by remember { mutableStateOf<com.perenniasystems.lascito.data.model.Profile?>(null) }
 
     // Trigger re-fetch every time this screen becomes active
     LaunchedEffect(Unit) {
         viewModel.refresh()
+    }
+
+    LaunchedEffect(verificationEmailSent) {
+        if (verificationEmailSent) {
+            kotlinx.coroutines.delay(3000L)
+            viewModel.resetVerificationBannerState()
+        }
     }
 
     Scaffold(
@@ -102,9 +111,17 @@ fun DashboardScreen(
                 .padding(paddingValues)
         ) {
             if (!isEmailVerified) {
+                val bannerMessage = if (verificationEmailSent) {
+                    stringResource(R.string.toast_verification_sent)
+                } else {
+                    stringResource(R.string.banner_verify_email)
+                }
+
                 InfoBanner(
-                    message = stringResource(R.string.banner_verify_email),
+                    message = bannerMessage,
                     actionText = stringResource(R.string.action_resend),
+                    isLoading = isSendingVerification,
+                    isSuccess = verificationEmailSent,
                     onActionClick = { viewModel.resendVerificationEmail() }
                 )
             }
@@ -200,6 +217,8 @@ fun DashboardScreen(
 fun InfoBanner(
     message: String,
     actionText: String,
+    isLoading: Boolean = false,
+    isSuccess: Boolean = false,
     onActionClick: () -> Unit
 ) {
     Row(
@@ -211,14 +230,26 @@ fun InfoBanner(
     ) {
         Text(
             text = message,
-            style = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = if (isSuccess) ThemeState.selectedMetal.color else TextPrimary
+            ),
             modifier = Modifier.weight(1f)
         )
-        TextButton(onClick = onActionClick) {
-            Text(
-                text = actionText,
-                style = MaterialTheme.typography.labelLarge.copy(color = ThemeState.selectedMetal.color)
-            )
+        if (!isSuccess) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    strokeWidth = 2.dp,
+                    color = ThemeState.selectedMetal.color,
+                    modifier = Modifier.size(24.dp).padding(end = 8.dp)
+                )
+            } else {
+                TextButton(onClick = onActionClick) {
+                    Text(
+                        text = actionText,
+                        style = MaterialTheme.typography.labelLarge.copy(color = ThemeState.selectedMetal.color)
+                    )
+                }
+            }
         }
     }
 }
