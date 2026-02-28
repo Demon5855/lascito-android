@@ -208,4 +208,8 @@
 
     <string name="action_see_more">See more…</string>
     <string name="action_see_less">See less…</string>
+    <string name="placeholder_password_dots">••••••••</string>
+    <string name="placeholder_password_min">Minimum 8 characters</string>
+    <string name="placeholder_password_repeat">Repeat password</string>
+
 </resources>

@@ -216,7 +216,7 @@ class UserSettingsViewModel(
         }
 
         if (currentPass == newPass) {
-            _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_generic))
+            _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_password_same_as_current))
             return
         }
 

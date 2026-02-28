@@ -311,7 +311,7 @@ fun UserSettingsScreen(
                                 currentPasswordError = null 
                             },
                             label = { Text(stringResource(R.string.label_current_password)) },
-                            placeholder = { Text("••••••••") },
+                            placeholder = { Text(stringResource(R.string.placeholder_password_dots)) },
                             visualTransformation = if (currentVisible) 
                                 VisualTransformation.None 
                             else 
@@ -366,7 +366,7 @@ fun UserSettingsScreen(
                                 }
                             },
                             label = { Text(stringResource(R.string.label_new_password)) },
-                            placeholder = { Text("Mínimo 8 caracteres") },
+                            placeholder = { Text(stringResource(R.string.placeholder_password_min)) },
                             visualTransformation = if (newVisible) 
                                 VisualTransformation.None 
                             else 
@@ -421,7 +421,7 @@ fun UserSettingsScreen(
                                 }
                             },
                             label = { Text(stringResource(R.string.label_confirm_new_password)) },
-                            placeholder = { Text("Repetir contraseña") },
+                            placeholder = { Text(stringResource(R.string.placeholder_password_repeat)) },
                             visualTransformation = if (confirmVisible) 
                                 VisualTransformation.None 
                             else 
@@ -792,7 +792,7 @@ private fun PersonalizationSection(
                 ExposedDropdownMenu(
                     expanded         = langExpanded,
                     onDismissRequest = { langExpanded = false },
-                    containerColor   = SurfaceDark
+                    containerColor   = MaterialTheme.colorScheme.surface
                 ) {
                     AppLanguage.entries.forEach { lang ->
                         DropdownMenuItem(

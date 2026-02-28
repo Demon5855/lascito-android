@@ -345,12 +345,18 @@ fun BiometricLockScreen(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
+                val scope = rememberCoroutineScope()
                 androidx.compose.material3.TextButton(
                     onClick = { 
-                        FirebaseAuth.getInstance().signOut()
-                        val intent = activity.intent
-                        activity.finish()
-                        activity.startActivity(intent)
+                        scope.launch {
+                            kotlinx.coroutines.delay(150L)
+                            FirebaseAuth.getInstance().signOut()
+                            val intent = android.content.Intent(activity, MainActivity::class.java).apply {
+                                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            }
+                            activity.startActivity(intent)
+                            activity.finish()
+                        }
                     },
                     modifier = Modifier.padding(top = 16.dp)
                 ) {
