@@ -44,7 +44,8 @@ class UserSettingsViewModel(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
     private val userRepository: UserRepository = FirebaseAuthRepository(),
-    private val profileRepository: ProfileRepository = FirebaseProfileRepository()
+    private val profileRepository: ProfileRepository = FirebaseProfileRepository(),
+    private val prefs: com.perenniasystems.lascito.data.local.OnboardingPreferences? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UserSettingsUiState())
@@ -144,5 +145,13 @@ class UserSettingsViewModel(
 
     fun resetDeleteState() {
         _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Idle)
+    }
+
+    val isStrictVaultEnabled = prefs?.isStrictVaultEnabled
+    
+    fun toggleStrictVault(enabled: Boolean) {
+        viewModelScope.launch {
+            prefs?.saveStrictVaultState(enabled)
+        }
     }
 }

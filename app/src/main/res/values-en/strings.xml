@@ -130,6 +130,8 @@
     <string name="btn_privacy">Privacy Policy</string>
     <string name="btn_logout">Sign Out</string>
     <string name="btn_delete_account">Delete Account</string>
+    <string name="title_strict_vault">Strict Vault Mode</string>
+    <string name="desc_strict_vault">Blocks screenshots, recordings, and hides the app content in the recent tasks menu.</string>
 
     <!-- Upload Progress -->
     <string name="msg_uploading_profile">Ascending to Sanctuary…</string>

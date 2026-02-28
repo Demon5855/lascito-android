@@ -56,12 +56,20 @@ enum class AppLanguage(val labelRes: Int, val tag: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserSettingsScreen(
-    viewModel: UserSettingsViewModel = viewModel(),
     onNavigateBack: () -> Unit = {},
     onLogOut:       () -> Unit = {},
     onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
     val context = LocalContext.current
+    val viewModel: UserSettingsViewModel = viewModel(
+        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                val prefs = com.perenniasystems.lascito.data.local.OnboardingPreferences(context.applicationContext)
+                @Suppress("UNCHECKED_CAST")
+                return UserSettingsViewModel(prefs = prefs) as T
+            }
+        }
+    )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val themeRepository = remember { ThemeRepository(context) }
@@ -173,7 +181,10 @@ fun UserSettingsScreen(
             HorizontalDivider(color = CardBorder, thickness = 0.5.dp)
 
             // ── § 5 Seguridad y Privacidad ─────────────────────────────────────
+            val isStrictVault by viewModel.isStrictVaultEnabled?.collectAsStateWithLifecycle(initialValue = false) ?: remember { mutableStateOf(false) }
             SecuritySection(
+                isStrictVault = isStrictVault,
+                onToggleVault = { viewModel.toggleStrictVault(it) },
                 onExport  = { onShowSnackbar(context.getString(R.string.toast_exporting), null) {} },
                 onPrivacy = { onShowSnackbar(context.getString(R.string.toast_privacy_soon), null) {} },
                 onLogOut  = onLogOut,
@@ -582,6 +593,8 @@ private fun PersonalizationSection(
 
 @Composable
 private fun SecuritySection(
+    isStrictVault: Boolean,
+    onToggleVault: (Boolean) -> Unit,
     onExport:  () -> Unit,
     onPrivacy: () -> Unit,
     onLogOut:  () -> Unit,
@@ -589,6 +602,41 @@ private fun SecuritySection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         SectionTitle(stringResource(R.string.section_security))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.title_strict_vault),
+                    style = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary)
+                )
+                Text(
+                    text = stringResource(R.string.desc_strict_vault),
+                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary, lineHeight = 18.sp),
+                    modifier = Modifier.padding(top = 4.dp, end = 16.dp)
+                )
+            }
+            Switch(
+                checked = isStrictVault,
+                onCheckedChange = { onToggleVault(it) },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = AmoledBlack,
+                    checkedTrackColor = ThemeState.selectedMetal.color,
+                    uncheckedThumbColor = TextSecondary,
+                    uncheckedTrackColor = SurfaceDark
+                )
+            )
+        }
+
+        HorizontalDivider(
+            color     = CardBorder,
+            thickness = 0.5.dp,
+            modifier  = Modifier.padding(vertical = 8.dp)
+        )
 
         SecurityButton(
             icon    = Icons.Default.FileDownload,

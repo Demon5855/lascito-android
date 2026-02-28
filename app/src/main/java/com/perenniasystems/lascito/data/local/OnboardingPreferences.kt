@@ -15,6 +15,7 @@ class OnboardingPreferences(private val context: Context) {
 
     companion object {
         private val HAS_SEEN_ONBOARDING = booleanPreferencesKey("has_seen_onboarding")
+        private val IS_STRICT_VAULT_ENABLED = booleanPreferencesKey("is_strict_vault_enabled")
     }
 
     val hasSeenOnboarding: Flow<Boolean> = context.dataStore.data
@@ -25,6 +26,17 @@ class OnboardingPreferences(private val context: Context) {
     suspend fun saveOnboardingState(hasSeen: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[HAS_SEEN_ONBOARDING] = hasSeen
+        }
+    }
+
+    val isStrictVaultEnabled: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[IS_STRICT_VAULT_ENABLED] ?: false
+        }
+
+    suspend fun saveStrictVaultState(isEnabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_STRICT_VAULT_ENABLED] = isEnabled
         }
     }
 }

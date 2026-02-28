@@ -129,6 +129,8 @@
     <string name="btn_privacy">Políticas de Privacidad</string>
     <string name="btn_logout">Cerrar Sesión</string>
     <string name="btn_delete_account">Eliminar Cuenta</string>
+    <string name="title_strict_vault">Modo Bóveda Estricta</string>
+    <string name="desc_strict_vault">Bloquea capturas de pantalla, grabaciones y oculta el contenido de la app en el menú de tareas recientes.</string>
 
     <!-- Upload Progress -->
     <string name="msg_uploading_profile">Subiendo al Santuario…</string>
