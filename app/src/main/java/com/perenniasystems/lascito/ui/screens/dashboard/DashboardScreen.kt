@@ -38,6 +38,7 @@ fun DashboardScreen(
     onNavigateToUserSettings: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isEmailVerified by viewModel.isEmailVerified.collectAsStateWithLifecycle()
     var profileToDelete by remember { mutableStateOf<com.perenniasystems.lascito.data.model.Profile?>(null) }
 
     // Trigger re-fetch every time this screen becomes active
@@ -95,12 +96,25 @@ fun DashboardScreen(
         },
         containerColor = AmoledBlack
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (val state = uiState) {
+            if (!isEmailVerified) {
+                InfoBanner(
+                    message = stringResource(R.string.banner_verify_email),
+                    actionText = stringResource(R.string.action_resend),
+                    onActionClick = { viewModel.resendVerificationEmail() }
+                )
+            }
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                when (val state = uiState) {
 
                 is DashboardUiState.Loading -> {
                     CircularProgressIndicator(
@@ -149,6 +163,7 @@ fun DashboardScreen(
                     )
                 }
             }
+        } // Closure for the Box holding the `when(state)`
 
             if (profileToDelete != null) {
                 AlertDialog(
@@ -177,6 +192,33 @@ fun DashboardScreen(
                     }
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun InfoBanner(
+    message: String,
+    actionText: String,
+    onActionClick: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(SurfaceDark)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodySmall.copy(color = TextPrimary),
+            modifier = Modifier.weight(1f)
+        )
+        TextButton(onClick = onActionClick) {
+            Text(
+                text = actionText,
+                style = MaterialTheme.typography.labelLarge.copy(color = ThemeState.selectedMetal.color)
+            )
         }
     }
 }

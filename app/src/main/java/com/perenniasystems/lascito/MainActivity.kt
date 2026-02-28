@@ -199,12 +199,22 @@ class MainActivity : AppCompatActivity() {
 fun BiometricLockScreen(activity: FragmentActivity, content: @Composable () -> Unit) {
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     var isUnlocked by remember { mutableStateOf(false) }
+    var lastPauseTime by remember { mutableStateOf(0L) }
+    val GRACE_PERIOD_MS = 30_000L
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            // Se asume que el Santuario está protegido al inicio y se debe verificar siempre al reanudar.
-            if (event == Lifecycle.Event.ON_STOP || event == Lifecycle.Event.ON_PAUSE) {
-                isUnlocked = false
+            when (event) {
+                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
+                    lastPauseTime = android.os.SystemClock.elapsedRealtime()
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    val timeAway = android.os.SystemClock.elapsedRealtime() - lastPauseTime
+                    if (timeAway > GRACE_PERIOD_MS) {
+                        isUnlocked = false
+                    }
+                }
+                else -> {}
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)

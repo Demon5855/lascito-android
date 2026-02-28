@@ -30,7 +30,6 @@
     <string name="error_mic_permission_denied">Microphone permission denied</string>
     <string name="error_email_not_verified">Please verify your email address to continue. Check your inbox or spam folder.</string>
     <string name="toast_verification_sent">A verification link has been sent to your email.</string>
-    <string name="action_resend">Resend</string>
 
 
     <!-- ── Auth ──────────────────────────────────────────────────────────── -->
@@ -133,9 +132,11 @@
     <string name="title_strict_vault">Strict Vault Mode</string>
     <string name="desc_strict_vault">Blocks screenshots, recordings, and hides the app content in the recent tasks menu.</string>
 
-    <!-- Upload Progress -->
+    <!-- Upload Progress & Banners -->
     <string name="msg_uploading_profile">Ascending to Sanctuary…</string>
     <string name="msg_uploading_memory">Immortalizing Memory…</string>
+    <string name="banner_verify_email">Verify your email to secure your vault and unlock features.</string>
+    <string name="action_resend">Resend</string>
 
     <!-- Toasts -->
     <string name="toast_guardian_saved">Guardian updated</string>

@@ -30,6 +30,10 @@ class DashboardViewModel(
     private val _uiState = MutableStateFlow<DashboardUiState>(DashboardUiState.Loading)
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
+    // ── Email Verification State ──────────────────────────────────────────────
+    private val _isEmailVerified = MutableStateFlow(true)
+    val isEmailVerified: StateFlow<Boolean> = _isEmailVerified.asStateFlow()
+
     init {
         refresh()
     }
@@ -39,9 +43,16 @@ class DashboardViewModel(
             _uiState.value = DashboardUiState.Loading
             try {
                 withTimeout(15_000L) {
-                    val uid = FirebaseAuth.getInstance().currentUser?.uid
+                    val user = FirebaseAuth.getInstance().currentUser
                         ?: throw Exception("Not authenticated")
-                    val profiles = repository.getProfiles(userId = uid)
+                    
+                    // Reload user to get latest email verification status
+                    user.reload().addOnCompleteListener { 
+                        _isEmailVerified.value = user.isEmailVerified
+                    }
+
+                    val profiles = repository.getProfiles(userId = user.uid)
+                    _isEmailVerified.value = user.isEmailVerified
                     _uiState.value = DashboardUiState.Success(profiles)
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
@@ -70,6 +81,12 @@ class DashboardViewModel(
 
     fun resetState() {
         refresh()
+    }
+
+    fun resendVerificationEmail(onSent: () -> Unit = {}, onError: (Exception) -> Unit = {}) {
+        FirebaseAuth.getInstance().currentUser?.sendEmailVerification()
+            ?.addOnSuccessListener { onSent() }
+            ?.addOnFailureListener { e -> onError(e) }
     }
 }
 

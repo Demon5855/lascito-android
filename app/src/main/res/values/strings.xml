@@ -30,7 +30,6 @@
     <string name="error_mic_permission_denied">Permiso de micrófono denegado</string>
     <string name="error_email_not_verified">Por favor, verifica tu correo electrónico para continuar. Revisa tu bandeja de entrada o spam.</string>
     <string name="toast_verification_sent">Se ha enviado un enlace de verificación a tu correo.</string>
-    <string name="action_resend">Reenviar</string>
 
     <!-- ── Auth ────────────────────────────────────────────────────────────── -->
     <string name="label_email">Correo electrónico</string>
@@ -132,9 +131,11 @@
     <string name="title_strict_vault">Modo Bóveda Estricta</string>
     <string name="desc_strict_vault">Bloquea capturas de pantalla, grabaciones y oculta el contenido de la app en el menú de tareas recientes.</string>
 
-    <!-- Upload Progress -->
+    <!-- Upload Progress & Banners -->
     <string name="msg_uploading_profile">Subiendo al Santuario…</string>
     <string name="msg_uploading_memory">Inmortalizando Recuerdo…</string>
+    <string name="banner_verify_email">Verifica tu correo para asegurar tu bóveda y desbloquear funciones.</string>
+    <string name="action_resend">Reenviar</string>
 
     <!-- Toasts -->
     <string name="toast_guardian_saved">Guardián actualizado</string>
