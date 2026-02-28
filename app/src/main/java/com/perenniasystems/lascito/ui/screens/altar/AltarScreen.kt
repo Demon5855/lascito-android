@@ -225,7 +225,7 @@ private fun AltarContent(
     val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
     val birthYear    = yearFmt.format(Date(profile.birthDate))
-    val passingLabel = profile.passingDate?.let { yearFmt.format(Date(it)) } ?: "Presente"
+    val passingLabel = profile.passingDate?.let { yearFmt.format(Date(it)) } ?: stringResource(R.string.label_present)
     val dateRange    = "$birthYear — $passingLabel"
 
     LazyColumn(
@@ -312,7 +312,7 @@ private fun AltarContent(
                 ) {
                     Icon(
                         imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
+                        contentDescription = stringResource(R.string.desc_back),
                         tint               = TextPrimary
                     )
                 }
@@ -329,7 +329,7 @@ private fun AltarContent(
                     ) {
                         Icon(
                             imageVector        = Icons.Default.MoreVert,
-                            contentDescription = "Opciones",
+                            contentDescription = stringResource(R.string.desc_options),
                             tint               = TextPrimary
                         )
                     }
@@ -546,7 +546,7 @@ private fun MemoryItem(
                 IconButton(onClick = { showMenu = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Opciones",
+                        contentDescription = stringResource(R.string.desc_options),
                         tint = TextSecondary
                     )
                 }

@@ -126,7 +126,7 @@ class AddMemoryViewModel(
                 withTimeout(120_000L) {
                     val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
                     if (currentUserUid.isNullOrBlank()) {
-                        throw IllegalStateException("Usuario no autenticado")
+                        throw IllegalStateException("User not authenticated")
                     }
                     
                     try {

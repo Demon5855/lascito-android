@@ -21,6 +21,8 @@
     <string name="hint_date_format">DD/MM/YYYY</string>
     <string name="label_photo">Photo</string>
     <string name="error_profile_not_found">Profile not found</string>
+    <string name="desc_back">Back</string>
+    <string name="desc_options">Options</string>
 
     <!-- ── Error Handling Global ───────────────────────────────────────────── -->
     <string name="error_auth_invalid">Incorrect email or password.</string>
@@ -131,6 +133,10 @@
     <string name="btn_delete_account">Delete Account</string>
     <string name="title_strict_vault">Strict Vault Mode</string>
     <string name="desc_strict_vault">Blocks screenshots, recordings, and hides the app content in the recent tasks menu.</string>
+    <string name="biometric_title">Sanctuary Locked</string>
+    <string name="biometric_description">Verify your identity to access your legacies</string>
+    <string name="btn_unlock_sanctuary">Unlock Sanctuary</string>
+    <string name="biometric_error">Authentication error: %1$s</string>
 
     <!-- Upload Progress & Banners -->
     <string name="msg_uploading_profile">Ascending to Sanctuary…</string>

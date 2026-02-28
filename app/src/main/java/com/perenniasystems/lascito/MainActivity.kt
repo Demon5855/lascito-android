@@ -1,6 +1,7 @@
 package com.perenniasystems.lascito
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
@@ -54,6 +55,7 @@ import com.perenniasystems.lascito.data.repository.ThemeRepository
 import com.perenniasystems.lascito.ui.theme.AccentMetal
 import com.perenniasystems.lascito.ui.theme.ThemeState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
 
 
 /**
@@ -236,21 +238,20 @@ fun BiometricLockScreen(activity: FragmentActivity, content: @Composable () -> U
                     }
                     override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                         super.onAuthenticationError(errorCode, errString)
-                        android.widget.Toast.makeText(activity, "Auth Error: $errString", android.widget.Toast.LENGTH_SHORT).show()
                     }
                 }
             )
 
             val promptInfo = BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Santuario Bloqueado")
-                .setDescription("Verifica tu identidad para acceder a tus legados")
+                .setTitle(activity.getString(R.string.biometric_title))
+                .setDescription(activity.getString(R.string.biometric_description))
                 .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)
                 .build()
 
             try {
                 biometricPrompt.authenticate(promptInfo)
             } catch (e: Exception) {
-                android.widget.Toast.makeText(activity, "Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                Log.e("BiometricLock", "Biometric authentication failed", e)
             }
     }
 
@@ -275,7 +276,7 @@ fun BiometricLockScreen(activity: FragmentActivity, content: @Composable () -> U
             ) {
                 Icon(
                     imageVector = Icons.Filled.Lock,
-                    contentDescription = "Lock Icon",
+                    contentDescription = null,
                     tint = androidx.compose.ui.graphics.Color(0xFFE0E0E0), // Plata/Premium
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
@@ -288,7 +289,7 @@ fun BiometricLockScreen(activity: FragmentActivity, content: @Composable () -> U
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "Desbloquear Santuario",
+                        text = stringResource(R.string.btn_unlock_sanctuary),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
