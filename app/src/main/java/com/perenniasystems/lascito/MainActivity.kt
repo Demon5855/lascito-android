@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import com.perenniasystems.lascito.data.repository.ThemeRepository
 import com.perenniasystems.lascito.ui.theme.AccentMetal
 import com.perenniasystems.lascito.ui.theme.ThemeState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 
 /**
  * Single-Activity entry point for Lascito.
@@ -77,12 +79,12 @@ class MainActivity : ComponentActivity() {
 
             // Create DataStore Preferences Repository
             val onboardingPreferences = remember { OnboardingPreferences(baseContext) }
-            val hasSeenOnboarding by onboardingPreferences.hasSeenOnboarding.collectAsState(initial = null)
+            val hasSeenOnboarding by onboardingPreferences.hasSeenOnboarding.collectAsStateWithLifecycle(initialValue = null)
             val scope = rememberCoroutineScope()
             
             // Theme setup
             val themeRepository = remember { ThemeRepository(baseContext) }
-            val savedThemeColor by themeRepository.themeColorFlow.collectAsState(initial = "GOLD")
+            val savedThemeColor by themeRepository.themeColorFlow.collectAsStateWithLifecycle(initialValue = "GOLD")
             
             // Map string name to Enum and update ThemeState
             LaunchedEffect(savedThemeColor) {
