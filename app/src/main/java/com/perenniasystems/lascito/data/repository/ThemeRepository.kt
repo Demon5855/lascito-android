@@ -14,16 +14,38 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "th
 class ThemeRepository(private val context: Context) {
 
     private val THEME_COLOR_KEY = stringPreferencesKey("selected_theme_color")
+    private val LANGUAGE_KEY = stringPreferencesKey("language")
 
     val themeColorFlow: Flow<String> = context.dataStore.data
         .map { preferences ->
-            // Return GOLD as default if nothing is saved
             preferences[THEME_COLOR_KEY] ?: "GOLD"
         }
+
+    val accentMetalFlow: Flow<com.perenniasystems.lascito.ui.theme.AccentMetal> = context.dataStore.data.map { prefs ->
+        val metalName = prefs[THEME_COLOR_KEY] ?: "GOLD"
+        com.perenniasystems.lascito.ui.theme.AccentMetal.entries.find { it.name == metalName } ?: com.perenniasystems.lascito.ui.theme.AccentMetal.GOLD
+    }
+    
+    val languageFlow: Flow<com.perenniasystems.lascito.data.model.AppLanguage> = context.dataStore.data.map { prefs ->
+        val langTag = prefs[LANGUAGE_KEY] ?: "es"
+        com.perenniasystems.lascito.data.model.AppLanguage.entries.find { it.tag == langTag } ?: com.perenniasystems.lascito.data.model.AppLanguage.SPANISH
+    }
 
     suspend fun saveThemeColor(colorName: String) {
         context.dataStore.edit { preferences ->
             preferences[THEME_COLOR_KEY] = colorName
+        }
+    }
+
+    suspend fun saveAccentMetal(metal: com.perenniasystems.lascito.ui.theme.AccentMetal) {
+        context.dataStore.edit { prefs ->
+            prefs[THEME_COLOR_KEY] = metal.name
+        }
+    }
+    
+    suspend fun saveLanguage(language: com.perenniasystems.lascito.data.model.AppLanguage) {
+        context.dataStore.edit { prefs ->
+            prefs[LANGUAGE_KEY] = language.tag
         }
     }
 }

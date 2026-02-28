@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import androidx.annotation.StringRes
 import com.perenniasystems.lascito.R
@@ -78,6 +79,36 @@ class AuthViewModel(
     fun resetState() {
         _uiState.value = AuthUiState.Idle
     }
+
+    private var lastResetTime = 0L
+
+    fun resetPassword(email: String) {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastResetTime < 60_000L) {
+            val remainingSeconds = (60_000L - (currentTime - lastResetTime)) / 1000
+            _uiState.value = AuthUiState.Error(
+                // "Espera %1$d segundos antes de reintentar"
+                R.string.error_reset_cooldown, 
+                listOf(remainingSeconds.toInt())
+            )
+            return
+        }
+        lastResetTime = currentTime
+
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            try {
+                withTimeout(15_000L) {
+                    FirebaseAuth.getInstance().sendPasswordResetEmail(email.trim()).await()
+                }
+                _uiState.value = AuthUiState.ResetEmailSent
+            } catch (e: com.google.firebase.auth.FirebaseAuthInvalidUserException) {
+                _uiState.value = AuthUiState.Error(R.string.error_login) // Or specific string
+            } catch (e: Exception) {
+                _uiState.value = AuthUiState.Error(ErrorHandler.mapExceptionToResId(e))
+            }
+        }
+    }
 }
 
 // ── Sealed UI State ────────────────────────────────────────────────────────────
@@ -86,5 +117,6 @@ sealed interface AuthUiState {
     data object Loading : AuthUiState
     data object Success : AuthUiState
     data object ErrorUnverified : AuthUiState
-    data class  Error(@StringRes val messageResId: Int) : AuthUiState
+    data object ResetEmailSent : AuthUiState
+    data class  Error(@StringRes val messageResId: Int, val formatArgs: List<Any> = emptyList()) : AuthUiState
 }

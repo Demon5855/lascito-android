@@ -259,7 +259,8 @@ fun RegisterScreen(
                 val errorState = authState as AuthUiState.Error
                 LascitoAlertDialog(
                     messageRes = errorState.messageResId,
-                    onDismiss = { authViewModel.resetState() }
+                    onDismiss = { authViewModel.resetState() },
+                    formatArgs = errorState.formatArgs
                 )
             }
 

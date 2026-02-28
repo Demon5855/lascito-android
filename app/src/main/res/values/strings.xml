@@ -34,6 +34,7 @@
     <string name="error_mic_permission_denied">Permiso de micrófono denegado</string>
     <string name="error_email_not_verified">Por favor, verifica tu correo electrónico para continuar. Revisa tu bandeja de entrada o spam.</string>
     <string name="toast_verification_sent">Se ha enviado un enlace de verificación a tu correo.</string>
+    <string name="error_reset_cooldown">Espera %1$d segundos antes de reintentar</string>
 
     <!-- ── Auth ────────────────────────────────────────────────────────────── -->
     <string name="label_email">Correo electrónico</string>
@@ -54,11 +55,33 @@
     <string name="error_password_strength">Mínimo 8 caracteres: 1 mayúscula, 1 minúscula, 1 número y 1 símbolo</string>
     <string name="desc_show_password">Mostrar contraseña</string>
     <string name="desc_hide_password">Ocultar contraseña</string>
+    <string name="error_enter_current_password">Por favor, ingresa tu contraseña actual</string>
+    <string name="error_enter_new_password">Por favor, ingresa tu nueva contraseña</string>
+    <string name="error_password_same_as_current">La nueva contraseña no puede ser igual a la actual</string>
+    <string name="error_confirm_new_password">Por favor, confirma tu nueva contraseña</string>
     <!-- Terms &amp; Privacy consent -->
     <string name="terms_prefix">"He leído y acepto los "</string>
     <string name="terms_tos">Términos de Servicio</string>
     <string name="terms_connector">" y la "</string>
     <string name="terms_privacy">Política de Privacidad</string>
+
+    <!-- ── Reset / Change Password ───────────────────────────────────────────── -->
+    <string name="btn_forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="error_enter_email_first">Escribe tu correo primero</string>
+    <string name="msg_reset_email_sent">Correo de recuperación enviado a %1$s</string>
+    <string name="hint_forgot_email">Si olvidaste tu email, contacta soporte</string>
+    <string name="title_change_password">Cambiar Contraseña</string>
+    <string name="label_current_password">Contraseña Actual</string>
+    <string name="label_new_password">Nueva Contraseña</string>
+    <string name="label_confirm_new_password">Confirmar Nueva Contraseña</string>
+    <string name="error_incorrect_current_password">Contraseña actual incorrecta</string>
+    <string name="error_weak_password">La contraseña es muy débil</string>
+    <string name="msg_password_changed">La llave de tu santuario ha sido renovada</string>
+    <string name="btn_save">Guardar</string>
+
+    <!-- ── Biometric ───────────────────────────────────────────────────────────── -->
+    <string name="msg_welcome_back">Bienvenido de vuelta, \n%1$s</string>
+    <string name="btn_sign_out_safe">Iniciar sesión con otra cuenta</string>
 
     <!-- ── Dashboard ────────────────────────────────────────────────────────── -->
     <string name="screen_my_altars">Tus Legados</string>

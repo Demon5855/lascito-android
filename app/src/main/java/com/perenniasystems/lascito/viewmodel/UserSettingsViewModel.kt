@@ -13,9 +13,13 @@ import kotlinx.coroutines.withTimeout
 import java.io.IOException
 
 import androidx.annotation.StringRes
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.repository.ProfileRepository
+import com.perenniasystems.lascito.util.ErrorHandler
 import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
 import com.perenniasystems.lascito.data.repository.UserRepository
 import com.perenniasystems.lascito.data.repository.FirebaseAuthRepository
@@ -25,6 +29,13 @@ sealed class DeleteAccountState {
     object Loading : DeleteAccountState()
     object Success : DeleteAccountState()
     data class Error(@StringRes val messageResId: Int) : DeleteAccountState()
+}
+
+sealed class ChangePwdState {
+    object Idle : ChangePwdState()
+    object Loading : ChangePwdState()
+    object Success : ChangePwdState()
+    data class Error(@StringRes val messageResId: Int) : ChangePwdState()
 }
 
 data class UserSettingsUiState(
@@ -37,7 +48,8 @@ data class UserSettingsUiState(
     @StringRes val storageUsedStrRes: Int = R.string.state_calculating,
     @StringRes val storageMaxStrRes: Int = R.string.state_storage_max,
     
-    val deleteState: DeleteAccountState = DeleteAccountState.Idle
+    val deleteState: DeleteAccountState = DeleteAccountState.Idle,
+    val changePwdState: ChangePwdState = ChangePwdState.Idle
 )
 
 class UserSettingsViewModel(
@@ -45,14 +57,57 @@ class UserSettingsViewModel(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
     private val userRepository: UserRepository = FirebaseAuthRepository(),
     private val profileRepository: ProfileRepository = FirebaseProfileRepository(),
-    private val prefs: com.perenniasystems.lascito.data.local.OnboardingPreferences? = null
+    private val prefs: com.perenniasystems.lascito.data.local.OnboardingPreferences? = null,
+    private val themeRepository: com.perenniasystems.lascito.data.repository.ThemeRepository? = null
 ) : ViewModel() {
+
+    private val _selectedMetal = MutableStateFlow(com.perenniasystems.lascito.ui.theme.AccentMetal.GOLD)
+    val selectedMetal: StateFlow<com.perenniasystems.lascito.ui.theme.AccentMetal> = _selectedMetal.asStateFlow()
+    
+    private val _selectedLanguage = MutableStateFlow(com.perenniasystems.lascito.data.model.AppLanguage.SPANISH)
+    val selectedLanguage: StateFlow<com.perenniasystems.lascito.data.model.AppLanguage> = _selectedLanguage.asStateFlow()
 
     private val _uiState = MutableStateFlow(UserSettingsUiState())
     val uiState: StateFlow<UserSettingsUiState> = _uiState.asStateFlow()
 
     init {
         loadUserData()
+        
+        themeRepository?.let { repo ->
+            viewModelScope.launch {
+                repo.accentMetalFlow.collect { metal ->
+                    _selectedMetal.value = metal
+                }
+            }
+            viewModelScope.launch {
+                repo.languageFlow.collect { lang ->
+                    _selectedLanguage.value = lang
+                }
+            }
+        }
+    }
+
+    fun changeLanguage(language: com.perenniasystems.lascito.data.model.AppLanguage) {
+        viewModelScope.launch {
+            _selectedLanguage.value = language
+            themeRepository?.saveLanguage(language)
+            com.perenniasystems.lascito.ui.theme.LangState.selectedTag = language.tag
+        }
+    }
+    
+    fun changeLanguageWithDelay(language: com.perenniasystems.lascito.data.model.AppLanguage) {
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(50)
+            changeLanguage(language)
+        }
+    }
+    
+    fun changeMetal(metal: com.perenniasystems.lascito.ui.theme.AccentMetal) {
+        viewModelScope.launch {
+            _selectedMetal.value = metal
+            themeRepository?.saveAccentMetal(metal)
+            com.perenniasystems.lascito.ui.theme.ThemeState.selectedMetal = metal
+        }
     }
 
     private fun loadUserData() {
@@ -122,29 +177,69 @@ class UserSettingsViewModel(
                 userRepository.deleteUserDocument(uid)
                 
                 // 4. Eliminar la cuenta en Firebase Auth
-                val result = userRepository.deleteAccount()
-                if (result.isFailure) {
-                    val exception = result.exceptionOrNull()
-                    if (exception is FirebaseAuthRecentLoginRequiredException) {
-                        _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Error(R.string.error_recent_login_required))
-                        return@launch
+                userRepository.deleteAccount()
+                    .onSuccess {
+                        _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Success)
                     }
-                    throw exception ?: Exception("Failed to delete Auth account")
-                }
-                
-                _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Success)
+                    .onFailure { t ->
+                        val errorRes = if (t is FirebaseAuthRecentLoginRequiredException) {
+                            R.string.error_recent_login_required
+                        } else {
+                            ErrorHandler.mapExceptionToResId(t as? Exception ?: Exception(t))
+                        }
+                        _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Error(errorRes))
+                    }
             } catch (e: Exception) {
-                if (e is FirebaseAuthRecentLoginRequiredException) {
-                    _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Error(R.string.error_recent_login_required))
-                } else {
-                    _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Error(R.string.error_generic))
-                }
+                _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Error(ErrorHandler.mapExceptionToResId(e)))
             }
         }
     }
 
     fun resetDeleteState() {
         _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Idle)
+    }
+
+    fun resetChangePwdState() {
+        _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Idle)
+    }
+
+    fun changePassword(currentPass: String, newPass: String) {
+        val user = auth.currentUser
+        if (user == null || user.email == null) {
+            _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_not_authenticated))
+            return
+        }
+
+        if (newPass.length < 8) {
+            _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_password_strength))
+            return
+        }
+
+        if (currentPass == newPass) {
+            _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_generic))
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Loading)
+
+        viewModelScope.launch {
+            try {
+                val credential = EmailAuthProvider.getCredential(user.email!!, currentPass)
+                withTimeout(15_000L) {
+                    user.reauthenticate(credential).await()
+                    user.updatePassword(newPass).await()
+                }
+                _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Success)
+            } catch (e: FirebaseAuthInvalidCredentialsException) {
+                _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_incorrect_current_password))
+            } catch (e: FirebaseAuthWeakPasswordException) {
+                _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_weak_password))
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_network))
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(ErrorHandler.mapExceptionToResId(e)))
+            }
+        }
     }
 
     val isStrictVaultEnabled = prefs?.isStrictVaultEnabled

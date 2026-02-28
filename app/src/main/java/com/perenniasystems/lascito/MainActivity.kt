@@ -58,6 +58,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.text.style.TextAlign
+import com.google.firebase.auth.FirebaseAuth
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.perenniasystems.lascito.viewmodel.BiometricLockViewModel
 
 
 /**
@@ -207,37 +213,42 @@ class MainActivity : AppCompatActivity() {
 }
 
 @Composable
-fun BiometricLockScreen(activity: FragmentActivity, content: @Composable () -> Unit) {
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-    var isUnlocked by remember { mutableStateOf(false) }
-    var lastPauseTime by remember { mutableStateOf(0L) }
-    val GRACE_PERIOD_MS = 30_000L
-
+fun BiometricLockScreen(
+    activity: FragmentActivity,
+    viewModel: BiometricLockViewModel = viewModel(),
+    content: @Composable () -> Unit
+) {
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    if (currentUser == null) {
+        content()
+        return
+    }
+    
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val isUnlocked by viewModel.isUnlocked.collectAsStateWithLifecycle()
+    
+    // CRÍTICO: DisposableEffect con key del lifecycleOwner
+    // Esto previene múltiples registros del observer
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
-                    lastPauseTime = android.os.SystemClock.elapsedRealtime()
+                    viewModel.onPause()
                 }
                 Lifecycle.Event.ON_RESUME -> {
-                    if (lastPauseTime == 0L) {
-                        isUnlocked = false
-                    } else {
-                        val timeAway = android.os.SystemClock.elapsedRealtime() - lastPauseTime
-                        if (timeAway > GRACE_PERIOD_MS) {
-                            isUnlocked = false
-                        }
-                    }
+                    viewModel.onResume()
                 }
                 else -> {}
             }
         }
+        
         lifecycleOwner.lifecycle.addObserver(observer)
+        
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-
+    
     val authenticate = {
         val executor = ContextCompat.getMainExecutor(activity)
             
@@ -245,42 +256,61 @@ fun BiometricLockScreen(activity: FragmentActivity, content: @Composable () -> U
             activity,
             executor,
             object : BiometricPrompt.AuthenticationCallback() {
-                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                        super.onAuthenticationSucceeded(result)
-                        isUnlocked = true
-                    }
-                    override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                        super.onAuthenticationError(errorCode, errString)
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    viewModel.unlock()
+                }
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    when (errorCode) {
+                        BiometricPrompt.ERROR_USER_CANCELED,
+                        BiometricPrompt.ERROR_NEGATIVE_BUTTON,
+                        BiometricPrompt.ERROR_CANCELED -> {
+                            // Usuario canceló, no loguear
+                        }
+                        else -> {
+                            Log.w("BiometricLock", "Authentication error: $errString (code: $errorCode)")
+                        }
                     }
                 }
-            )
-
-            val promptInfo = BiometricPrompt.PromptInfo.Builder()
-                .setTitle(activity.getString(R.string.biometric_title))
-                .setDescription(activity.getString(R.string.biometric_description))
-                .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)
-                .build()
-
-            try {
-                biometricPrompt.authenticate(promptInfo)
-            } catch (e: Exception) {
-                Log.e("BiometricLock", "Biometric authentication failed", e)
             }
+        )
+        
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(activity.getString(R.string.biometric_title))
+            .setDescription(activity.getString(R.string.biometric_description))
+            .setAllowedAuthenticators(
+                BiometricManager.Authenticators.BIOMETRIC_STRONG or 
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            )
+            .build()
+            
+        try {
+            biometricPrompt.authenticate(promptInfo)
+        } catch (e: Exception) {
+            Log.e("BiometricLock", "Biometric authentication failed", e)
+        }
     }
-
+    
+    // CRÍTICO: LaunchedEffect con key de isUnlocked
+    // Solo se ejecuta cuando isUnlocked cambia, no en cada recomposición
     LaunchedEffect(isUnlocked) {
         if (!isUnlocked) {
             authenticate()
         }
     }
-
+    
     if (isUnlocked) {
         content()
     } else {
+        val guardianName = currentUser.displayName.takeIf { !it.isNullOrBlank() }
+            ?: currentUser.email?.substringBefore('@')
+            ?: "Guardián"
+            
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(androidx.compose.ui.graphics.Color(0xFF0D0D0D)),
+                .background(com.perenniasystems.lascito.ui.theme.AmoledBlack),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -290,25 +320,47 @@ fun BiometricLockScreen(activity: FragmentActivity, content: @Composable () -> U
                 Icon(
                     imageVector = Icons.Filled.Lock,
                     contentDescription = null,
-                    tint = androidx.compose.ui.graphics.Color(0xFFE0E0E0), // Plata/Premium
+                    tint = com.perenniasystems.lascito.ui.theme.ThemeState.selectedMetal.dimColor,
                     modifier = Modifier.padding(bottom = 24.dp)
+                )
+                Text(
+                    text = stringResource(R.string.msg_welcome_back, guardianName),
+                    color = androidx.compose.ui.graphics.Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 32.dp)
                 )
                 Button(
                     onClick = { authenticate() },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = androidx.compose.ui.graphics.Color(0xFFC9A96E), // Oro
-                        contentColor = androidx.compose.ui.graphics.Color(0xFF0D0D0D)
+                        containerColor = com.perenniasystems.lascito.ui.theme.ThemeState.selectedMetal.color,
+                        contentColor = com.perenniasystems.lascito.ui.theme.AmoledBlack
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         text = stringResource(R.string.btn_unlock_sanctuary),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+                androidx.compose.material3.TextButton(
+                    onClick = { 
+                        FirebaseAuth.getInstance().signOut()
+                        val intent = activity.intent
+                        activity.finish()
+                        activity.startActivity(intent)
+                    },
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.btn_sign_out_safe),
+                        color = com.perenniasystems.lascito.ui.theme.TextSecondary
                     )
                 }
             }
         }
     }
 }
+

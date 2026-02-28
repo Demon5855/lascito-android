@@ -24,10 +24,15 @@ fun LascitoAlertDialog(
     @StringRes messageRes: Int,
     onDismiss: () -> Unit,
     @StringRes actionRes: Int? = null,
-    onAction: (() -> Unit)? = null
+    onAction: (() -> Unit)? = null,
+    formatArgs: List<Any> = emptyList()
 ) {
     val context = LocalContext.current
-    val messageText = context.getString(messageRes)
+    val messageText = if (formatArgs.isNotEmpty()) {
+        context.getString(messageRes, *formatArgs.toTypedArray())
+    } else {
+        context.getString(messageRes)
+    }
     val btnText = context.getString(R.string.btn_understood)
 
     AlertDialog(

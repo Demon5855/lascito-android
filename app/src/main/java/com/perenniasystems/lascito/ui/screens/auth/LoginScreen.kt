@@ -49,6 +49,7 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
 
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
+    val isLoading = authState is AuthUiState.Loading
 
     // Validate format only when the field has been touched (non-empty).
     val emailError = email.isNotBlank() && !Validators.EMAIL_REGEX.matches(email)
@@ -134,7 +135,17 @@ fun LoginScreen(
                     VisualTransformation.None
                 else
                     PasswordVisualTransformation(),
-                keyboardOptions      = KeyboardOptions(keyboardType = KeyboardType.Password),
+                keyboardOptions      = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction    = androidx.compose.ui.text.input.ImeAction.Done
+                ),
+                keyboardActions      = androidx.compose.foundation.text.KeyboardActions(
+                    onDone = {
+                        if (!isLoading && email.isNotBlank() && !emailError && password.isNotBlank()) {
+                            authViewModel.login(email, password)
+                        }
+                    }
+                ),
                 trailingIcon         = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
@@ -152,19 +163,38 @@ fun LoginScreen(
                 }
             )
 
-            // Error de credenciales inválidas o de autenticación (Delegado a ErrorHandler + LascitoAlertDialog)
+            // ── Forgot Password Compact ───────────────────────────────────────
+            androidx.compose.material3.TextButton(
+                onClick = {
+                    if (email.isBlank()) {
+                        onShowSnackbar(context.getString(R.string.error_enter_email_first) + "\nSi olvidaste tu email, contacta soporte.", null) {}
+                    } else {
+                        authViewModel.resetPassword(email)
+                    }
+                },
+                modifier = Modifier.align(Alignment.End),
+                contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp)
+            ) {
+                Text(
+                    text = "Olvidé mi contraseña",
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            // Error de credenciales inválidas o de autenticación
             if (authState is AuthUiState.Error) {
                 val errorState = authState as AuthUiState.Error
                 LascitoAlertDialog(
                     messageRes = errorState.messageResId,
-                    onDismiss = { authViewModel.resetState() }
+                    onDismiss = { authViewModel.resetState() },
+                    formatArgs = errorState.formatArgs
                 )
             }
-
-            Spacer(modifier = Modifier.height(40.dp))
+            
+            Spacer(modifier = Modifier.height(16.dp))
 
             // ── CTA ──────────────────────────────────────────────────────────
-            val isLoading = authState is AuthUiState.Loading
             LascitoPrimaryButton(
                 text    = if (isLoading) stringResource(R.string.btn_loading)
                           else           stringResource(R.string.btn_login),
@@ -172,10 +202,13 @@ fun LoginScreen(
                 enabled = !isLoading && email.isNotBlank() && !emailError && password.isNotBlank()
             )
 
-            // Navigate on success
+            // Navigate or show snackbar on success
             LaunchedEffect(authState) {
                 if (authState is AuthUiState.Success) {
                     onNavigateToDashboard()
+                } else if (authState is AuthUiState.ResetEmailSent) {
+                    onShowSnackbar(context.getString(R.string.msg_reset_email_sent, email), null) {}
+                    authViewModel.resetState()
                 }
             }
 

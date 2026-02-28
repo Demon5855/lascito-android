@@ -24,6 +24,7 @@ fun LascitoTextField(
     modifier: Modifier = Modifier,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
     isError: Boolean = false,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
@@ -34,6 +35,7 @@ fun LascitoTextField(
         singleLine           = true,
         visualTransformation = visualTransformation,
         keyboardOptions      = keyboardOptions,
+        keyboardActions      = keyboardActions,
         isError              = isError,
         trailingIcon         = trailingIcon,
         shape                = RoundedCornerShape(8.dp),

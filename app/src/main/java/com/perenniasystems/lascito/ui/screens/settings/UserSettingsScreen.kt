@@ -1,57 +1,61 @@
 ﻿package com.perenniasystems.lascito.ui.screens.settings
 
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.os.LocaleListCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.perenniasystems.lascito.data.repository.ThemeRepository
 import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.util.LocaleHelper
 import com.perenniasystems.lascito.util.Validators
-import com.perenniasystems.lascito.data.repository.ThemeRepository
-import kotlinx.coroutines.launch
-
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
+import com.perenniasystems.lascito.viewmodel.ChangePwdState
+import com.perenniasystems.lascito.viewmodel.DeleteAccountState
 import com.perenniasystems.lascito.viewmodel.UserSettingsUiState
 import com.perenniasystems.lascito.viewmodel.UserSettingsViewModel
-import com.perenniasystems.lascito.viewmodel.DeleteAccountState
+import kotlinx.coroutines.launch
 
-// ── Language options ──────────────────────────────────────────────────────────
-enum class AppLanguage(val labelRes: Int, val tag: String) {
-    SPANISH(R.string.lang_spanish, "es"),
-    ENGLISH(R.string.lang_english, "en")
-}
+
+import com.perenniasystems.lascito.data.model.AppLanguage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,32 +65,23 @@ fun UserSettingsScreen(
     onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
     val context = LocalContext.current
+    val themeRepository = remember { ThemeRepository(context) }
+    
     val viewModel: UserSettingsViewModel = viewModel(
         factory = object : androidx.lifecycle.ViewModelProvider.Factory {
             override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
                 val prefs = com.perenniasystems.lascito.data.local.OnboardingPreferences(context.applicationContext)
                 @Suppress("UNCHECKED_CAST")
-                return UserSettingsViewModel(prefs = prefs) as T
+                return UserSettingsViewModel(prefs = prefs, themeRepository = themeRepository) as T
             }
         }
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val themeRepository = remember { ThemeRepository(context) }
 
-    // Init from LangState (which was already seeded from SharedPreferences
-    // in MainActivity.onCreate before setContent was called).
-    var selectedLang by remember {
-        mutableStateOf(
-            AppLanguage.entries.firstOrNull { it.tag == LangState.selectedTag }
-                ?: AppLanguage.SPANISH
-        )
-    }
-
-    // Accent metal state lives in the singleton ThemeState — reading it here
-    // means this composable stays in sync with any external changes, and writing
-    // propagates instantly through LascitoTheme to the whole tree.
-    val selectedMetal = ThemeState.selectedMetal
+    // SOLUCIÓN BUG #2: Estado desde ViewModel (sobrevive recreación)
+    val selectedMetal by viewModel.selectedMetal.collectAsStateWithLifecycle()
+    val selectedLang by viewModel.selectedLanguage.collectAsStateWithLifecycle()
 
     var guardianEmail by remember { mutableStateOf("") }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
@@ -95,6 +90,16 @@ fun UserSettingsScreen(
         if (uiState.deleteState is DeleteAccountState.Success) {
             viewModel.resetDeleteState()
             onLogOut()
+        }
+    }
+
+    var showChangePwdDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.changePwdState) {
+        if (uiState.changePwdState is ChangePwdState.Success) {
+            showChangePwdDialog = false
+            viewModel.resetChangePwdState()
+            onShowSnackbar(context.getString(R.string.msg_password_changed), null) {}
         }
     }
 
@@ -160,19 +165,16 @@ fun UserSettingsScreen(
                 selectedLang  = selectedLang,
                 selectedMetal = selectedMetal,
                 onLangChange  = { lang ->
-                    selectedLang = lang
+                    viewModel.changeLanguageWithDelay(lang)
+                    
+                    // Maintain standard android locale application
                     LocaleHelper.save(context, lang.tag)
                     java.util.Locale.setDefault(java.util.Locale.forLanguageTag(lang.tag))
-                    LangState.selectedTag = lang.tag
-                    
                     val localeList = LocaleListCompat.forLanguageTags(lang.tag)
                     AppCompatDelegate.setApplicationLocales(localeList)
                 },
                 onMetalChange = { metal ->
-                    ThemeState.selectedMetal = metal   // triggers recomposition everywhere
-                    scope.launch {
-                        themeRepository.saveThemeColor(metal.name)
-                    }
+                    viewModel.changeMetal(metal)
                     onShowSnackbar(context.getString(R.string.toast_accent_changed,
                         context.getString(metal.labelRes)), null) {}
                 }
@@ -187,6 +189,7 @@ fun UserSettingsScreen(
                 onToggleVault = { viewModel.toggleStrictVault(it) },
                 onExport  = { onShowSnackbar(context.getString(R.string.toast_exporting), null) {} },
                 onPrivacy = { onShowSnackbar(context.getString(R.string.toast_privacy_soon), null) {} },
+                onChangePwd = { showChangePwdDialog = true },
                 onLogOut  = onLogOut,
                 onDelete  = { showDeleteAccountDialog = true }
             )
@@ -233,8 +236,283 @@ fun UserSettingsScreen(
                 onDismiss  = { viewModel.resetDeleteState() }
             )
         }
+        
+        if (uiState.changePwdState is ChangePwdState.Error) {
+            val errState = uiState.changePwdState as ChangePwdState.Error
+            LascitoAlertDialog(
+                messageRes = errState.messageResId,
+                onDismiss  = { viewModel.resetChangePwdState() }
+            )
+        }
 
-        if (uiState.deleteState is DeleteAccountState.Loading) {
+        if (showChangePwdDialog) {
+            var currentPass by remember { mutableStateOf("") }
+            var newPass by remember { mutableStateOf("") }
+            var confirmPass by remember { mutableStateOf("") }
+
+            var currentVisible by remember { mutableStateOf(false) }
+            var newVisible by remember { mutableStateOf(false) }
+            var confirmVisible by remember { mutableStateOf(false) }
+
+            var currentPasswordError by remember { mutableStateOf<Int?>(null) }
+            var newPasswordError by remember { mutableStateOf<Int?>(null) }
+            var confirmPasswordError by remember { mutableStateOf<Int?>(null) }
+            
+            // Función de validación reutilizable
+            val validateAndSubmit = {
+                currentPasswordError = null
+                newPasswordError = null
+                confirmPasswordError = null
+
+                if (currentPass.isBlank()) {
+                    currentPasswordError = R.string.error_enter_current_password
+                } else if (newPass.isBlank()) {
+                    newPasswordError = R.string.error_enter_new_password
+                } else if (newPass.length < 8) {
+                    newPasswordError = R.string.error_password_strength
+                } else if (currentPass == newPass) {
+                    newPasswordError = R.string.error_password_same_as_current
+                } else if (confirmPass.isBlank()) {
+                    confirmPasswordError = R.string.error_confirm_new_password
+                } else if (newPass != confirmPass) {
+                    confirmPasswordError = R.string.error_passwords_no_match
+                } else {
+                    viewModel.changePassword(currentPass, newPass)
+                }
+            }
+
+            AlertDialog(
+                onDismissRequest = { 
+                    if (uiState.changePwdState !is ChangePwdState.Loading) {
+                        showChangePwdDialog = false
+                        viewModel.resetChangePwdState()
+                    }
+                },
+                containerColor = SurfaceDark,
+                titleContentColor = TextPrimary,
+                textContentColor = TextPrimary,
+                title = { 
+                    Text(
+                        text = stringResource(R.string.title_change_password),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    ) 
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        
+                        // ─────────────────────────────────────────────────────────────
+                        // Campo: Contraseña Actual
+                        // ─────────────────────────────────────────────────────────────
+                        OutlinedTextField(
+                            value = currentPass,
+                            onValueChange = { 
+                                currentPass = it
+                                currentPasswordError = null 
+                            },
+                            label = { Text(stringResource(R.string.label_current_password)) },
+                            placeholder = { Text("••••••••") },
+                            visualTransformation = if (currentVisible) 
+                                VisualTransformation.None 
+                            else 
+                                PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Next
+                            ),
+                            trailingIcon = {
+                                IconButton(onClick = { currentVisible = !currentVisible }) {
+                                    Icon(
+                                        imageVector = if (currentVisible) 
+                                            Icons.Filled.VisibilityOff 
+                                        else 
+                                            Icons.Filled.Visibility,
+                                        contentDescription = if (currentVisible)
+                                            stringResource(R.string.desc_hide_password)
+                                        else
+                                            stringResource(R.string.desc_show_password),
+                                        tint = TextSecondary
+                                    )
+                                }
+                            },
+                            isError = currentPasswordError != null,
+                            supportingText = currentPasswordError?.let { errorResId ->
+                                { 
+                                    Text(
+                                        text = stringResource(errorResId), 
+                                        color = MaterialTheme.colorScheme.error
+                                    ) 
+                                }
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
+                                unfocusedBorderColor = CardBorder,
+                                cursorColor = MaterialTheme.colorScheme.primary
+                            ),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // ─────────────────────────────────────────────────────────────
+                        // Campo: Nueva Contraseña
+                        // ─────────────────────────────────────────────────────────────
+                        OutlinedTextField(
+                            value = newPass,
+                            onValueChange = { 
+                                newPass = it
+                                newPasswordError = null
+                                if (confirmPasswordError == R.string.error_passwords_no_match) {
+                                    confirmPasswordError = null
+                                }
+                            },
+                            label = { Text(stringResource(R.string.label_new_password)) },
+                            placeholder = { Text("Mínimo 8 caracteres") },
+                            visualTransformation = if (newVisible) 
+                                VisualTransformation.None 
+                            else 
+                                PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Next
+                            ),
+                            trailingIcon = {
+                                IconButton(onClick = { newVisible = !newVisible }) {
+                                    Icon(
+                                        imageVector = if (newVisible) 
+                                            Icons.Filled.VisibilityOff 
+                                        else 
+                                            Icons.Filled.Visibility,
+                                        contentDescription = if (newVisible)
+                                            stringResource(R.string.desc_hide_password)
+                                        else
+                                            stringResource(R.string.desc_show_password),
+                                        tint = TextSecondary
+                                    )
+                                }
+                            },
+                            isError = newPasswordError != null,
+                            supportingText = newPasswordError?.let { errorResId ->
+                                { 
+                                    Text(
+                                        text = stringResource(errorResId), 
+                                        color = MaterialTheme.colorScheme.error
+                                    ) 
+                                }
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
+                                unfocusedBorderColor = CardBorder,
+                                cursorColor = MaterialTheme.colorScheme.primary
+                            ),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // ─────────────────────────────────────────────────────────────
+                        // Campo: Confirmar Nueva Contraseña
+                        // ─────────────────────────────────────────────────────────────
+                        OutlinedTextField(
+                            value = confirmPass,
+                            onValueChange = { 
+                                confirmPass = it
+                                confirmPasswordError = null
+                                if (newPasswordError == R.string.error_passwords_no_match) {
+                                    newPasswordError = null
+                                }
+                            },
+                            label = { Text(stringResource(R.string.label_confirm_new_password)) },
+                            placeholder = { Text("Repetir contraseña") },
+                            visualTransformation = if (confirmVisible) 
+                                VisualTransformation.None 
+                            else 
+                                PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = { validateAndSubmit() }
+                            ),
+                            trailingIcon = {
+                                IconButton(onClick = { confirmVisible = !confirmVisible }) {
+                                    Icon(
+                                        imageVector = if (confirmVisible) 
+                                            Icons.Filled.VisibilityOff 
+                                        else 
+                                            Icons.Filled.Visibility,
+                                        contentDescription = if (confirmVisible)
+                                            stringResource(R.string.desc_hide_password)
+                                        else
+                                            stringResource(R.string.desc_show_password),
+                                        tint = TextSecondary
+                                    )
+                                }
+                            },
+                            isError = confirmPasswordError != null,
+                            supportingText = confirmPasswordError?.let { errorResId ->
+                                { 
+                                    Text(
+                                        text = stringResource(errorResId), 
+                                        color = MaterialTheme.colorScheme.error
+                                    ) 
+                                }
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primaryContainer,
+                                unfocusedBorderColor = CardBorder,
+                                cursorColor = MaterialTheme.colorScheme.primary
+                            ),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    val isLoading = uiState.changePwdState is ChangePwdState.Loading
+                    
+                    Button(
+                        onClick = validateAndSubmit,
+                        enabled = !isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = AmoledBlack
+                        )
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = AmoledBlack
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text(
+                            text = if (isLoading) 
+                                stringResource(R.string.btn_loading) 
+                            else 
+                                stringResource(R.string.btn_save),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { 
+                            showChangePwdDialog = false
+                            viewModel.resetChangePwdState()
+                        },
+                        enabled = uiState.changePwdState !is ChangePwdState.Loading
+                    ) {
+                        Text(
+                            text = stringResource(R.string.btn_cancel), 
+                            color = TextSecondary
+                        )
+                    }
+                }
+            )
+        }
+
+        if (uiState.deleteState is DeleteAccountState.Loading || uiState.changePwdState is ChangePwdState.Loading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -242,7 +520,7 @@ fun UserSettingsScreen(
                     .clickable(enabled = false) {}, // Block UI interaction
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = DangerRed)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -490,14 +768,17 @@ private fun PersonalizationSection(
                         .widthIn(min = 130.dp),
                     shape  = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary),
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ),
                     border = androidx.compose.foundation.BorderStroke(
-                        1.dp, MaterialTheme.colorScheme.primaryContainer)
+                        1.dp, MaterialTheme.colorScheme.primaryContainer
+                    )
                 ) {
                     Text(
                         text  = stringResource(selectedLang.labelRes),
                         style = MaterialTheme.typography.labelLarge.copy(
-                            color = MaterialTheme.colorScheme.primary)
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     )
                     Spacer(Modifier.width(4.dp))
                     Icon(
@@ -507,6 +788,7 @@ private fun PersonalizationSection(
                         modifier           = Modifier.size(16.dp)
                     )
                 }
+                
                 ExposedDropdownMenu(
                     expanded         = langExpanded,
                     onDismissRequest = { langExpanded = false },
@@ -518,12 +800,14 @@ private fun PersonalizationSection(
                                 Text(
                                     stringResource(lang.labelRes),
                                     color = if (lang == selectedLang)
-                                        MaterialTheme.colorScheme.primary else TextPrimary
+                                        MaterialTheme.colorScheme.primary 
+                                    else 
+                                        TextPrimary
                                 )
                             },
                             onClick = {
-                                onLangChange(lang)
                                 langExpanded = false
+                                onLangChange(lang)
                             },
                             trailingIcon = {
                                 if (lang == selectedLang) {
@@ -587,6 +871,8 @@ private fun PersonalizationSection(
     }
 }
 
+
+
 // ─────────────────────────────────────────────────────────────────────────────
 // § 5 — Seguridad y Privacidad
 // ─────────────────────────────────────────────────────────────────────────────
@@ -597,6 +883,7 @@ private fun SecuritySection(
     onToggleVault: (Boolean) -> Unit,
     onExport:  () -> Unit,
     onPrivacy: () -> Unit,
+    onChangePwd: () -> Unit,
     onLogOut:  () -> Unit,
     onDelete:  () -> Unit
 ) {
@@ -647,6 +934,11 @@ private fun SecuritySection(
             icon    = Icons.Default.Policy,
             label   = stringResource(R.string.btn_privacy),
             onClick = onPrivacy
+        )
+        SecurityButton(
+            icon    = Icons.Default.LockReset,
+            label   = stringResource(R.string.title_change_password),
+            onClick = onChangePwd
         )
         SecurityButton(
             icon    = Icons.AutoMirrored.Filled.ExitToApp,
