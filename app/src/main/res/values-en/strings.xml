@@ -28,6 +28,8 @@
     <string name="error_auth_invalid">Incorrect email or password.</string>
     <string name="error_network">No internet connection. Please check your network.</string>
     <string name="error_generic">An unexpected error occurred. Please try again later.</string>
+    <string name="error_not_authenticated">User not authenticated. Please log in.</string>
+    <string name="error_session_expired">Session expired. Please log in again.</string>
     <string name="error_recent_login_required">The security seals have expired. Please sign in again to confirm your identity.</string>
     <string name="error_mic_permission_denied">Microphone permission denied</string>
     <string name="error_email_not_verified">Please verify your email address to continue. Check your inbox or spam folder.</string>

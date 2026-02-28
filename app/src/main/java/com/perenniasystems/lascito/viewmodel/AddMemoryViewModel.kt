@@ -124,18 +124,21 @@ class AddMemoryViewModel(
             try {
                 // Extended timeout for large files (videos)
                 withTimeout(120_000L) {
-                    val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
-                    if (currentUserUid.isNullOrBlank()) {
-                        throw IllegalStateException("User not authenticated")
+                    val currentUser = FirebaseAuth.getInstance().currentUser
+                    if (currentUser == null) {
+                        _uiState.value = AddMemoryUiState.Error(R.string.error_not_authenticated)
+                        return@withTimeout
                     }
                     
                     try {
-                        FirebaseAuth.getInstance().currentUser?.reload()?.await()
+                        currentUser.reload().await()
                     } catch (e: Exception) {
                         Log.e("FirebaseAuth", "Failed to reload user", e)
+                        _uiState.value = AddMemoryUiState.Error(R.string.error_session_expired)
+                        return@withTimeout
                     }
 
-                    if (FirebaseAuth.getInstance().currentUser?.isEmailVerified == false) {
+                    if (currentUser.isEmailVerified == false) {
                         _uiState.value = AddMemoryUiState.Error(R.string.error_email_not_verified)
                         return@withTimeout
                     }

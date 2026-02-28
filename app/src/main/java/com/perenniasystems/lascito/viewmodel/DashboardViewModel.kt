@@ -101,9 +101,13 @@ class DashboardViewModel(
                 val user = FirebaseAuth.getInstance().currentUser 
                     ?: throw Exception("Not authenticated")
                 
-                user.sendEmailVerification().await()
+                withTimeout(15_000L) {
+                    user.sendEmailVerification().await()
+                }
                 _verificationEmailSent.value = true
                 
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                _uiState.value = DashboardUiState.Error(R.string.error_network)
             } catch (e: Exception) {
                 _uiState.value = DashboardUiState.Error(
                     messageResId = ErrorHandler.mapExceptionToResId(e)

@@ -28,6 +28,8 @@
     <string name="error_auth_invalid">Correo o contraseña incorrectos.</string>
     <string name="error_network">No hay conexión a internet. Verifica tu red.</string>
     <string name="error_generic">Ha ocurrido un error inesperado. Inténtalo más tarde.</string>
+    <string name="error_not_authenticated">Usuario no autenticado. Por favor, inicia sesión.</string>
+    <string name="error_session_expired">Sesión expirada. Por favor, inicia sesión nuevamente.</string>
     <string name="error_recent_login_required">Los sellos de seguridad han expirado. Por favor, vuelve a iniciar sesión para confirmar tu identidad.</string>
     <string name="error_mic_permission_denied">Permiso de micrófono denegado</string>
     <string name="error_email_not_verified">Por favor, verifica tu correo electrónico para continuar. Revisa tu bandeja de entrada o spam.</string>

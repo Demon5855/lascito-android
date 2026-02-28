@@ -56,6 +56,8 @@ import com.perenniasystems.lascito.ui.theme.AccentMetal
 import com.perenniasystems.lascito.ui.theme.ThemeState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.first
 
 
 /**
@@ -74,6 +76,13 @@ class MainActivity : AppCompatActivity() {
         // Restore the persisted language into LangState so the UI
         // starts in the correct locale straight away.
         LangState.selectedTag = LocaleHelper.getSavedTag(this)
+
+        val onboardingPreferences = OnboardingPreferences(this)
+        lifecycleScope.launch {
+            if (onboardingPreferences.isStrictVaultEnabled.first()) {
+                window.setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE)
+            }
+        }
 
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
@@ -211,9 +220,13 @@ fun BiometricLockScreen(activity: FragmentActivity, content: @Composable () -> U
                     lastPauseTime = android.os.SystemClock.elapsedRealtime()
                 }
                 Lifecycle.Event.ON_RESUME -> {
-                    val timeAway = android.os.SystemClock.elapsedRealtime() - lastPauseTime
-                    if (timeAway > GRACE_PERIOD_MS) {
+                    if (lastPauseTime == 0L) {
                         isUnlocked = false
+                    } else {
+                        val timeAway = android.os.SystemClock.elapsedRealtime() - lastPauseTime
+                        if (timeAway > GRACE_PERIOD_MS) {
+                            isUnlocked = false
+                        }
                     }
                 }
                 else -> {}
