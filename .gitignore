@@ -35,3 +35,16 @@ secrets.properties
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# ── Build Logs & Debug Files ──────────────────────────────────────────
+*.log
+*.txt
+!README.md
+!gradle/wrapper/*.properties
+build_*.txt
+error*.txt
+compile_*.txt
+cmd_*.log
+result.txt
+altar_temp.txt
+script.py
