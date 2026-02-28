@@ -22,6 +22,7 @@ import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.util.ErrorHandler
 import java.io.IOException
 import java.util.UUID
+import kotlinx.coroutines.tasks.await
 
 sealed interface AddProfileUiState {
     data object Idle : AddProfileUiState
@@ -89,6 +90,17 @@ class AddProfileViewModel(
                         throw IllegalStateException("Usuario no autenticado")
                     }
 
+                    try {
+                        FirebaseAuth.getInstance().currentUser?.reload()?.await()
+                    } catch (e: Exception) {
+                        Log.e("FirebaseAuth", "Failed to reload user", e)
+                    }
+
+                    if (FirebaseAuth.getInstance().currentUser?.isEmailVerified == false) {
+                        _uiState.value = AddProfileUiState.Error(R.string.error_email_not_verified)
+                        return@withTimeout
+                    }
+
                     _uploadProgress.value = 0.3f
                     val profileId = currentProfileId ?: UUID.randomUUID().toString()
                     val finalAvatarUrl = if (imageBytes != null) {
@@ -125,5 +137,9 @@ class AddProfileViewModel(
                 _uiState.value = AddProfileUiState.Error(ErrorHandler.mapExceptionToResId(e))
             }
         }
+    }
+
+    fun resendVerificationEmail() {
+        FirebaseAuth.getInstance().currentUser?.sendEmailVerification()
     }
 }

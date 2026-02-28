@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -39,8 +40,10 @@ import com.perenniasystems.lascito.viewmodel.AuthViewModel
 fun LoginScreen(
     authViewModel:         AuthViewModel,
     onNavigateToDashboard: () -> Unit = {},
-    onNavigateToRegister:  () -> Unit = {}
+    onNavigateToRegister:  () -> Unit = {},
+    onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
+    val context = LocalContext.current
     var email           by remember { mutableStateOf("") }
     var password        by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }

@@ -22,6 +22,7 @@ import com.perenniasystems.lascito.util.ErrorHandler
 import java.io.IOException
 import java.util.UUID
 import android.net.Uri
+import kotlinx.coroutines.tasks.await
 
 sealed interface AddMemoryUiState {
     data object Idle : AddMemoryUiState
@@ -127,6 +128,17 @@ class AddMemoryViewModel(
                     if (currentUserUid.isNullOrBlank()) {
                         throw IllegalStateException("Usuario no autenticado")
                     }
+                    
+                    try {
+                        FirebaseAuth.getInstance().currentUser?.reload()?.await()
+                    } catch (e: Exception) {
+                        Log.e("FirebaseAuth", "Failed to reload user", e)
+                    }
+
+                    if (FirebaseAuth.getInstance().currentUser?.isEmailVerified == false) {
+                        _uiState.value = AddMemoryUiState.Error(R.string.error_email_not_verified)
+                        return@withTimeout
+                    }
 
                     val memoryId = currentMemoryId ?: UUID.randomUUID().toString()
                     var mediaUrl = currentMediaUrl ?: ""
@@ -182,5 +194,9 @@ class AddMemoryViewModel(
                 _uiState.value = AddMemoryUiState.Error(ErrorHandler.mapExceptionToResId(e))
             }
         }
+    }
+
+    fun resendVerificationEmail() {
+        FirebaseAuth.getInstance().currentUser?.sendEmailVerification()
     }
 }

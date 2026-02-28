@@ -138,7 +138,8 @@ private fun validateDateDigits(digits: String): Int? {
 @Composable
 fun AddProfileScreen(
     viewModel: AddProfileViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
     var rawName         by remember { mutableStateOf("") }
     var rawRelationship by remember { mutableStateOf("") }
@@ -589,7 +590,11 @@ fun AddProfileScreen(
                 val errState = uiState as AddProfileUiState.Error
                 LascitoAlertDialog(
                     messageRes = errState.messageResId,
-                    onDismiss  = { viewModel.resetState() }
+                    onDismiss  = { viewModel.resetState() },
+                    actionRes = if (errState.messageResId == R.string.error_email_not_verified) R.string.action_resend else null,
+                    onAction = if (errState.messageResId == R.string.error_email_not_verified) {
+                        { viewModel.resendVerificationEmail() }
+                    } else null
                 )
             }
 
@@ -699,6 +704,6 @@ private fun pickerColors() = DatePickerDefaults.colors(
 @Preview(showBackground = true, backgroundColor = 0xFF0D0D0D)
 @Composable
 private fun AddProfileScreenPreview() {
-    LascitoTheme { AddProfileScreen(viewModel = AddProfileViewModel()) {} }
+    LascitoTheme { AddProfileScreen(viewModel = AddProfileViewModel(), onNavigateBack = {}) }
 }
 

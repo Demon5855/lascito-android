@@ -37,6 +37,11 @@ class FirebaseAuthRepository(
             userProfileChangeRequest { displayName = name.trim() }
         ).await()
 
+        // 3. Send email verification (fire and forget)
+        runCatching {
+            result.user!!.sendEmailVerification().await()
+        }
+
         // 3. Persist basic info in Firestore `users` collection
         val userData = mapOf(
             "displayName" to name.trim(),

@@ -448,7 +448,11 @@ fun AddMemoryScreen(
                 val errState = uiState as AddMemoryUiState.Error
                 LascitoAlertDialog(
                     messageRes = errState.messageResId,
-                    onDismiss  = { viewModel.resetState() }
+                    onDismiss = { viewModel.resetState() },
+                    actionRes = if (errState.messageResId == R.string.error_email_not_verified) R.string.action_resend else null,
+                    onAction = if (errState.messageResId == R.string.error_email_not_verified) {
+                        { viewModel.resendVerificationEmail() }
+                    } else null
                 )
             }
 

@@ -26,8 +26,11 @@
     <string name="error_auth_invalid">Correo o contraseña incorrectos.</string>
     <string name="error_network">No hay conexión a internet. Verifica tu red.</string>
     <string name="error_generic">Ha ocurrido un error inesperado. Inténtalo más tarde.</string>
-    <string name="error_recent_login_required">Por seguridad, cierra sesión, vuelve a ingresar e intenta esta acción de nuevo.</string>
+    <string name="error_recent_login_required">Los sellos de seguridad han expirado. Por favor, vuelve a iniciar sesión para confirmar tu identidad.</string>
     <string name="error_mic_permission_denied">Permiso de micrófono denegado</string>
+    <string name="error_email_not_verified">Por favor, verifica tu correo electrónico para continuar. Revisa tu bandeja de entrada o spam.</string>
+    <string name="toast_verification_sent">Se ha enviado un enlace de verificación a tu correo.</string>
+    <string name="action_resend">Reenviar</string>
 
     <!-- ── Auth ────────────────────────────────────────────────────────────── -->
     <string name="label_email">Correo electrónico</string>
@@ -36,7 +39,7 @@
     <string name="label_confirm_password">Confirmar contraseña</string>
     <string name="btn_login">Iniciar Sesión</string>
     <string name="btn_register">Crear Cuenta</string>
-    <string name="btn_loading">Cargando…</string>
+    <string name="btn_loading">Sincronizando…</string>
     <string name="link_no_account">¿No tienes cuenta? Regístrate</string>
     <string name="link_have_account">¿Ya tienes cuenta? Inicia Sesión</string>
     <string name="error_login">Correo o contraseña incorrectos</string>
@@ -63,7 +66,7 @@
     <!-- ── Altar ─────────────────────────────────────────────────────────────── -->
     <string name="screen_memories">Recuerdos</string>
     <string name="desc_add_memory">Añadir recuerdo</string>
-    <string name="empty_memories">Aún no hay recuerdos.\nPresiona + para añadir el primero.</string>
+    <string name="empty_memories">Este legado aguarda sus historias.\nPresiona + para preservar la primera.</string>
     <string name="desc_play_video">Reproducir video</string>
     <string name="desc_play_audio">Reproducir nota de voz</string>
 
@@ -139,9 +142,9 @@
     <string name="toast_lang_changed">Idioma actualizado a: %1$s</string>
     <string name="toast_accent_changed">Acento actualizado: %1$s</string>
     <!-- ViewModels & State Helpers -->
-    <string name="state_loading">Cargando...</string>
-    <string name="state_calculating">Calculando...</string>
-    <string name="state_calculating_storage">Calculando...</string>
+    <string name="state_loading">Sincronizando...</string>
+    <string name="state_calculating">Procesando...</string>
+    <string name="state_calculating_storage">Procesando...</string>
     <string name="state_offline">Sin conexión</string>
     <string name="state_unauthenticated">No autenticado</string>
     <string name="state_default_user">Usuario</string>

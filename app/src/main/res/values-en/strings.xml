@@ -26,8 +26,11 @@
     <string name="error_auth_invalid">Incorrect email or password.</string>
     <string name="error_network">No internet connection. Please check your network.</string>
     <string name="error_generic">An unexpected error occurred. Please try again later.</string>
-    <string name="error_recent_login_required">For security reasons, please log out, log back in, and try this action again.</string>
+    <string name="error_recent_login_required">The security seals have expired. Please sign in again to confirm your identity.</string>
     <string name="error_mic_permission_denied">Microphone permission denied</string>
+    <string name="error_email_not_verified">Please verify your email address to continue. Check your inbox or spam folder.</string>
+    <string name="toast_verification_sent">A verification link has been sent to your email.</string>
+    <string name="action_resend">Resend</string>
 
 
     <!-- ── Auth ──────────────────────────────────────────────────────────── -->
@@ -37,7 +40,7 @@
     <string name="label_confirm_password">Confirm password</string>
     <string name="btn_login">Sign In</string>
     <string name="btn_register">Create Account</string>
-    <string name="btn_loading">Loading…</string>
+    <string name="btn_loading">Synchronizing...</string>
     <string name="link_no_account">Don\'t have an account? Sign up</string>
     <string name="link_have_account">Already have an account? Sign in</string>
     <string name="error_login">Incorrect email or password</string>
@@ -64,13 +67,13 @@
     <!-- ── Altar ─────────────────────────────────────────────────────────── -->
     <string name="screen_memories">Memories</string>
     <string name="desc_add_memory">Add memory</string>
-    <string name="empty_memories">No memories yet.\nPress + to preserve the first one.</string>
+    <string name="empty_memories">This legacy awaits its stories.\nPress + to preserve the first one.</string>
     <string name="desc_play_video">Play video</string>
     <string name="desc_play_audio">Play voice note</string>
 
     <!-- ── AddMemory ──────────────────────────────────────────────────────── -->
     <string name="screen_new_memory">New Memory</string>
-    <string name="screen_edit_memory">Amend Memory</string>
+    <string name="screen_edit_memory">Refine Memory</string>
     <string name="desc_photo">Photo</string>
     <string name="desc_video">Video</string>
     <string name="desc_voice_note">Voice note</string>
@@ -80,7 +83,7 @@
 
     <!-- ── AddProfile ─────────────────────────────────────────────────────── -->
     <string name="screen_new_altar">New Legacy</string>
-    <string name="screen_edit_altar">Amend Legacy</string>
+    <string name="screen_edit_altar">Enrich Legacy</string>
     <string name="label_type">Type</string>
     <string name="type_human">Human</string>
     <string name="type_pet">Pet</string>
@@ -140,9 +143,9 @@
     <string name="toast_lang_changed">Language updated to: %1$s</string>
     <string name="toast_accent_changed">Accent updated: %1$s</string>
     <!-- ViewModels & State Helpers -->
-    <string name="state_loading">Loading...</string>
-    <string name="state_calculating">Calculating...</string>
-    <string name="state_calculating_storage">Calculating...</string>
+    <string name="state_loading">Synchronizing...</string>
+    <string name="state_calculating">Processing...</string>
+    <string name="state_calculating_storage">Processing...</string>
     <string name="state_offline">Offline</string>
     <string name="state_unauthenticated">Not authenticated</string>
     <string name="state_default_user">User</string>

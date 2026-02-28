@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -41,8 +42,10 @@ import com.perenniasystems.lascito.viewmodel.AuthViewModel
 @Composable
 fun RegisterScreen(
     authViewModel:  AuthViewModel,
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
+    val context = LocalContext.current
     var fullName        by remember { mutableStateOf("") }
     var email           by remember { mutableStateOf("") }
     var password        by remember { mutableStateOf("") }
@@ -270,6 +273,8 @@ fun RegisterScreen(
             // Navigate on success
             LaunchedEffect(authState) {
                 if (authState is AuthUiState.Success) {
+                    onShowSnackbar(context.getString(R.string.toast_verification_sent), null) {}
+                    authViewModel.resetState()
                     onNavigateBack()
                 }
             }

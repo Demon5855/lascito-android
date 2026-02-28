@@ -22,7 +22,9 @@ import com.perenniasystems.lascito.R
 @Composable
 fun LascitoAlertDialog(
     @StringRes messageRes: Int,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    @StringRes actionRes: Int? = null,
+    onAction: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val messageText = context.getString(messageRes)
@@ -47,8 +49,8 @@ fun LascitoAlertDialog(
             Button(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFC9A96E), // Gold Accent
-                    contentColor = Color(0xFF0D0D0D)  // Amoled Black text
+                    containerColor = if (actionRes != null) Color(0xFF333333) else Color(0xFFC9A96E), 
+                    contentColor = if (actionRes != null) Color(0xFFE0E0E0) else Color(0xFF0D0D0D)  
                 ),
                 shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.fillMaxWidth()
@@ -58,6 +60,26 @@ fun LascitoAlertDialog(
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
+            }
+            if (actionRes != null && onAction != null) {
+                Button(
+                    onClick = {
+                        onAction()
+                        onDismiss()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFC9A96E), // Gold Accent
+                        contentColor = Color(0xFF0D0D0D)  // Amoled Black text
+                    ),
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                ) {
+                    Text(
+                        text = context.getString(actionRes),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
             }
         }
     )

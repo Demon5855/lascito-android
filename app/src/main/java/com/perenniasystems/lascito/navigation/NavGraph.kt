@@ -62,7 +62,8 @@ fun LascitoNavGraph(
                 },
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
-                }
+                },
+                onShowSnackbar = onShowSnackbar
             )
         }
 
@@ -71,7 +72,8 @@ fun LascitoNavGraph(
             LaunchedEffect(Unit) { authViewModel.resetState() }
             RegisterScreen(
                 authViewModel  = authViewModel,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onShowSnackbar = onShowSnackbar
             )
         }
 
@@ -108,7 +110,8 @@ fun LascitoNavGraph(
 
             AddProfileScreen(
                 viewModel      = addProfileViewModel,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onShowSnackbar = onShowSnackbar
             )
         }
 

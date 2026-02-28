@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.data.repository.FirebaseAuthRepository
 import com.perenniasystems.lascito.data.repository.UserRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -84,5 +85,6 @@ sealed interface AuthUiState {
     data object Idle    : AuthUiState
     data object Loading : AuthUiState
     data object Success : AuthUiState
+    data object ErrorUnverified : AuthUiState
     data class  Error(@StringRes val messageResId: Int) : AuthUiState
 }
