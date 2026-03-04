@@ -2,7 +2,10 @@ package com.perenniasystems.lascito.data.repository
 
 import android.net.Uri
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import com.perenniasystems.lascito.data.model.MediaType
 
 /**
@@ -53,15 +56,25 @@ class FirebaseStorageRepositoryImpl(
             val storageRef = storage.reference.child(path)
             
             val uploadTask = storageRef.putFile(uri)
-            
+
             uploadTask.addOnProgressListener { snapshot ->
                 val progress = snapshot.bytesTransferred.toFloat() / snapshot.totalByteCount.toFloat()
                 onProgress(progress)
             }
-            
-            uploadTask.await()
+
+            // suspendCancellableCoroutine garantiza que si la corrutina padre es cancelada
+            // (ej. timeout del ViewModel), la tarea de Firebase se cancela físicamente.
+            suspendCancellableCoroutine { continuation ->
+                continuation.invokeOnCancellation {
+                    uploadTask.cancel()
+                }
+                uploadTask
+                    .addOnSuccessListener { continuation.resume(Unit) }
+                    .addOnFailureListener { e -> continuation.resumeWithException(e) }
+            }
+
             val downloadUrl = storageRef.downloadUrl.await().toString()
-            
+
             Result.success(downloadUrl)
         } catch (e: Exception) {
             Result.failure(e)

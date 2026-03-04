@@ -8,7 +8,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import kotlin.math.log2
 import kotlin.math.max
+import kotlin.math.roundToInt
 import android.os.Build
 import android.graphics.Matrix
 import androidx.exifinterface.media.ExifInterface
@@ -55,16 +57,20 @@ object ImageCompressor {
             var rotationDegrees = 0f
             try {
                 val exifStream = context.contentResolver.openInputStream(uri)
+                // Bloque finally garantiza que el stream se cierra aunque ExifInterface lance una excepción
                 if (exifStream != null) {
-                    val exif = ExifInterface(exifStream)
-                    val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-                    rotationDegrees = when (orientation) {
-                        ExifInterface.ORIENTATION_ROTATE_90 -> 90f
-                        ExifInterface.ORIENTATION_ROTATE_180 -> 180f
-                        ExifInterface.ORIENTATION_ROTATE_270 -> 270f
-                        else -> 0f
+                    try {
+                        val exif = ExifInterface(exifStream)
+                        val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+                        rotationDegrees = when (orientation) {
+                            ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                            ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                            ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                            else -> 0f
+                        }
+                    } finally {
+                        exifStream.close()
                     }
-                    exifStream.close()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -108,17 +114,23 @@ object ImageCompressor {
         reqWidth: Int,
         reqHeight: Int
     ): Int {
-        val (height: Int, width: Int) = options.outHeight to options.outWidth
-        var inSampleSize = 1
+        val height = options.outHeight
+        val width  = options.outWidth
+        if (height <= reqHeight && width <= reqWidth) return 1
 
-        if (height > reqHeight || width > reqWidth) {
-            val halfHeight: Int = height / 2
-            val halfWidth: Int = width / 2
+        // Cálculo logarítmico O(1): determina cuántas veces dividir por 2 para
+        // que AMBAS dimensiones queden dentro del límite requerido.
+        // Evita el bucle while iterativo que puede tardar decenas de iteraciones
+        // con imágenes gigantes (gigapíxeles), previniendo potenciales ANRs.
+        val ratioWidth  = width.toDouble()  / reqWidth
+        val ratioHeight = height.toDouble() / reqHeight
+        val largestRatio = max(ratioWidth, ratioHeight)
+        return (2.0.pow(log2(largestRatio).toInt())).toInt().coerceAtLeast(1)
+    }
 
-            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
-                inSampleSize *= 2
-            }
-        }
-        return inSampleSize
+    private fun Double.pow(exp: Int): Double {
+        var result = 1.0
+        repeat(exp) { result *= this }
+        return result
     }
 }

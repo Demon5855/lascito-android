@@ -165,7 +165,7 @@ fun formatMillisToMMSS(millis: Long): String {
 @Composable
 fun MediaPreviewPlayer(uri: Uri, isAudioOnly: Boolean = false) {
     val context = LocalContext.current
-    val exoPlayer = remember {
+    val exoPlayer = remember(uri) {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(uri))
             prepare()
@@ -173,8 +173,10 @@ fun MediaPreviewPlayer(uri: Uri, isAudioOnly: Boolean = false) {
         }
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(uri) {
         onDispose {
+            exoPlayer.stop()
+            exoPlayer.clearMediaItems()
             exoPlayer.release()
         }
     }
