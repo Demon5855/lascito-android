@@ -10,19 +10,22 @@ import kotlinx.coroutines.flow.asStateFlow
 class BiometricLockViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    
+
+    companion object {
+        private const val GRACE_PERIOD_MS = 30_000L
+    }
+
     private val _isUnlocked = MutableStateFlow(
         savedStateHandle.get<Boolean>("isUnlocked") ?: false
     )
     val isUnlocked: StateFlow<Boolean> = _isUnlocked.asStateFlow()
-    
+
     private val _lastPauseTime = MutableStateFlow(
         savedStateHandle.get<Long>("lastPauseTime") ?: 0L
     )
     val lastPauseTime: StateFlow<Long> = _lastPauseTime.asStateFlow()
-    
-    private val GRACE_PERIOD_MS = 30_000L
-    
+
+
     fun unlock() {
         _isUnlocked.value = true
         savedStateHandle["isUnlocked"] = true

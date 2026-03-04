@@ -95,11 +95,8 @@ class AddMemoryViewModel(
             _uiState.value = AddMemoryUiState.Loading
             try {
                 withTimeout(15_000L) {
-                    // We need a getMemoryById from the repository, so I'll assume we can fetch it
-                    // Actually, let's look at MemoryRepository: it only has getMemoriesByProfile. 
-                    // To avoid another backend call if we don't have getMemoryById, we can just fetch all by profile and find it:
-                    val memories = repository.getMemoriesByProfile(profileId)
-                    val memory = memories.find { it.memoryId == memoryId }
+                    // Single-document fetch (O(1)): evita descargar toda la colección (O(N)).
+                    val memory = repository.getMemoryById(profileId, memoryId)
                     if (memory != null) {
                         currentMemoryId = memory.memoryId
                         currentMediaUrl = memory.mediaUrl
@@ -107,7 +104,6 @@ class AddMemoryViewModel(
                         _selectedMediaType.value = memory.mediaType // Vital para pintar Video, Audio o Imagen al editar
                         _uiState.value = AddMemoryUiState.Loaded(memory)
                     } else {
-                        // Resusing a generic profile not found or just generic error
                         _uiState.value = AddMemoryUiState.Error(R.string.error_generic)
                     }
                 }

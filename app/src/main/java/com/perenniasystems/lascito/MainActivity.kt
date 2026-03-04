@@ -53,7 +53,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import com.perenniasystems.lascito.data.repository.ThemeRepository
 import com.perenniasystems.lascito.ui.theme.AccentMetal
+import com.perenniasystems.lascito.ui.theme.AmoledBlack
 import com.perenniasystems.lascito.ui.theme.ThemeState
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
@@ -93,9 +95,9 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
         @Suppress("DEPRECATION")
-        window.statusBarColor = android.graphics.Color.parseColor("#0D0D0D")
+        window.statusBarColor = AmoledBlack.toArgb()
         @Suppress("DEPRECATION")
-        window.navigationBarColor = android.graphics.Color.parseColor("#0D0D0D")
+        window.navigationBarColor = AmoledBlack.toArgb()
 
         WindowInsetsControllerCompat(window, window.decorView).apply {
             isAppearanceLightStatusBars     = false
@@ -154,7 +156,7 @@ class MainActivity : AppCompatActivity() {
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .background(androidx.compose.ui.graphics.Color(0xFF0D0D0D))
+                                    .background(AmoledBlack)
                             )
                         } else {
                             val navController = rememberNavController()

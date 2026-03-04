@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 
 /**
  * Firebase implementation of [UserRepository].
@@ -19,8 +20,10 @@ class FirebaseAuthRepository(
 
     override suspend fun login(email: String, password: String): Result<String> =
         runCatching {
-            val result = auth.signInWithEmailAndPassword(email.trim(), password).await()
-            result.user?.uid ?: throw Exception("Login failed — no UID returned")
+            withTimeout(10_000L) {
+                val result = auth.signInWithEmailAndPassword(email.trim(), password).await()
+                result.user?.uid ?: throw Exception("Login failed — no UID returned")
+            }
         }
 
     override suspend fun register(
@@ -28,29 +31,31 @@ class FirebaseAuthRepository(
         email: String,
         password: String
     ): Result<String> = runCatching {
-        // 1. Create the auth account
-        val result = auth.createUserWithEmailAndPassword(email.trim(), password).await()
-        val uid = result.user?.uid ?: throw Exception("Register failed — no UID returned")
+        withTimeout(10_000L) {
+            // 1. Create the auth account
+            val result = auth.createUserWithEmailAndPassword(email.trim(), password).await()
+            val uid = result.user?.uid ?: throw Exception("Register failed — no UID returned")
 
-        // 2. Set display name on the auth profile
-        result.user!!.updateProfile(
-            userProfileChangeRequest { displayName = name.trim() }
-        ).await()
+            // 2. Set display name on the auth profile
+            result.user!!.updateProfile(
+                userProfileChangeRequest { displayName = name.trim() }
+            ).await()
 
-        // 3. Send email verification (fire and forget)
-        runCatching {
-            result.user!!.sendEmailVerification().await()
+            // 3. Send email verification (fire and forget)
+            runCatching {
+                result.user!!.sendEmailVerification().await()
+            }
+
+            // 4. Persist basic info in Firestore `users` collection
+            val userData = mapOf(
+                "displayName" to name.trim(),
+                "email"       to email.trim(),
+                "createdAt"   to System.currentTimeMillis()
+            )
+            db.collection("users").document(uid).set(userData).await()
+
+            uid
         }
-
-        // 3. Persist basic info in Firestore `users` collection
-        val userData = mapOf(
-            "displayName" to name.trim(),
-            "email"       to email.trim(),
-            "createdAt"   to System.currentTimeMillis()
-        )
-        db.collection("users").document(uid).set(userData).await()
-
-        uid
     }
 
     override fun currentUserId(): String? = auth.currentUser?.uid
@@ -58,11 +63,15 @@ class FirebaseAuthRepository(
     override fun logout() { auth.signOut() }
 
     override suspend fun deleteUserDocument(userId: String): Result<Unit> = runCatching {
-        db.collection("users").document(userId).delete().await()
+        withTimeout(10_000L) {
+            db.collection("users").document(userId).delete().await()
+        }
     }
 
     override suspend fun deleteAccount(): Result<Unit> = runCatching {
-        val user = auth.currentUser ?: throw Exception("No authenticated user")
-        user.delete().await()
+        withTimeout(10_000L) {
+            val user = auth.currentUser ?: throw Exception("No authenticated user")
+            user.delete().await()
+        }
     }
 }

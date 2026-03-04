@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withTimeout
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "theme_settings")
 
@@ -32,20 +33,26 @@ class ThemeRepository(private val context: Context) {
     }
 
     suspend fun saveThemeColor(colorName: String) {
-        context.dataStore.edit { preferences ->
-            preferences[THEME_COLOR_KEY] = colorName
+        withTimeout(5_000L) {
+            context.dataStore.edit { preferences ->
+                preferences[THEME_COLOR_KEY] = colorName
+            }
         }
     }
 
     suspend fun saveAccentMetal(metal: com.perenniasystems.lascito.ui.theme.AccentMetal) {
-        context.dataStore.edit { prefs ->
-            prefs[THEME_COLOR_KEY] = metal.name
+        withTimeout(5_000L) {
+            context.dataStore.edit { prefs ->
+                prefs[THEME_COLOR_KEY] = metal.name
+            }
         }
     }
     
     suspend fun saveLanguage(language: com.perenniasystems.lascito.data.model.AppLanguage) {
-        context.dataStore.edit { prefs ->
-            prefs[LANGUAGE_KEY] = language.tag
+        withTimeout(5_000L) {
+            context.dataStore.edit { prefs ->
+                prefs[LANGUAGE_KEY] = language.tag
+            }
         }
     }
 }
