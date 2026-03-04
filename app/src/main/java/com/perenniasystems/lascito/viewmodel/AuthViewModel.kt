@@ -1,10 +1,14 @@
 package com.perenniasystems.lascito.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.perenniasystems.lascito.data.repository.FirebaseAuthRepository
-import com.perenniasystems.lascito.data.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.perenniasystems.lascito.data.repository.FirebaseAuthRepository
+import com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository
+import com.perenniasystems.lascito.data.repository.GuardianRepository
+import com.perenniasystems.lascito.data.repository.UserRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,11 +27,21 @@ import java.io.IOException
  * (scoped to the navigation back-stack).
  */
 class AuthViewModel(
-    private val repo: UserRepository = FirebaseAuthRepository()
+    private val repo:         UserRepository     = FirebaseAuthRepository(),
+    private val guardianRepo: GuardianRepository = FirebaseGuardianRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    init {
+        // Si el usuario ya tiene una sesión activa al iniciar la app,
+        // registramos silenciosamente una Prueba de Vida para retrasar
+        // el Dead Man's Switch sin bloquear la navegación.
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            sendProofOfLife()
+        }
+    }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
@@ -35,7 +49,11 @@ class AuthViewModel(
             try {
                 withTimeout(15_000L) {
                     repo.login(email, password)
-                        .onSuccess { _uiState.value = AuthUiState.Success }
+                        .onSuccess {
+                            // El login exitoso es en sí una Prueba de Vida.
+                            sendProofOfLife()
+                            _uiState.value = AuthUiState.Success
+                        }
                         .onFailure { t ->
                             _uiState.value = AuthUiState.Error(
                                 ErrorHandler.mapExceptionToResId(t as? Exception ?: Exception(t))
@@ -78,6 +96,25 @@ class AuthViewModel(
 
     fun resetState() {
         _uiState.value = AuthUiState.Idle
+    }
+
+    /**
+     * Registra una Prueba de Vida de forma silenciosa (fire-and-forget).
+     *
+     * - Se ejecuta en [Dispatchers.IO] para no bloquear el hilo principal.
+     * - Un fallo de red NO se propaga a la UI: solo se loguea en consola.
+     *   La Prueba de Vida es una mejora de calidad, nunca un bloqueante crítico.
+     */
+    private fun sendProofOfLife() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                guardianRepo.registerProofOfLife()
+            } catch (e: Exception) {
+                // Fallo silencioso: sin internet o usuario sin switch configurado.
+                // No mostramos error en la UI; el latido se enviará en la próxima sesión.
+                Log.w("AuthViewModel", "Proof of Life no registrada: ${e.message}")
+            }
+        }
     }
 
     private var lastResetTime = 0L
