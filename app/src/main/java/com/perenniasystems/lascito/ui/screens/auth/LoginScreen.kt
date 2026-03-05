@@ -167,7 +167,7 @@ fun LoginScreen(
             androidx.compose.material3.TextButton(
                 onClick = {
                     if (email.isBlank()) {
-                        onShowSnackbar(context.getString(R.string.error_enter_email_first) + "\nSi olvidaste tu email, contacta soporte.", null) {}
+                        onShowSnackbar(context.getString(R.string.error_enter_email_first) + "\n" + context.getString(R.string.hint_forgot_email), null) {}
                     } else {
                         authViewModel.resetPassword(email)
                     }
@@ -176,7 +176,7 @@ fun LoginScreen(
                 contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp)
             ) {
                 Text(
-                    text = "Olvidé mi contraseña",
+                    text = stringResource(R.string.btn_forgot_password),
                     color = TextSecondary,
                     style = MaterialTheme.typography.bodySmall
                 )

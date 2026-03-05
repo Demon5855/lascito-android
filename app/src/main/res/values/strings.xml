@@ -175,7 +175,7 @@
     <!-- Upload Progress & Banners -->
     <string name="msg_uploading_profile">Subiendo al Santuario…</string>
     <string name="msg_uploading_memory">Inmortalizando Recuerdo…</string>
-    <string name="banner_verify_email">Verifica tu correo para asegurar tu bóveda y desbloquear funciones.</string>
+    <string name="banner_verify_email">Verifica tu correo (quizás en spam) para asegurar tu bóveda y desbloquear funciones.</string>
     <string name="action_resend">Reenviar</string>
 
     <!-- Toasts -->

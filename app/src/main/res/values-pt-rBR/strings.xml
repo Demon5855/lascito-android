@@ -173,7 +173,7 @@
     <!-- Upload Progress & Banners -->
     <string name="msg_uploading_profile">Ascendendo ao Santuário…</string>
     <string name="msg_uploading_memory">Imortalizando Memória…</string>
-    <string name="banner_verify_email">Verifique seu e-mail para garantir seu cofre e desbloquear recursos.</string>
+    <string name="banner_verify_email">Verifique seu e-mail (talvez em spam) para garantir seu cofre e desbloquear recursos.</string>
     <string name="action_resend">Reenviar</string>
 
     <!-- Toasts -->

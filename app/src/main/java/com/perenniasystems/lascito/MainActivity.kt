@@ -78,6 +78,11 @@ import com.perenniasystems.lascito.viewmodel.BiometricLockViewModel
  */
 class MainActivity : AppCompatActivity() {
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        val tag = LocaleHelper.getSavedTag(newBase)
+        super.attachBaseContext(LocaleHelper.wrapContext(newBase, tag))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -90,10 +95,6 @@ class MainActivity : AppCompatActivity() {
         // en vez del idioma guardado por el usuario.
         val savedLocale = java.util.Locale.forLanguageTag(LangState.selectedTag)
         java.util.Locale.setDefault(savedLocale)
-        @Suppress("DEPRECATION")
-        val config = resources.configuration
-        config.setLocale(savedLocale)
-        resources.updateConfiguration(config, resources.displayMetrics)
 
         val onboardingPreferences = OnboardingPreferences(this)
         lifecycleScope.launch {

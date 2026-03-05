@@ -176,7 +176,7 @@
     <!-- Upload Progress & Banners -->
     <string name="msg_uploading_profile">Ascending to Sanctuary…</string>
     <string name="msg_uploading_memory">Immortalizing Memory…</string>
-    <string name="banner_verify_email">Verify your email to secure your vault and unlock features.</string>
+    <string name="banner_verify_email">Verify your email (maybe in spam) to secure your vault and unlock features.</string>
     <string name="action_resend">Resend</string>
 
     <!-- Toasts -->
