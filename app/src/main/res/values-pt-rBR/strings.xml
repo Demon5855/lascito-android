@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lascito</string>
+    <string name="company_name">Perennia Systems</string>
+
+    <!-- ── Onboarding ─────────────────────────────────────────────────────── -->
+    <string name="onboarding_slide1">Bem-vindo(a) ao Lascito. \nSeu santuário digital privado.</string>
+    <string name="onboarding_slide2">Não são apenas fotos ou vídeos. \nPreserve o contexto e a história de cada momento.</string>
+    <string name="onboarding_slide3">Seu legado, \nprotegido para a eternidade.</string>
+    <string name="btn_skip">Pular</string>
+    <string name="btn_next">Próximo</string>
+    <string name="btn_start">Começar</string>
+
+    <!-- ── Compartilhados ─────────────────────────────────────────────────── -->
+    <string name="btn_back">Voltar</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">Cancelar</string>
+    <string name="btn_understood">Entendido</string>
+    <string name="label_present">Presente</string>
+    <string name="desc_select_date">Selecionar data</string>
+    <string name="hint_date_format">DD/MM/AAAA</string>
+    <string name="label_photo">Foto</string>
+    <string name="error_profile_not_found">Perfil não encontrado</string>
+    <string name="desc_back">Voltar</string>
+    <string name="desc_options">Opções</string>
+
+    <!-- ── Error Handling Global ───────────────────────────────────────────── -->
+    <string name="error_auth_invalid">E-mail ou senha incorretos.</string>
+    <string name="error_network">Sem conexão de internet. Verifique sua rede.</string>
+    <string name="error_generic">Ocorreu um erro inesperado. Tente novamente mais tarde.</string>
+    <string name="error_not_authenticated">Usuário não autenticado. Por favor, faça login.</string>
+    <string name="error_session_expired">Sessão expirada. Por favor, faça login novamente.</string>
+    <string name="error_recent_login_required">Os selos de segurança expiraram. Por favor, entre novamente para confirmar sua identidade.</string>
+    <string name="error_mic_permission_denied">Permissão do microfone negada</string>
+    <string name="error_email_not_verified">Por favor, verifique seu endereço de e-mail para continuar. Confira sua caixa de entrada ou spam.</string>
+    <string name="toast_verification_sent">Um link de verificação foi enviado para o seu e-mail.</string>
+    <string name="error_reset_cooldown">Por favor, aguarde %1$d segundos antes de tentar novamente</string>
+
+    <!-- ── Auth ────────────────────────────────────────────────────────────── -->
+    <string name="label_email">Endereço de e-mail</string>
+    <string name="label_password">Senha</string>
+    <string name="label_full_name">Nome completo</string>
+    <string name="label_confirm_password">Confirmar senha</string>
+    <string name="btn_login">Entrar</string>
+    <string name="btn_register">Criar Conta</string>
+    <string name="btn_loading">Sincronizando…</string>
+    <string name="link_no_account">Não tem uma conta? Cadastre-se</string>
+    <string name="link_have_account">Já tem uma conta? Entrar</string>
+    <string name="error_login">E-mail ou senha incorretos</string>
+    <!-- Register screen -->
+    <string name="screen_register">Criar Conta</string>
+    <string name="subtitle_register">Preserve suas memórias para sempre.</string>
+    <string name="error_invalid_email">Insira um e-mail válido</string>
+    <string name="error_passwords_no_match">As senhas não coincidem</string>
+    <string name="error_password_strength">Mín. 8 caracteres: 1 maiúscula, 1 minúscula, 1 número e 1 símbolo</string>
+    <string name="desc_show_password">Mostrar senha</string>
+    <string name="desc_hide_password">Ocultar senha</string>
+    <string name="error_enter_current_password">Por favor, insira sua senha atual</string>
+    <string name="error_enter_new_password">Por favor, insira sua nova senha</string>
+    <string name="error_password_same_as_current">A nova senha não pode ser igual à atual</string>
+    <string name="error_confirm_new_password">Por favor, confirme sua nova senha</string>
+    <!-- Terms & Privacy consent -->
+    <string name="terms_prefix">"Li e aceito os "</string>
+    <string name="terms_tos">Termos de Serviço</string>
+    <string name="terms_connector">" e a "</string>
+    <string name="terms_privacy">Política de Privacidade</string>
+
+    <!-- ── Reset / Change Password ─────────────────────────────────────────── -->
+    <string name="btn_forgot_password">Esqueceu sua senha?</string>
+    <string name="error_enter_email_first">Digite seu e-mail primeiro</string>
+    <string name="msg_reset_email_sent">E-mail de recuperação enviado para %1$s</string>
+    <string name="hint_forgot_email">Se você esqueceu seu e-mail, contate o suporte</string>
+    <string name="title_change_password">Alterar Senha</string>
+    <string name="label_current_password">Senha Atual</string>
+    <string name="label_new_password">Nova Senha</string>
+    <string name="label_confirm_new_password">Confirmar Nova Senha</string>
+    <string name="error_incorrect_current_password">Senha atual incorreta</string>
+    <string name="error_weak_password">A senha é muito fraca</string>
+    <string name="msg_password_changed">A chave do seu santuário foi renovada</string>
+    <string name="btn_save">Salvar</string>
+
+    <!-- ── Biometric ───────────────────────────────────────────────────────── -->
+    <string name="msg_welcome_back">Bem-vindo(a) de volta, \n%1$s</string>
+    <string name="btn_sign_out_safe">Entrar com outra conta</string>
+
+    <!-- ── Dashboard ───────────────────────────────────────────────────────── -->
+    <string name="screen_my_altars">Seus Legados</string>
+    <string name="desc_create_altar">Criar legado</string>
+    <string name="empty_altars">Seu cofre está vazio.\nPressione + para imortalizar seu primeiro legado.</string>
+    <string name="error_load_altars">Não foi possível carregar os legados.</string>
+
+    <!-- ── Altar ───────────────────────────────────────────────────────────── -->
+    <string name="screen_memories">Memórias</string>
+    <string name="desc_add_memory">Adicionar memória</string>
+    <string name="empty_memories">Este legado aguarda suas histórias.\nPressione + para preservar a primeira.</string>
+    <string name="desc_play_video">Reproduzir vídeo</string>
+    <string name="desc_play_audio">Reproduzir nota de voz</string>
+
+    <!-- ── AddMemory ───────────────────────────────────────────────────────── -->
+    <string name="screen_new_memory">Nova Memória</string>
+    <string name="screen_edit_memory">Refinar Memória</string>
+    <string name="desc_photo">Foto</string>
+    <string name="desc_video">Vídeo</string>
+    <string name="desc_voice_note">Nota de voz</string>
+    <string name="hint_pick_media">Toque para adicionar uma Foto, Vídeo\nou gravar uma Nota de Voz</string>
+    <string name="hint_context_text">Escreva a história por trás deste momento…</string>
+    <string name="btn_preserve_memory">Preservar Memória</string>
+
+    <!-- ── AddProfile ──────────────────────────────────────────────────────── -->
+    <string name="screen_new_altar">Novo Legado</string>
+    <string name="screen_edit_altar">Enriquecer Legado</string>
+    <string name="label_type">Tipo</string>
+    <string name="type_human">Humano</string>
+    <string name="type_pet">Pet</string>
+    <string name="label_full_name_field">Nome Completo</string>
+    <string name="placeholder_human_name">Elena Ríos Marchetti</string>
+    <string name="placeholder_pet_name">Mochi</string>
+    <string name="label_relationship">Parentesco / Vínculo</string>
+    <string name="placeholder_human_rel">Avó, Pai, Amigo…</string>
+    <string name="placeholder_pet_rel">Companheiro fiel</string>
+    <string name="label_birthdate">Data de Nascimento</string>
+    <string name="label_still_with_us">Ainda está conosco</string>
+    <string name="label_departed">Já partiu</string>
+    <string name="label_passing_date_hint">Insira a data de partida</string>
+    <string name="label_passing_date">Data de Partida</string>
+    <string name="btn_create_altar">Imortalizar Legado</string>
+    <string name="desc_upload_photo">Enviar foto</string>
+    <!-- Validation -->
+    <string name="error_day">Dia inválido (01–31)</string>
+    <string name="error_month">Mês inválido (01–12)</string>
+    <string name="error_year">Ano fora do intervalo (1900–%1$d)</string>
+    <string name="error_future_date">A data não pode ser no futuro</string>
+    <string name="error_invalid_date">Data inválida</string>
+
+    <!-- ── Minha Conta (UserSettings) ──────────────────────────────────────── -->
+    <string name="screen_my_account">Minha Conta</string>
+    <string name="section_mausoleum">Estado do Santuário</string>
+    <string name="plan_lifetime">Plano de Custódia Perpétua</string>
+    <string name="label_storage_used">Memórias resguardadas</string>
+    <string name="label_storage_amount">%1$.1f GB / %2$d GB</string>
+    <string name="section_guardian">Guardião do Legado</string>
+    <string name="hint_guardian_email">E-mail do herdeiro…</string>
+    <string name="guardian_help_text">Em caso de inatividade prolongada, esta pessoa receberá acesso de leitura aos seus legados.</string>
+    <string name="btn_save_guardian">Salvar guardião</string>
+    <string name="section_personalization">Personalização do Santuário</string>
+    <string name="label_language">Idioma</string>
+    <string name="lang_spanish">Español</string>
+    <string name="lang_english">English</string>
+    <string name="lang_portuguese">Português</string>
+    <string name="label_accent_metal">Metal de Custódia</string>
+    <string name="accent_gold">Ouro</string>
+    <string name="accent_silver">Prata</string>
+    <string name="accent_bronze">Bronze</string>
+    <string name="section_security">Segurança e Privacidade</string>
+    <string name="btn_export">Exportar minhas memórias</string>
+    <string name="btn_privacy">Políticas de Privacidade</string>
+    <string name="btn_logout">Sair</string>
+    <string name="btn_delete_account">Excluir Conta</string>
+    <string name="title_strict_vault">Modo Cofre Estrito</string>
+    <string name="desc_strict_vault">Bloqueia capturas de tela, gravações e oculta o conteúdo do app no menu de tarefas recentes.</string>
+    <string name="title_biometric_lock">Bloqueio Facial / Digital</string>
+    <string name="desc_biometric_lock">Exige autenticação biométrica ao voltar ao app após um período de inatividade.</string>
+    <string name="desc_biometric_unavailable">Seu dispositivo não possui biometria disponível ou configurada.</string>
+    <string name="biometric_title">Santuário Bloqueado</string>
+    <string name="biometric_description">Verifique sua identidade para acessar seus legados</string>
+    <string name="btn_unlock_sanctuary">Desbloquear Santuário</string>
+    <string name="biometric_error">Erro de autenticação: %1$s</string>
+    <string name="promo_biometric_title">Proteja seu Cofre</string>
+    <string name="promo_biometric_body">Seu legado está selado. Deseja proteger seu cofre com biometria para que apenas você possa acessar?</string>
+    <string name="promo_biometric_activate">Ativar</string>
+    <string name="promo_biometric_later">Talvez mais tarde</string>
+
+    <!-- Upload Progress & Banners -->
+    <string name="msg_uploading_profile">Ascendendo ao Santuário…</string>
+    <string name="msg_uploading_memory">Imortalizando Memória…</string>
+    <string name="banner_verify_email">Verifique seu e-mail para garantir seu cofre e desbloquear recursos.</string>
+    <string name="action_resend">Reenviar</string>
+
+    <!-- Toasts -->
+    <string name="toast_guardian_saved">Guardião atualizado</string>
+    <string name="toast_exporting">Exportando memórias…</string>
+    <string name="toast_privacy_soon">Em breve — Política de Privacidade</string>
+    <string name="toast_delete_soon">Em breve — Excluir conta</string>
+    <string name="toast_lang_changed">Idioma atualizado para: %1$s</string>
+    <string name="toast_accent_changed">Metal atualizado: %1$s</string>
+    <!-- ViewModels & State Helpers -->
+    <string name="state_loading">Sincronizando...</string>
+    <string name="state_calculating">Processando...</string>
+    <string name="state_calculating_storage">Processando...</string>
+    <string name="state_offline">Sem conexão</string>
+    <string name="state_unauthenticated">Não autenticado</string>
+    <string name="state_default_user">Usuário</string>
+    <string name="state_no_email">Sem e-mail</string>
+    <string name="state_storage_empty">0 GB</string>
+    <string name="state_storage_max">10 GB</string>
+
+    <!-- ── Context Menus & Dialogs ─────────────────────────────────────────── -->
+    <string name="action_edit">Modificar</string>
+    <string name="action_delete">Excluir</string>
+    <string name="confirm_delete_profile_title">Excluir Legado</string>
+    <string name="confirm_delete_profile_text">Tem certeza de que deseja excluir o legado de %1$s? \nEsta ação é irreversível e apagará todas as suas memórias para sempre.</string>
+    <string name="confirm_delete_memory_title">Excluir Memória</string>
+    <string name="confirm_delete_memory_text">Tem certeza de que deseja excluir esta memória? \nEsta ação não pode ser desfeita e o arquivo de mídia será perdido permanentemente.</string>
+    <string name="dialog_delete_audio_title">Excluir Áudio</string>
+    <string name="dialog_delete_audio_text">Esta nota de voz será perdida. Deseja removê-la desta Memória?</string>
+    <string name="action_remove">Remover</string>
+    <string name="action_settings">Configurações</string>
+    <string name="action_add_photo">Adicionar Foto</string>
+    <string name="action_add_video">Adicionar Vídeo</string>
+    <string name="action_add_voice_note">Adicionar Nota de Voz</string>
+    <string name="toast_video_soon">Vídeo: Em breve (Fase 3B)</string>
+    <string name="toast_audio_soon">Áudio: Em breve (Fase 3B)</string>
+    <string name="dialog_delete_account_title">Destruir Santuário</string>
+    <string name="dialog_delete_account_text">Tem certeza absoluta? Esta ação excluirá permanentemente sua conta, todos os seus legados, memórias e arquivos de mídia. É irreversível.</string>
+
+    <string name="action_see_more">Ver mais…</string>
+    <string name="action_see_less">Ver menos…</string>
+    <string name="placeholder_password_dots">••••••••</string>
+    <string name="placeholder_password_min">Mínimo 8 caracteres</string>
+    <string name="placeholder_password_repeat">Repetir senha</string>
+
+    <!-- ── Legacy Plan (GuardianScreen) ──────────────────────────────────── -->
+    <string name="screen_guardian">Plano de Legado</string>
+
+    <!-- Card A: The Heir -->
+    <string name="section_beneficiary">Herdeiro Designado</string>
+    <string name="desc_beneficiary_subtitle">A pessoa que guardará o seu legado</string>
+    <string name="label_heir_name">Nome do Herdeiro</string>
+    <string name="placeholder_heir_name">Ex: Maria Garcia</string>
+    <string name="label_heir_email">Endereço de E-mail</string>
+    <string name="placeholder_heir_email">herdeiro@email.com</string>
+    <string name="label_heir_pin">PIN de Acesso (4 dígitos)</string>
+    <string name="guardian_key_disclaimer">Essa pessoa receberá a Chave Mestra apenas quando o sistema confirmar sua ausência.</string>
+
+    <!-- Card B: Absence Protocol -->
+    <string name="section_absence_protocol">Protocolo de Ausência</string>
+    <string name="desc_absence_subtitle">Monitoramento automático de atividade</string>
+    <string name="label_inactivity_threshold">Limite de Inatividade</string>
+    <string name="label_switch_active">Ativar Monitoramento Automático</string>
+    <string name="desc_switch_active_on">Sistema ativo — pulsação em andamento</string>
+    <string name="desc_switch_inactive">Sistema inativo</string>
+    <string name="guardian_inactivity_subtitle">O sistema aguardará %1$d dias de inatividade antes de contatar seu herdeiro.</string>
+
+    <!-- Footer: System Status -->
+    <string name="label_system_operative">Sistema Operacional</string>
+    <string name="label_last_heartbeat">Último sinal de vida: %1$s</string>
+    <string name="btn_send_manual_signal">Enviar Sinal Manual</string>
+    <string name="heartbeat_never">Nunca</string>
+    <string name="heartbeat_seconds">Há %1$d segundo</string>
+    <string name="heartbeat_seconds_plural">Há %1$d segundos</string>
+    <string name="heartbeat_minutes">Há %1$d minuto</string>
+    <string name="heartbeat_minutes_plural">Há %1$d minutos</string>
+    <string name="heartbeat_hours">Há %1$d hora</string>
+    <string name="heartbeat_hours_plural">Há %1$d horas</string>
+    <string name="heartbeat_days">Há %1$d dia</string>
+    <string name="heartbeat_days_plural">Há %1$d dias</string>
+
+    <!-- Buttons & Feedback -->
+    <string name="btn_save_legacy_config">Salvar Configuração</string>
+    <string name="btn_saving">Salvando…</string>
+    <string name="toast_legacy_saved">Configuração de legado salva</string>
+    <string name="error_guardian_save_body">Não foi possível salvar a configuração. Verifique sua conexão e tente novamente.</string>
+
+    <!-- Navigation card in My Account -->
+    <string name="nav_card_guardian_title">Plano de Legado</string>
+
+    <!-- ── Time Capsules (AddTimeCapsuleScreen) ─────────────────────────── -->
+    <string name="screen_new_capsule">Nova Cápsula do Tempo</string>
+    <string name="capsule_section_message">A Mensagem</string>
+    <string name="capsule_section_message_sub">Sua carta para o futuro</string>
+    <string name="label_capsule_title">Título da Cápsula</string>
+    <string name="placeholder_capsule_title">Ex: Para minha filha no dia do seu casamento</string>
+    <string name="label_capsule_content">Carta / Conteúdo</string>
+    <string name="placeholder_capsule_content">Escreva aqui a carta, mensagem ou pensamento que deseja preservar…</string>
+    <string name="capsule_section_media">Anexo de Mídia</string>
+    <string name="capsule_section_media_sub">Foto ou vídeo (opcional)</string>
+    <string name="capsule_attach_media_hint">Toque para anexar uma foto ou vídeo</string>
+    <string name="capsule_section_trigger">Condição de Abertura</string>
+    <string name="capsule_section_trigger_sub">Quando esta mensagem será revelada</string>
+    <string name="trigger_immediate">Abrir ao confirmar minha partida</string>
+    <string name="trigger_immediate_desc">O herdeiro terá acesso assim que o sistema confirmar sua ausência.</string>
+    <string name="trigger_scheduled">Abrir em uma data futura</string>
+    <string name="trigger_scheduled_desc">A cápsula será revelada na data que você escolher, independentemente de qualquer evento.</string>
+    <string name="capsule_no_date_selected">Selecione uma data de abertura</string>
+    <string name="btn_seal_capsule">Selar Cápsula</string>
+    <string name="capsule_sealing">Selando seu legado…</string>
+    <string name="toast_capsule_saved">Cápsula do tempo criada</string>
+    <string name="error_capsule_save_title">Erro ao selar</string>
+
+    <!-- ── Capsule Vault (CapsuleVaultScreen) ───────────────────────────── -->
+    <string name="screen_capsule_vault">Meus Cofres</string>
+    <string name="vault_empty_title">Ainda não há mensagens seladas</string>
+    <string name="vault_empty_subtitle">Você ainda não selou nenhuma mensagem para o futuro. Crie sua primeira cápsula do tempo.</string>
+    <string name="vault_capsule_count">%1$d mensagem(ns) selada(s)</string>
+    <string name="vault_has_media">Anexo</string>
+    <string name="trigger_badge_immediate">Ao partir</string>
+    <string name="trigger_date_format">Abertura: %1$s</string>
+    <string name="capsule_untitled">Sem título</string>
+    <string name="btn_new_capsule_fab">Nova Cápsula</string>
+    <string name="dialog_delete_capsule_title">Destruir esta cápsula?</string>
+    <string name="dialog_delete_capsule_body">"%1$s" será excluída permanentemente. Esta ação não pode ser desfeita.</string>
+
+</resources>

@@ -143,12 +143,6 @@ fun GuardianScreen(
                 )
             }
 
-            // ── Footer: Estado del Sistema ───────────────────────────────────────────
-            SystemStatusFooter(
-                lastProofOfLife = uiState.lastProofOfLife,
-                onManualCheck   = { viewModel.triggerManualCheck() }
-            )
-
             // ── CTA: Bóveda de Cápsulas ──────────────────────────────────────────
             OutlinedButton(
                 onClick  = onNavigateToCapsule,
@@ -169,6 +163,12 @@ fun GuardianScreen(
                     fontSize   = 14.sp
                 )
             }
+
+            // ── Footer: Estado del Sistema ───────────────────────────────────────────
+            SystemStatusFooter(
+                lastProofOfLife = uiState.lastProofOfLife,
+                onManualCheck   = { viewModel.triggerManualCheck() }
+            )
 
             Spacer(Modifier.height(24.dp))
         }

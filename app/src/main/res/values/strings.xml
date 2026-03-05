@@ -146,6 +146,7 @@
     <string name="label_language">Idioma</string>
     <string name="lang_spanish">Español</string>
     <string name="lang_english">English</string>
+    <string name="lang_portuguese">Português</string>
     <string name="label_accent_metal">Metal de Custodia</string>
     <string name="accent_gold">Oro</string>
     <string name="accent_silver">Plata</string>
@@ -168,6 +169,8 @@
     <string name="promo_biometric_body">Tu legado está sellado. ¿Deseas proteger tu bóveda con huella dactilar para que solo tú puedas acceder?</string>
     <string name="promo_biometric_activate">Activar</string>
     <string name="promo_biometric_later">Quizás más tarde</string>
+
+
 
     <!-- Upload Progress & Banners -->
     <string name="msg_uploading_profile">Subiendo al Santuario…</string>
@@ -294,6 +297,7 @@
     <string name="vault_capsule_count">%1$d mensaje(s) sellado(s)</string>
     <string name="vault_has_media">Archivo adjunto</string>
     <string name="trigger_badge_immediate">Al partir</string>
+    <string name="trigger_date_format">Apertura: %1$s</string>
     <string name="capsule_untitled">Sin título</string>
     <string name="btn_new_capsule_fab">Nueva Cápsula</string>
     <string name="dialog_delete_capsule_title">¿Destruir esta cápsula?</string>

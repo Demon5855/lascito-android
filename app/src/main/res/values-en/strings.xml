@@ -147,6 +147,7 @@
     <string name="label_language">Language</string>
     <string name="lang_spanish">Español</string>
     <string name="lang_english">English</string>
+    <string name="lang_portuguese">Português</string>
     <string name="label_accent_metal">Custody Metal</string>
     <string name="accent_gold">Gold</string>
     <string name="accent_silver">Silver</string>
@@ -169,6 +170,8 @@
     <string name="promo_biometric_body">Your legacy is sealed. Would you like to protect your vault with fingerprint so only you can access it?</string>
     <string name="promo_biometric_activate">Activate</string>
     <string name="promo_biometric_later">Maybe later</string>
+
+
 
     <!-- Upload Progress & Banners -->
     <string name="msg_uploading_profile">Ascending to Sanctuary…</string>
@@ -294,6 +297,7 @@
     <string name="vault_capsule_count">%1$d sealed message(s)</string>
     <string name="vault_has_media">Attachment</string>
     <string name="trigger_badge_immediate">Upon passing</string>
+    <string name="trigger_date_format">Opens: %1$s</string>
     <string name="capsule_untitled">Untitled</string>
     <string name="btn_new_capsule_fab">New Capsule</string>
     <string name="dialog_delete_capsule_title">Destroy this capsule?</string>

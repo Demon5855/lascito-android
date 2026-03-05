@@ -26,7 +26,11 @@ object LocaleHelper {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         return prefs.getString(PREF_LANG, null) ?: run {
             val systemLang = Locale.getDefault().language
-            if (systemLang.startsWith("es")) "es" else "en"
+            when {
+                systemLang.startsWith("es") -> "es"
+                systemLang.startsWith("pt") -> "pt"
+                else -> "en"
+            }
         }
     }
 

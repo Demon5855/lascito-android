@@ -1,26 +1,24 @@
 package com.perenniasystems.lascito.ui.screens.capsule
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.LockClock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,29 +32,23 @@ import com.perenniasystems.lascito.viewmodel.CapsuleVaultViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Screen
-// ─────────────────────────────────────────────────────────────────────────────
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CapsuleVaultScreen(
-    viewModel:           CapsuleVaultViewModel = viewModel(),
-    onNavigateBack:      () -> Unit            = {},
-    onNavigateToCreate:  () -> Unit            = {}
+    viewModel: CapsuleVaultViewModel = viewModel(),
+    onNavigateBack: () -> Unit = {},
+    onNavigateToCreate: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    // Cápsula pendiente de confirmación de borrado
-    var pendingDelete by remember { mutableStateOf<TimeCapsule?>(null) }
+    var capsuleToDelete by remember { mutableStateOf<TimeCapsule?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Text(
-                            text  = stringResource(R.string.screen_capsule_vault),
+                            text = stringResource(R.string.screen_capsule_vault),
                             style = MaterialTheme.typography.headlineLarge
                         )
                     }
@@ -64,144 +56,127 @@ fun CapsuleVaultScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.btn_back),
-                            tint               = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
-                actions = { Spacer(Modifier.width(48.dp)) },
-                colors  = TopAppBarDefaults.topAppBarColors(
-                    containerColor    = AmoledBlack,
+                actions = { Spacer(Modifier.width(48.dp)) }, // Centrado visual del título
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = AmoledBlack,
                     titleContentColor = TextPrimary
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick          = onNavigateToCreate,
-                containerColor   = MaterialTheme.colorScheme.primary,
-                contentColor     = AmoledBlack,
-                shape            = CircleShape,
-                modifier         = Modifier.size(60.dp)
+                onClick = onNavigateToCreate,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = AmoledBlack,
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(
-                    Icons.Default.Create,
-                    contentDescription = stringResource(R.string.btn_new_capsule_fab),
-                    modifier           = Modifier.size(26.dp)
+                    imageVector = Icons.Default.Create,
+                    contentDescription = stringResource(R.string.btn_new_capsule_fab)
                 )
             }
         },
         containerColor = AmoledBlack
     ) { padding ->
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier    = Modifier.align(Alignment.Center).size(48.dp),
-                        strokeWidth = 3.dp,
-                        color       = MaterialTheme.colorScheme.primary
+            if (!uiState.isLoading && uiState.capsules.isEmpty()) {
+                // ── Empty State ──
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LockClock,
+                        contentDescription = null,
+                        tint = SurfaceDark, // Color muy sutil
+                        modifier = Modifier.size(80.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.vault_empty_subtitle),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 24.sp
                     )
                 }
-
-                uiState.capsules.isEmpty() -> {
-                    // ── Empty State ────────────────────────────────────────────
-                    Column(
-                        modifier            = Modifier
-                            .align(Alignment.Center)
-                            .padding(horizontal = 40.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(18.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                                .border(1.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Inbox,
-                                contentDescription = null,
-                                tint     = MaterialTheme.colorScheme.primaryContainer,
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-                        Text(
-                            text      = stringResource(R.string.vault_empty_title),
-                            style     = MaterialTheme.typography.titleMedium.copy(
-                                color      = TextPrimary,
-                                fontWeight = FontWeight.SemiBold,
-                                fontFamily = PlayfairDisplay
-                            ),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                        Text(
-                            text      = stringResource(R.string.vault_empty_subtitle),
-                            style     = MaterialTheme.typography.bodyMedium.copy(
-                                color      = TextSecondary,
-                                lineHeight = 22.sp
-                            ),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            } else {
+                // ── Lista de Cápsulas ──
+                LazyColumn(
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 88.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(uiState.capsules, key = { it.capsuleId }) { capsule ->
+                        CapsuleItemCard(
+                            capsule = capsule,
+                            onDeleteClick = { capsuleToDelete = capsule }
                         )
                     }
                 }
+            }
 
-                else -> {
-                    // ── Lista de Cápsulas ──────────────────────────────────────
-                    LazyColumn(
-                        modifier            = Modifier.fillMaxSize(),
-                        contentPadding      = PaddingValues(
-                            start  = 20.dp,
-                            end    = 20.dp,
-                            top    = 16.dp,
-                            bottom = 88.dp   // espacio para el FAB
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        item {
-                            Text(
-                                text  = stringResource(R.string.vault_capsule_count, uiState.capsules.size),
-                                style = MaterialTheme.typography.labelMedium.copy(color = TextSecondary),
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
-                        }
-                        items(
-                            items = uiState.capsules,
-                            key   = { it.capsuleId }
-                        ) { capsule ->
-                            AnimatedVisibility(
-                                visible = true,
-                                enter   = fadeIn(),
-                                exit    = fadeOut()
-                            ) {
-                                CapsuleItemCard(
-                                    capsule   = capsule,
-                                    onDelete  = { pendingDelete = capsule }
-                                )
-                            }
-                        }
-                    }
-                }
+            // ── Loading Overlay (opcional si queremos bloquear interactividad rápida) ──
+            if (uiState.isLoading && uiState.capsules.isEmpty()) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
 
-    // ── AlertDialog de error ───────────────────────────────────────────────────
-    uiState.error?.let {
+    // ── Dialog de Eliminación ──
+    capsuleToDelete?.let { capsule ->
         AlertDialog(
-            onDismissRequest  = { viewModel.clearError() },
-            containerColor    = SurfaceDark,
+            onDismissRequest = { capsuleToDelete = null },
+            containerColor = SurfaceDark,
             titleContentColor = ErrorRed,
-            textContentColor  = TextPrimary,
-            title = { Text(stringResource(R.string.error_capsule_save_title)) },
-            text  = { Text(stringResource(R.string.error_guardian_save_body)) },
+            textContentColor = TextPrimary,
+            title = { Text(stringResource(R.string.dialog_delete_capsule_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_capsule_body, capsule.title)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteCapsule(capsule)
+                    capsuleToDelete = null
+                }) {
+                    Text(
+                        text = stringResource(R.string.action_delete),
+                        color = ErrorRed,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { capsuleToDelete = null }) {
+                    Text(text = stringResource(R.string.btn_cancel), color = TextSecondary)
+                }
+            }
+        )
+    }
+
+    // ── Error Dialog ──
+    uiState.error?.let { errorRes ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearError() },
+            containerColor = SurfaceDark,
+            titleContentColor = ErrorRed,
+            textContentColor = TextPrimary,
+            title = { Text(stringResource(R.string.error_generic)) },
+            text = { Text(stringResource(errorRes)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.clearError() }) {
                     Text(stringResource(R.string.btn_understood), color = MaterialTheme.colorScheme.primary)
@@ -209,184 +184,98 @@ fun CapsuleVaultScreen(
             }
         )
     }
-
-    // ── AlertDialog de confirmación de borrado ─────────────────────────────────
-    pendingDelete?.let { capsule ->
-        AlertDialog(
-            onDismissRequest  = { pendingDelete = null },
-            containerColor    = SurfaceDark,
-            titleContentColor = ErrorRed,
-            textContentColor  = TextPrimary,
-            icon = {
-                Icon(Icons.Default.DeleteForever, null,
-                    tint     = ErrorRed,
-                    modifier = Modifier.size(28.dp))
-            },
-            title = { Text(stringResource(R.string.dialog_delete_capsule_title)) },
-            text  = {
-                Text(
-                    stringResource(R.string.dialog_delete_capsule_body, capsule.title),
-                    style = LocalTextStyle.current.copy(lineHeight = 20.sp)
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.deleteCapsule(capsule)
-                    pendingDelete = null
-                }) {
-                    Text(
-                        stringResource(R.string.action_delete),
-                        color      = ErrorRed,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingDelete = null }) {
-                    Text(stringResource(R.string.btn_cancel), color = TextSecondary)
-                }
-            }
-        )
-    }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CapsuleItemCard
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun CapsuleItemCard(
-    capsule:  TimeCapsule,
-    onDelete: () -> Unit
+    capsule: TimeCapsule,
+    onDeleteClick: () -> Unit
 ) {
-    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-
     Card(
-        shape    = RoundedCornerShape(14.dp),
-        colors   = CardDefaults.cardColors(containerColor = SurfaceDark),
-        border   = androidx.compose.foundation.BorderStroke(
-            1.dp, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-        ),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceDark)
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-
-            // ── Header: Título + Botón borrar ──────────────────────────────────
-            Row(
-                modifier              = Modifier.fillMaxWidth(),
-                verticalAlignment     = Alignment.Top,
-                horizontalArrangement = Arrangement.SpaceBetween
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Header (Title)
                 Text(
-                    text       = capsule.title.ifBlank { stringResource(R.string.capsule_untitled) },
-                    style      = MaterialTheme.typography.titleSmall.copy(
-                        color      = TextPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = PlayfairDisplay
-                    ),
-                    maxLines   = 2,
-                    overflow   = TextOverflow.Ellipsis,
-                    modifier   = Modifier.weight(1f).padding(end = 8.dp)
+                    text = capsule.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
                 )
-                IconButton(
-                    onClick  = onDelete,
-                    modifier = Modifier.size(36.dp)
+
+                // Body (Preview)
+                Text(
+                    text = capsule.content ?: "",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 18.sp
+                )
+
+                // Footer (Metadata)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(top = 4.dp)
                 ) {
-                    Icon(
-                        Icons.Default.DeleteOutline,
-                        contentDescription = stringResource(R.string.action_delete),
-                        tint               = TextSecondary,
-                        modifier           = Modifier.size(20.dp)
-                    )
-                }
-            }
+                    if (capsule.mediaUrl != null) {
+                        Icon(
+                            imageVector = Icons.Default.AttachFile,
+                            contentDescription = "Attachment",
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
 
-            // ── Body: Preview del contenido ────────────────────────────────────
-            if (!capsule.content.isNullOrBlank()) {
-                Text(
-                    text     = capsule.content,
-                    style    = MaterialTheme.typography.bodySmall.copy(
-                        color      = TextSecondary,
-                        lineHeight = 18.sp
-                    ),
-                    maxLines  = 2,
-                    overflow  = TextOverflow.Ellipsis
-                )
-            }
-
-            HorizontalDivider(color = CardBorder, thickness = 0.5.dp)
-
-            // ── Footer: Metadata ───────────────────────────────────────────────
-            Row(
-                modifier              = Modifier.fillMaxWidth(),
-                verticalAlignment     = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Badge de condición de apertura
-                TriggerBadge(capsule = capsule, formatter = dateFormatter)
-
-                Spacer(Modifier.weight(1f))
-
-                // Indicador de multimedia
-                if (!capsule.mediaUrl.isNullOrBlank()) {
                     Row(
-                        verticalAlignment     = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
+                        val isImmediate = capsule.triggerType == TriggerType.IMMEDIATE_POST_MORTEM
                         Icon(
-                            Icons.Default.AttachFile,
-                            contentDescription = null,
-                            tint     = MaterialTheme.colorScheme.primaryContainer,
+                            imageVector = if (isImmediate) Icons.Default.LockClock else Icons.Default.CalendarToday,
+                            contentDescription = "Trigger Type",
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text  = stringResource(R.string.vault_has_media),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = MaterialTheme.colorScheme.primaryContainer
-                            )
+                            text = if (isImmediate) {
+                                stringResource(R.string.trigger_badge_immediate)
+                            } else {
+                                val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                                val dateStr = capsule.scheduledUnlockDate?.let { sdf.format(Date(it)) } ?: "—"
+                                stringResource(R.string.trigger_date_format, dateStr)
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
             }
+
+            // Trailing Action (Delete)
+            IconButton(
+                onClick = onDeleteClick,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.action_delete),
+                    tint = ErrorRed.copy(alpha = 0.8f)
+                )
+            }
         }
-    }
-}
-
-@Composable
-private fun TriggerBadge(
-    capsule:   TimeCapsule,
-    formatter: SimpleDateFormat
-) {
-    val (icon, label, tint) = when (capsule.triggerType) {
-        TriggerType.IMMEDIATE_POST_MORTEM -> Triple(
-            Icons.Default.AllInclusive,
-            stringResource(R.string.trigger_badge_immediate),
-            MaterialTheme.colorScheme.primaryContainer
-        )
-        TriggerType.POST_MORTEM_DATE -> Triple(
-            Icons.Default.CalendarMonth,
-            capsule.scheduledUnlockDate
-                ?.let { formatter.format(Date(it)) }
-                ?: stringResource(R.string.capsule_no_date_selected),
-            MaterialTheme.colorScheme.primary
-        )
-    }
-
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(tint.copy(alpha = 0.12f))
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        verticalAlignment     = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Icon(icon, null, tint = tint, modifier = Modifier.size(12.dp))
-        Text(
-            text  = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                color      = tint,
-                fontWeight = FontWeight.SemiBold
-            )
-        )
     }
 }
