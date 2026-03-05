@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
@@ -242,11 +244,27 @@ class UserSettingsViewModel(
         }
     }
 
-    val isStrictVaultEnabled = prefs?.isStrictVaultEnabled
-    
+    // ── Bóveda Estricta (stateIn elimina el flicker del toggle) ──────────────
+
+    val isStrictVaultEnabled: StateFlow<Boolean?> = prefs?.isStrictVaultEnabled
+        ?.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        ?: MutableStateFlow(null)
+
     fun toggleStrictVault(enabled: Boolean) {
         viewModelScope.launch {
             prefs?.saveStrictVaultState(enabled)
+        }
+    }
+
+    // ── Bloqueo Biométrico Voluntario ─────────────────────────────────────────
+
+    val isBiometricLockEnabled: StateFlow<Boolean?> = prefs?.isBiometricLockEnabled
+        ?.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        ?: MutableStateFlow(null)
+
+    fun toggleBiometricLock(enabled: Boolean) {
+        viewModelScope.launch {
+            prefs?.saveBiometricLockState(enabled)
         }
     }
 }

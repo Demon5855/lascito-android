@@ -60,8 +60,9 @@ import com.perenniasystems.lascito.data.model.AppLanguage
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserSettingsScreen(
-    onNavigateBack: () -> Unit = {},
-    onLogOut:       () -> Unit = {},
+    onNavigateBack:       () -> Unit = {},
+    onNavigateToGuardian: () -> Unit = {},
+    onLogOut:             () -> Unit = {},
     onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
     val context = LocalContext.current
@@ -83,7 +84,6 @@ fun UserSettingsScreen(
     val selectedMetal by viewModel.selectedMetal.collectAsStateWithLifecycle()
     val selectedLang by viewModel.selectedLanguage.collectAsStateWithLifecycle()
 
-    var guardianEmail by remember { mutableStateOf("") }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.deleteState) {
@@ -152,11 +152,7 @@ fun UserSettingsScreen(
             HorizontalDivider(color = CardBorder, thickness = 0.5.dp)
 
             // ── § 3 Guardián del Legado ────────────────────────────────────────
-            GuardianSection(
-                email         = guardianEmail,
-                onEmailChange = { guardianEmail = it },
-                onSave        = { onShowSnackbar(context.getString(R.string.toast_guardian_saved), null) {} }
-            )
+            NavigateToGuardianCard(onNavigateToGuardian)
 
             HorizontalDivider(color = CardBorder, thickness = 0.5.dp)
 
@@ -165,13 +161,18 @@ fun UserSettingsScreen(
                 selectedLang  = selectedLang,
                 selectedMetal = selectedMetal,
                 onLangChange  = { lang ->
-                    viewModel.changeLanguageWithDelay(lang)
-                    
-                    // Maintain standard android locale application
-                    LocaleHelper.save(context, lang.tag)
-                    java.util.Locale.setDefault(java.util.Locale.forLanguageTag(lang.tag))
-                    val localeList = LocaleListCompat.forLanguageTags(lang.tag)
-                    AppCompatDelegate.setApplicationLocales(localeList)
+                    // Fase 1: El dropdown se cierra inmediatamente (expanded=false ya ocurrió en PersonalizationSection)
+                    // Fase 2: Diferir el cambio de Locale para permitir la animación de cierre
+                    scope.launch {
+                        kotlinx.coroutines.delay(180) // yield + ~3 frames para la animación del Popup
+                        viewModel.changeLanguage(lang)
+
+                        // Aplicar locale a nivel de plataforma
+                        LocaleHelper.save(context, lang.tag)
+                        java.util.Locale.setDefault(java.util.Locale.forLanguageTag(lang.tag))
+                        val localeList = LocaleListCompat.forLanguageTags(lang.tag)
+                        AppCompatDelegate.setApplicationLocales(localeList)
+                    }
                 },
                 onMetalChange = { metal ->
                     viewModel.changeMetal(metal)
@@ -183,10 +184,21 @@ fun UserSettingsScreen(
             HorizontalDivider(color = CardBorder, thickness = 0.5.dp)
 
             // ── § 5 Seguridad y Privacidad ─────────────────────────────────────
-            val isStrictVault by viewModel.isStrictVaultEnabled?.collectAsStateWithLifecycle(initialValue = false) ?: remember { mutableStateOf(false) }
+            val isStrictVault by viewModel.isStrictVaultEnabled.collectAsStateWithLifecycle()
+            val isBiometricLock by viewModel.isBiometricLockEnabled.collectAsStateWithLifecycle()
+            val canUseBiometric = remember {
+                val bm = androidx.biometric.BiometricManager.from(context)
+                bm.canAuthenticate(
+                    androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                    androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                ) == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
+            }
             SecuritySection(
-                isStrictVault = isStrictVault,
-                onToggleVault = { viewModel.toggleStrictVault(it) },
+                isStrictVault    = isStrictVault,
+                onToggleVault    = { viewModel.toggleStrictVault(it) },
+                isBiometricLock  = isBiometricLock,
+                canUseBiometric  = canUseBiometric,
+                onToggleBiometric = { viewModel.toggleBiometricLock(it) },
                 onExport  = { onShowSnackbar(context.getString(R.string.toast_exporting), null) {} },
                 onPrivacy = { onShowSnackbar(context.getString(R.string.toast_privacy_soon), null) {} },
                 onChangePwd = { showChangePwdDialog = true },
@@ -643,85 +655,71 @@ private fun MausoleumStatusCard(state: UserSettingsUiState) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun GuardianSection(
-    email:         String,
-    onEmailChange: (String) -> Unit,
-    onSave:        () -> Unit
-) {
-    // Same email-format check used on Login and Register screens.
-    val emailError = email.isNotBlank() && !Validators.EMAIL_REGEX.matches(email)
-
+private fun NavigateToGuardianCard(onNavigate: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         SectionTitle(stringResource(R.string.section_guardian))
 
-        OutlinedTextField(
-            value         = email,
-            onValueChange = onEmailChange,
-            modifier      = Modifier.fillMaxWidth(),
-            isError       = emailError,
-            placeholder   = {
-                Text(
-                    stringResource(R.string.hint_guardian_email),
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextDisabled)
-                )
-            },
-            textStyle     = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary),
-            singleLine    = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            leadingIcon   = {
-                Icon(
-                    imageVector        = Icons.Default.Shield,
-                    contentDescription = null,
-                    tint               = if (emailError)
-                        ErrorRed
-                    else
-                        MaterialTheme.colorScheme.primaryContainer,
-                    modifier           = Modifier.size(20.dp)
-                )
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor      = MaterialTheme.colorScheme.primaryContainer,
-                unfocusedBorderColor    = CardBorder,
-                errorBorderColor        = ErrorRed,
-                errorLeadingIconColor   = ErrorRed,
-                cursorColor             = MaterialTheme.colorScheme.primary,
-                focusedContainerColor   = SurfaceDark.copy(alpha = 0.4f),
-                unfocusedContainerColor = Color.Transparent
+        Card(
+            onClick  = onNavigate,
+            shape    = RoundedCornerShape(14.dp),
+            colors   = CardDefaults.cardColors(containerColor = SurfaceDark),
+            border   = androidx.compose.foundation.BorderStroke(
+                1.dp, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
             ),
-            shape = RoundedCornerShape(10.dp)
-        )
-
-        if (emailError) {
-            Text(
-                text     = stringResource(R.string.error_invalid_email),
-                color    = ErrorRed,
-                style    = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 4.dp)
-            )
-        }
-
-        Text(
-            text  = stringResource(R.string.guardian_help_text),
-            style = MaterialTheme.typography.bodySmall.copy(
-                color      = TextSecondary,
-                lineHeight = 18.sp
-            )
-        )
-
-        // Save button visible only when email is entered and passes validation.
-        if (email.isNotBlank() && !emailError) {
-            TextButton(
-                onClick  = onSave,
-                modifier = Modifier.align(Alignment.End)
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier              = Modifier.padding(18.dp),
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text(
-                    stringResource(R.string.btn_save_guardian),
-                    color = MaterialTheme.colorScheme.primary
+                Box(
+                    modifier         = Modifier
+                        .size(44.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.primaryContainer,
+                            androidx.compose.foundation.shape.CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector        = Icons.Default.Shield,
+                        contentDescription = null,
+                        tint               = MaterialTheme.colorScheme.primary,
+                        modifier           = Modifier.size(22.dp)
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text  = stringResource(R.string.nav_card_guardian_title),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color      = TextPrimary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Text(
+                        text  = stringResource(R.string.guardian_help_text),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color      = TextSecondary,
+                            lineHeight = 17.sp
+                        ),
+                        maxLines = 2
+                    )
+                }
+                Icon(
+                    imageVector        = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint               = MaterialTheme.colorScheme.primaryContainer,
+                    modifier           = Modifier.size(20.dp)
                 )
             }
         }
     }
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // § 4 — Personalización del Santuario
@@ -879,8 +877,11 @@ private fun PersonalizationSection(
 
 @Composable
 private fun SecuritySection(
-    isStrictVault: Boolean,
+    isStrictVault: Boolean?,
     onToggleVault: (Boolean) -> Unit,
+    isBiometricLock: Boolean?,
+    canUseBiometric: Boolean,
+    onToggleBiometric: (Boolean) -> Unit,
     onExport:  () -> Unit,
     onPrivacy: () -> Unit,
     onChangePwd: () -> Unit,
@@ -890,6 +891,7 @@ private fun SecuritySection(
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         SectionTitle(stringResource(R.string.section_security))
 
+        // ── Bóveda Estricta ──────────────────────────────────────────────
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -908,8 +910,46 @@ private fun SecuritySection(
                 )
             }
             Switch(
-                checked = isStrictVault,
+                checked = isStrictVault ?: false,
                 onCheckedChange = { onToggleVault(it) },
+                enabled = isStrictVault != null,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = AmoledBlack,
+                    checkedTrackColor = ThemeState.selectedMetal.color,
+                    uncheckedThumbColor = TextSecondary,
+                    uncheckedTrackColor = SurfaceDark
+                )
+            )
+        }
+
+        // ── Bloqueo Biométrico ───────────────────────────────────────────
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.title_biometric_lock),
+                    style = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary)
+                )
+                Text(
+                    text = if (canUseBiometric)
+                        stringResource(R.string.desc_biometric_lock)
+                    else
+                        stringResource(R.string.desc_biometric_unavailable),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = if (canUseBiometric) TextSecondary else ErrorRed.copy(alpha = 0.8f),
+                        lineHeight = 18.sp
+                    ),
+                    modifier = Modifier.padding(top = 4.dp, end = 16.dp)
+                )
+            }
+            Switch(
+                checked = (isBiometricLock ?: false) && canUseBiometric,
+                onCheckedChange = { onToggleBiometric(it) },
+                enabled = canUseBiometric && isBiometricLock != null,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = AmoledBlack,
                     checkedTrackColor = ThemeState.selectedMetal.color,

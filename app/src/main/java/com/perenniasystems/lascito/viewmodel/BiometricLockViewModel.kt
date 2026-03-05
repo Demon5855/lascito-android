@@ -1,19 +1,31 @@
 package com.perenniasystems.lascito.viewmodel
 
+import android.app.Application
 import android.os.SystemClock
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.perenniasystems.lascito.data.local.OnboardingPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 
 class BiometricLockViewModel(
+    application: Application,
     private val savedStateHandle: SavedStateHandle
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     companion object {
         private const val GRACE_PERIOD_MS = 30_000L
     }
+
+    private val prefs = OnboardingPreferences(application)
+
+    /** null = cargando, false = desactivado, true = activado */
+    val isBiometricEnabled: StateFlow<Boolean?> = prefs.isBiometricLockEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val _isUnlocked = MutableStateFlow(
         savedStateHandle.get<Boolean>("isUnlocked") ?: false

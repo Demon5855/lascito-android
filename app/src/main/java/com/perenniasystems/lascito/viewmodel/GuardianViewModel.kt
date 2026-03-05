@@ -1,0 +1,198 @@
+package com.perenniasystems.lascito.viewmodel
+
+import android.util.Log
+import androidx.annotation.StringRes
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.data.model.DeadManSwitch
+import com.perenniasystems.lascito.data.model.LegacyGuardian
+import com.perenniasystems.lascito.data.model.UnlockStatus
+import com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository
+import com.perenniasystems.lascito.data.repository.GuardianRepository
+import com.perenniasystems.lascito.util.ErrorHandler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UI State
+// ─────────────────────────────────────────────────────────────────────────────
+
+data class GuardianUiState(
+    val isLoading:       Boolean = false,
+    val guardianName:    String  = "",
+    val guardianEmail:   String  = "",
+    /** 4-digit PIN de acceso para el heredero. Almacenado como hash en Firestore. */
+    val guardianPin:     String  = "",
+    val isSwitchActive:  Boolean = false,
+    /** Umbral de inactividad en días. Opciones válidas: 30, 90, 180, 365. */
+    val inactivityDays:  Int     = 90,
+    /** Timestamp (ms) de la última Prueba de Vida registrada. */
+    val lastProofOfLife: Long    = 0L,
+    @StringRes val error: Int?   = null,
+    /** true durante un breve período tras un guardado exitoso (feedback visual). */
+    val isSaved:         Boolean = false
+)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ViewModel
+// ─────────────────────────────────────────────────────────────────────────────
+
+class GuardianViewModel(
+    private val repository: GuardianRepository = FirebaseGuardianRepository()
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(GuardianUiState())
+    val uiState: StateFlow<GuardianUiState> = _uiState.asStateFlow()
+
+    init {
+        loadConfig()
+    }
+
+    // ── Carga ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Lee la configuración actual del Guardián y del Dead Man's Switch desde
+     * Firestore en una única consulta al documento `users/{uid}`.
+     *
+     * Reglas de mapeo:
+     *  - [LegacyGuardian] existe  → rellena nombre y email. El PIN no se
+     *    restaura por seguridad (el hash no es reversible); la UI lo deja vacío.
+     *  - [DeadManSwitch] existe   → actualiza isSwitchActive, inactivityDays y
+     *    lastProofOfLife.
+     *  - lastProofOfLife == 0L   → fallback a System.currentTimeMillis() para
+     *    que el footer nunca muestre "Nunca" en una cuenta que ya tiene actividad.
+     *  - Campos null / doc vacío → estado "Sin configurar"; la UI muestra
+     *    valores por defecto sin bloquear al usuario.
+     */
+    fun loadConfig() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            repository.getGuardianConfig()
+                .onSuccess { config ->
+                    val g   = config.guardian
+                    val dms = config.deadManSwitch
+
+                    _uiState.update { state ->
+                        state.copy(
+                            isLoading    = false,
+                            // ── Heredero ───────────────────────────────
+                            guardianName  = g?.name?.orEmpty()  ?: "",
+                            guardianEmail = g?.email?.orEmpty() ?: "",
+                            // PIN nunca se rellena: el hash no es reversible.
+                            guardianPin   = "",
+                            // ── Dead Man's Switch ──────────────────────
+                            isSwitchActive  = dms?.isActive               ?: false,
+                            inactivityDays  = dms?.inactivityThresholdDays ?: 90,
+                            lastProofOfLife = (dms?.lastProofOfLife ?: 0L)
+                                .let { ts -> if (ts == 0L) System.currentTimeMillis() else ts }
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    Log.e("GuardianViewModel", "Error loading guardian config", e)
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            // Fallback visual: al menos muestra un timestamp real
+                            lastProofOfLife = System.currentTimeMillis(),
+                            error = ErrorHandler.mapExceptionToResId(e as Exception)
+                        )
+                    }
+                }
+        }
+    }
+
+    // ── Mutadores de estado local (UI-only, sin I/O) ──────────────────────────
+
+    fun onNameChange(name: String)    = _uiState.update { it.copy(guardianName = name) }
+    fun onEmailChange(email: String)  = _uiState.update { it.copy(guardianEmail = email) }
+    fun onPinChange(pin: String)      = _uiState.update { it.copy(guardianPin = pin.take(4)) }
+    fun onSwitchChange(active: Boolean) = _uiState.update { it.copy(isSwitchActive = active) }
+    fun onDaysChange(days: Int)       = _uiState.update { it.copy(inactivityDays = days) }
+    fun clearError()                  = _uiState.update { it.copy(error = null) }
+    fun clearSaved()                  = _uiState.update { it.copy(isSaved = false) }
+
+    // ── Persistencia ──────────────────────────────────────────────────────────
+
+    /**
+     * Persiste la configuración del Guardián y del Dead Man's Switch en Firestore
+     * usando actualizaciones parciales (merge). Las dos llamadas se hacen en
+     * secuencia para evitar condiciones de carrera sobre el mismo documento.
+     */
+    fun saveGuardianConfig() {
+        val state = _uiState.value
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isLoading = true, error = null, isSaved = false) }
+            try {
+                // 1. Guardar configuración del Heredero
+                val guardian = LegacyGuardian(
+                    name          = state.guardianName.trim().ifBlank { null },
+                    email         = state.guardianEmail.trim().ifBlank { null },
+                    accessPinHash = hashPin(state.guardianPin)
+                )
+                repository.updateGuardian(guardian).getOrThrow()
+
+                // 2. Guardar configuración del Dead Man's Switch
+                val switch = DeadManSwitch(
+                    isActive               = state.isSwitchActive,
+                    inactivityThresholdDays = state.inactivityDays,
+                    lastProofOfLife        = state.lastProofOfLife,
+                    unlockStatus           = UnlockStatus.LOCKED
+                )
+                repository.updateDeadManSwitchConfig(switch).getOrThrow()
+
+                _uiState.update { it.copy(isLoading = false, isSaved = true) }
+            } catch (e: Exception) {
+                Log.e("GuardianViewModel", "Error saving guardian config", e)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = ErrorHandler.mapExceptionToResId(e)
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Registra manualmente una Prueba de Vida (botón de pánico/refresh).
+     * Actualiza [GuardianUiState.lastProofOfLife] en la UI inmediatamente
+     * y persiste el timestamp en Firestore de forma asíncrona.
+     */
+    fun triggerManualCheck() {
+        val now = System.currentTimeMillis()
+        _uiState.update { it.copy(lastProofOfLife = now) }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.registerProofOfLife().getOrThrow()
+                Log.d("GuardianViewModel", "Manual proof of life registered: $now")
+            } catch (e: Exception) {
+                Log.w("GuardianViewModel", "Manual proof of life failed silently: ${e.message}")
+                // Fallo silencioso — el timestamp local ya se actualizó en la UI.
+                // El servidor se sincronizará en la próxima sesión.
+            }
+        }
+    }
+
+    // ── Utilidades ────────────────────────────────────────────────────────────
+
+    /**
+     * Hashea el PIN antes de persistirlo. En producción usar bcrypt o
+     * al menos SHA-256 con salt. Aquí usamos SHA-256 como base.
+     */
+    private fun hashPin(pin: String): String? {
+        if (pin.isBlank()) return null
+        return try {
+            val digest = java.security.MessageDigest.getInstance("SHA-256")
+            val hash = digest.digest(pin.toByteArray())
+            hash.joinToString("") { "%02x".format(it) }
+        } catch (e: Exception) {
+            null
+        }
+    }
+}

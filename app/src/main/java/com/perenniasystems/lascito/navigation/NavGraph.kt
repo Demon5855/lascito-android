@@ -11,7 +11,10 @@ import androidx.navigation.navArgument
 import com.perenniasystems.lascito.ui.screens.altar.AltarScreen
 import com.perenniasystems.lascito.ui.screens.auth.LoginScreen
 import com.perenniasystems.lascito.ui.screens.auth.RegisterScreen
+import com.perenniasystems.lascito.ui.screens.capsule.AddTimeCapsuleScreen
+import com.perenniasystems.lascito.ui.screens.capsule.CapsuleVaultScreen
 import com.perenniasystems.lascito.ui.screens.dashboard.DashboardScreen
+import com.perenniasystems.lascito.ui.screens.guardian.GuardianScreen
 import com.perenniasystems.lascito.ui.screens.memory.AddMemoryScreen
 import com.perenniasystems.lascito.ui.screens.profile.AddProfileScreen
 import com.perenniasystems.lascito.ui.screens.settings.UserSettingsScreen
@@ -161,13 +164,38 @@ fun LascitoNavGraph(
 
         composable(Screen.UserSettings.route) {
             UserSettingsScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onLogOut       = {
+                onNavigateBack     = { navController.popBackStack() },
+                onNavigateToGuardian = {
+                    navController.navigate(Screen.Guardian.route)
+                },
+                onLogOut           = {
                     authViewModel.logout()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
+                onShowSnackbar = onShowSnackbar
+            )
+        }
+
+        composable(Screen.Guardian.route) {
+            GuardianScreen(
+                onNavigateBack      = { navController.popBackStack() },
+                onNavigateToCapsule = { navController.navigate(Screen.CapsuleVault.route) },
+                onShowSnackbar      = onShowSnackbar
+            )
+        }
+
+        composable(Screen.CapsuleVault.route) {
+            CapsuleVaultScreen(
+                onNavigateBack     = { navController.popBackStack() },
+                onNavigateToCreate = { navController.navigate(Screen.AddTimeCapsule.route) }
+            )
+        }
+
+        composable(Screen.AddTimeCapsule.route) {
+            AddTimeCapsuleScreen(
+                onNavigateBack = { navController.popBackStack() },
                 onShowSnackbar = onShowSnackbar
             )
         }

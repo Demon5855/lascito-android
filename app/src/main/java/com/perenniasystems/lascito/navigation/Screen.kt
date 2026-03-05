@@ -22,5 +22,8 @@ sealed class Screen(val route: String) {
             return if (memoryId != null) "add_memory/$profileId?memoryId=$memoryId" else "add_memory/$profileId"
         }
     }
-    data object UserSettings : Screen("user_settings")
+    data object UserSettings    : Screen("user_settings")
+    data object Guardian         : Screen("guardian")
+    data object AddTimeCapsule   : Screen("add_time_capsule")
+    data object CapsuleVault     : Screen("capsule_vault")
 }

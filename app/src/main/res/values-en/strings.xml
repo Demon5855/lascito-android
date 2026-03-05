@@ -158,10 +158,17 @@
     <string name="btn_delete_account">Delete Account</string>
     <string name="title_strict_vault">Strict Vault Mode</string>
     <string name="desc_strict_vault">Blocks screenshots, recordings, and hides the app content in the recent tasks menu.</string>
+    <string name="title_biometric_lock">Fingerprint Lock</string>
+    <string name="desc_biometric_lock">Requires biometric authentication when returning to the app after a period of inactivity.</string>
+    <string name="desc_biometric_unavailable">Your device does not have available or configured biometric hardware.</string>
     <string name="biometric_title">Sanctuary Locked</string>
     <string name="biometric_description">Verify your identity to access your legacies</string>
     <string name="btn_unlock_sanctuary">Unlock Sanctuary</string>
     <string name="biometric_error">Authentication error: %1$s</string>
+    <string name="promo_biometric_title">Protect Your Vault</string>
+    <string name="promo_biometric_body">Your legacy is sealed. Would you like to protect your vault with fingerprint so only you can access it?</string>
+    <string name="promo_biometric_activate">Activate</string>
+    <string name="promo_biometric_later">Maybe later</string>
 
     <!-- Upload Progress & Banners -->
     <string name="msg_uploading_profile">Ascending to Sanctuary…</string>
@@ -211,5 +218,85 @@
     <string name="placeholder_password_dots">••••••••</string>
     <string name="placeholder_password_min">Minimum 8 characters</string>
     <string name="placeholder_password_repeat">Repeat password</string>
+
+    <!-- ── Legacy Plan (GuardianScreen) ─────────────────────────────────────── -->
+    <string name="screen_guardian">Legacy Plan</string>
+
+    <!-- Card A: The Heir -->
+    <string name="section_beneficiary">Designated Heir</string>
+    <string name="desc_beneficiary_subtitle">The person who will safeguard your legacy</string>
+    <string name="label_heir_name">Heir\'s Name</string>
+    <string name="placeholder_heir_name">E.g.: María García</string>
+    <string name="label_heir_email">Email Address</string>
+    <string name="placeholder_heir_email">heir@email.com</string>
+    <string name="label_heir_pin">Access PIN (4 digits)</string>
+    <string name="guardian_key_disclaimer">This person will receive the Master Key only when the system confirms your absence.</string>
+
+    <!-- Card B: Absence Protocol -->
+    <string name="section_absence_protocol">Absence Protocol</string>
+    <string name="desc_absence_subtitle">Automatic activity monitoring</string>
+    <string name="label_inactivity_threshold">Inactivity Threshold</string>
+    <string name="label_switch_active">Enable Automatic Monitoring</string>
+    <string name="desc_switch_active_on">System active — heartbeat running</string>
+    <string name="desc_switch_inactive">System inactive</string>
+    <string name="guardian_inactivity_subtitle">The system will wait %1$d days of inactivity before contacting your heir.</string>
+
+    <!-- Footer: System Status -->
+    <string name="label_system_operative">System Operative</string>
+    <string name="label_last_heartbeat">Last life signal: %1$s</string>
+    <string name="btn_send_manual_signal">Send Manual Signal</string>
+    <string name="heartbeat_never">Never</string>
+    <string name="heartbeat_seconds">%1$d second ago</string>
+    <string name="heartbeat_seconds_plural">%1$d seconds ago</string>
+    <string name="heartbeat_minutes">%1$d minute ago</string>
+    <string name="heartbeat_minutes_plural">%1$d minutes ago</string>
+    <string name="heartbeat_hours">%1$d hour ago</string>
+    <string name="heartbeat_hours_plural">%1$d hours ago</string>
+    <string name="heartbeat_days">%1$d day ago</string>
+    <string name="heartbeat_days_plural">%1$d days ago</string>
+
+    <!-- Buttons & Feedback -->
+    <string name="btn_save_legacy_config">Save Configuration</string>
+    <string name="btn_saving">Saving…</string>
+    <string name="toast_legacy_saved">Legacy configuration saved</string>
+    <string name="error_guardian_save_body">Could not save the configuration. Check your connection and try again.</string>
+
+    <!-- Navigation card in My Account -->
+    <string name="nav_card_guardian_title">Legacy Plan</string>
+
+    <!-- ── Time Capsules (AddTimeCapsuleScreen) ──────────────────────────────── -->
+    <string name="screen_new_capsule">New Time Capsule</string>
+    <string name="capsule_section_message">The Message</string>
+    <string name="capsule_section_message_sub">Your letter to the future</string>
+    <string name="label_capsule_title">Capsule Title</string>
+    <string name="placeholder_capsule_title">E.g.: For my daughter on her wedding day</string>
+    <string name="label_capsule_content">Letter / Content</string>
+    <string name="placeholder_capsule_content">Write here the letter, message or thought you wish to preserve…</string>
+    <string name="capsule_section_media">Media Attachment</string>
+    <string name="capsule_section_media_sub">Photo or video (optional)</string>
+    <string name="capsule_attach_media_hint">Tap to attach a photo or video</string>
+    <string name="capsule_section_trigger">Opening Condition</string>
+    <string name="capsule_section_trigger_sub">When this message will be revealed</string>
+    <string name="trigger_immediate">Open upon confirming my passing</string>
+    <string name="trigger_immediate_desc">The guardian will gain access once the system confirms your absence.</string>
+    <string name="trigger_scheduled">Open on a future date</string>
+    <string name="trigger_scheduled_desc">The capsule will be revealed on the date you choose, regardless of any event.</string>
+    <string name="capsule_no_date_selected">Select an opening date</string>
+    <string name="btn_seal_capsule">Seal Capsule</string>
+    <string name="capsule_sealing">Sealing your legacy…</string>
+    <string name="toast_capsule_saved">Time capsule created</string>
+    <string name="error_capsule_save_title">Error while sealing</string>
+
+    <!-- ── Capsule Vault (CapsuleVaultScreen) ────────────────────────────── -->
+    <string name="screen_capsule_vault">My Capsules</string>
+    <string name="vault_empty_title">No sealed messages yet</string>
+    <string name="vault_empty_subtitle">You haven\'t sealed any message for the future yet. Create your first time capsule.</string>
+    <string name="vault_capsule_count">%1$d sealed message(s)</string>
+    <string name="vault_has_media">Attachment</string>
+    <string name="trigger_badge_immediate">Upon passing</string>
+    <string name="capsule_untitled">Untitled</string>
+    <string name="btn_new_capsule_fab">New Capsule</string>
+    <string name="dialog_delete_capsule_title">Destroy this capsule?</string>
+    <string name="dialog_delete_capsule_body">"%1$s" will be permanently deleted. This action cannot be undone.</string>
 
 </resources>

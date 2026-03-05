@@ -157,10 +157,17 @@
     <string name="btn_delete_account">Eliminar Cuenta</string>
     <string name="title_strict_vault">Modo Bóveda Estricta</string>
     <string name="desc_strict_vault">Bloquea capturas de pantalla, grabaciones y oculta el contenido de la app en el menú de tareas recientes.</string>
+    <string name="title_biometric_lock">Bloqueo con Huella</string>
+    <string name="desc_biometric_lock">Solicita autenticación biométrica al volver a la app tras un periodo de inactividad.</string>
+    <string name="desc_biometric_unavailable">Tu dispositivo no tiene hardware biométrico disponible o configurado.</string>
     <string name="biometric_title">Santuario Bloqueado</string>
     <string name="biometric_description">Verifica tu identidad para acceder a tus legados</string>
     <string name="btn_unlock_sanctuary">Desbloquear Santuario</string>
     <string name="biometric_error">Error de autenticación: %1$s</string>
+    <string name="promo_biometric_title">Protege tu Bóveda</string>
+    <string name="promo_biometric_body">Tu legado está sellado. ¿Deseas proteger tu bóveda con huella dactilar para que solo tú puedas acceder?</string>
+    <string name="promo_biometric_activate">Activar</string>
+    <string name="promo_biometric_later">Quizás más tarde</string>
 
     <!-- Upload Progress & Banners -->
     <string name="msg_uploading_profile">Subiendo al Santuario…</string>
@@ -211,5 +218,85 @@
     <string name="placeholder_password_dots">••••••••</string>
     <string name="placeholder_password_min">Mínimo 8 caracteres</string>
     <string name="placeholder_password_repeat">Repetir contraseña</string>
+
+    <!-- ── Plan de Legado (GuardianScreen) ──────────────────────────────────── -->
+    <string name="screen_guardian">Plan de Legado</string>
+
+    <!-- Tarjeta A: El Heredero -->
+    <string name="section_beneficiary">Heredero Designado</string>
+    <string name="desc_beneficiary_subtitle">La persona que custodiará tu legado</string>
+    <string name="label_heir_name">Nombre del Heredero</string>
+    <string name="placeholder_heir_name">Ej: María García</string>
+    <string name="label_heir_email">Correo Electrónico</string>
+    <string name="placeholder_heir_email">heredero@correo.com</string>
+    <string name="label_heir_pin">PIN de Acceso (4 dígitos)</string>
+    <string name="guardian_key_disclaimer">Esta persona recibirá la Llave Maestra solo cuando el sistema confirme tu ausencia.</string>
+
+    <!-- Tarjeta B: Protocolo de Ausencia -->
+    <string name="section_absence_protocol">Protocolo de Ausencia</string>
+    <string name="desc_absence_subtitle">Monitoreo automático de actividad</string>
+    <string name="label_inactivity_threshold">Umbral de Inactividad</string>
+    <string name="label_switch_active">Activar Monitoreo Automático</string>
+    <string name="desc_switch_active_on">Sistema activo — latido en curso</string>
+    <string name="desc_switch_inactive">Sistema inactivo</string>
+    <string name="guardian_inactivity_subtitle">El sistema esperará %1$d días de inactividad antes de contactar a tu heredero.</string>
+
+    <!-- Footer: Estado del Sistema -->
+    <string name="label_system_operative">Sistema Operativo</string>
+    <string name="label_last_heartbeat">Última señal de vida: %1$s</string>
+    <string name="btn_send_manual_signal">Enviar Señal Manual</string>
+    <string name="heartbeat_never">Nunca</string>
+    <string name="heartbeat_seconds">Hace %1$d segundo</string>
+    <string name="heartbeat_seconds_plural">Hace %1$d segundos</string>
+    <string name="heartbeat_minutes">Hace %1$d minuto</string>
+    <string name="heartbeat_minutes_plural">Hace %1$d minutos</string>
+    <string name="heartbeat_hours">Hace %1$d hora</string>
+    <string name="heartbeat_hours_plural">Hace %1$d horas</string>
+    <string name="heartbeat_days">Hace %1$d día</string>
+    <string name="heartbeat_days_plural">Hace %1$d días</string>
+
+    <!-- Botones y Feedback -->
+    <string name="btn_save_legacy_config">Guardar Configuración</string>
+    <string name="btn_saving">Guardando…</string>
+    <string name="toast_legacy_saved">Configuración del legado guardada</string>
+    <string name="error_guardian_save_body">No se pudo guardar la configuración. Verifica tu conexión e inténtalo de nuevo.</string>
+
+    <!-- Tarjeta de navegación en Mi Cuenta -->
+    <string name="nav_card_guardian_title">Plan de Legado</string>
+
+    <!-- ── Cápsulas del Tiempo (AddTimeCapsuleScreen) ──────────────────────── -->
+    <string name="screen_new_capsule">Nueva Cápsula del Tiempo</string>
+    <string name="capsule_section_message">El Mensaje</string>
+    <string name="capsule_section_message_sub">Tu carta para el futuro</string>
+    <string name="label_capsule_title">Título de la Cápsula</string>
+    <string name="placeholder_capsule_title">Ej: Para mi hija en su boda</string>
+    <string name="label_capsule_content">Carta / Contenido</string>
+    <string name="placeholder_capsule_content">Escribe aquí la carta, el mensaje o el pensamiento que deseas preservar…</string>
+    <string name="capsule_section_media">Adjunto Multimedia</string>
+    <string name="capsule_section_media_sub">Foto o video (opcional)</string>
+    <string name="capsule_attach_media_hint">Toca para adjuntar una foto o video</string>
+    <string name="capsule_section_trigger">Condición de Apertura</string>
+    <string name="capsule_section_trigger_sub">Cuándo se revelará este mensaje</string>
+    <string name="trigger_immediate">Abrir al confirmar mi partida</string>
+    <string name="trigger_immediate_desc">El guardián accederá en cuanto el sistema confirme tu ausencia.</string>
+    <string name="trigger_scheduled">Abrir en una fecha futura</string>
+    <string name="trigger_scheduled_desc">La cápsula se revelará en la fecha que elijas, independientemente de cualquier evento.</string>
+    <string name="capsule_no_date_selected">Seleccionar fecha de apertura</string>
+    <string name="btn_seal_capsule">Sellar Cápsula</string>
+    <string name="capsule_sealing">Sellando tu legado…</string>
+    <string name="toast_capsule_saved">Cápsula del tiempo creada</string>
+    <string name="error_capsule_save_title">Error al sellar</string>
+
+    <!-- ── Bóveda de Cápsulas (CapsuleVaultScreen) ───────────────────────── -->
+    <string name="screen_capsule_vault">Mis Cápsulas</string>
+    <string name="vault_empty_title">Ningún mensaje sellado aún</string>
+    <string name="vault_empty_subtitle">Aún no has sellado ningún mensaje para el futuro. Crea tu primera cápsula del tiempo.</string>
+    <string name="vault_capsule_count">%1$d mensaje(s) sellado(s)</string>
+    <string name="vault_has_media">Archivo adjunto</string>
+    <string name="trigger_badge_immediate">Al partir</string>
+    <string name="capsule_untitled">Sin título</string>
+    <string name="btn_new_capsule_fab">Nueva Cápsula</string>
+    <string name="dialog_delete_capsule_title">¿Destruir esta cápsula?</string>
+    <string name="dialog_delete_capsule_body">"%1$s" será eliminada permanentemente. Esta acción no se puede deshacer.</string>
 
 </resources>

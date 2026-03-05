@@ -4,7 +4,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.storage.FirebaseStorage
 import com.perenniasystems.lascito.data.model.DeadManSwitch
+import com.perenniasystems.lascito.data.model.GuardianConfig
 import com.perenniasystems.lascito.data.model.LegacyGuardian
 import com.perenniasystems.lascito.data.model.TimeCapsule
 import kotlinx.coroutines.tasks.await
@@ -21,8 +23,9 @@ import kotlinx.coroutines.withTimeout
  * para garantizar Fail Fast ante inestabilidad de conexión.
  */
 class FirebaseGuardianRepository(
-    private val db:   FirebaseFirestore = FirebaseFirestore.getInstance(),
-    private val auth: FirebaseAuth      = FirebaseAuth.getInstance()
+    private val db:      FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val auth:    FirebaseAuth      = FirebaseAuth.getInstance(),
+    private val storage: FirebaseStorage   = FirebaseStorage.getInstance()
 ) : GuardianRepository {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -41,6 +44,55 @@ class FirebaseGuardianRepository(
         userDoc(uid).collection("capsules")
 
     // ── Guardián del Legado ───────────────────────────────────────────────────
+
+    /**
+     * Lee en una única operación el documento `users/{uid}` y extrae los
+     * objetos embebidos [LegacyGuardian] y [DeadManSwitch].
+     *
+     * Usa [DocumentSnapshot.get] con nombre de campo en lugar de [toObject]
+     * para evitar problemas si el esquema del documento User cambia.
+     * Si el documento no existe o un campo es null, devuelve null en ese slot
+     * (estado "Sin configurar") sin lanzar excepción.
+     */
+    override suspend fun getGuardianConfig(): Result<GuardianConfig> =
+        runCatching {
+            val uid = requireUid()
+            val snapshot = withTimeout(10_000L) { userDoc(uid).get().await() }
+
+            val guardian = runCatching {
+                snapshot.get("legacyGuardian")?.let { raw ->
+                    @Suppress("UNCHECKED_CAST")
+                    val map = raw as? Map<String, Any?> ?: return@let null
+                    LegacyGuardian(
+                        email         = map["email"] as? String,
+                        name          = map["name"] as? String,
+                        status        = runCatching {
+                            com.perenniasystems.lascito.data.model.GuardianStatus
+                                .valueOf((map["status"] as? String) ?: "PENDING")
+                        }.getOrDefault(com.perenniasystems.lascito.data.model.GuardianStatus.PENDING),
+                        accessPinHash = map["accessPinHash"] as? String
+                    )
+                }
+            }.getOrNull()
+
+            val deadManSwitch = runCatching {
+                snapshot.get("deadManSwitch")?.let { raw ->
+                    @Suppress("UNCHECKED_CAST")
+                    val map = raw as? Map<String, Any?> ?: return@let null
+                    DeadManSwitch(
+                        isActive                = (map["isActive"] as? Boolean) ?: false,
+                        inactivityThresholdDays = ((map["inactivityThresholdDays"] as? Long)?.toInt()) ?: 90,
+                        lastProofOfLife         = (map["lastProofOfLife"] as? Long) ?: 0L,
+                        unlockStatus            = runCatching {
+                            com.perenniasystems.lascito.data.model.UnlockStatus
+                                .valueOf((map["unlockStatus"] as? String) ?: "LOCKED")
+                        }.getOrDefault(com.perenniasystems.lascito.data.model.UnlockStatus.LOCKED)
+                    )
+                }
+            }.getOrNull()
+
+            GuardianConfig(guardian = guardian, deadManSwitch = deadManSwitch)
+        }
 
     /**
      * Persiste el [LegacyGuardian] del usuario mediante un merge parcial.
@@ -139,5 +191,36 @@ class FirebaseGuardianRepository(
                 .get()
                 .await()
                 .toObjects(TimeCapsule::class.java)
+        }
+
+    /**
+     * Elimina la cápsula y su archivo en Storage (si existe).
+     *
+     * Storage se borra primero usando tolerancia a fallo (el archivo puede ya no
+     * existir). Firestore se borra solo si el paso de Storage no lanzó una
+     * excepción no tolerable. Ambas operaciones tienen su propio timeout.
+     */
+    override suspend fun deleteTimeCapsule(capsuleId: String, mediaUrl: String?): Result<Unit> =
+        runCatching {
+            val uid = requireUid()
+
+            // 1. Borrar archivo de Storage (tolerante a "object not found")
+            if (!mediaUrl.isNullOrBlank()) {
+                withTimeout(10_000L) {
+                    try {
+                        val ref = storage.getReferenceFromUrl(mediaUrl)
+                        ref.delete().await()
+                    } catch (e: com.google.firebase.storage.StorageException) {
+                        if (e.errorCode != com.google.firebase.storage.StorageException.ERROR_OBJECT_NOT_FOUND) {
+                            throw e   // relanza solo si no es "ya borrado"
+                        }
+                    }
+                }
+            }
+
+            // 2. Borrar documento Firestore
+            withTimeout(10_000L) {
+                capsulesCol(uid).document(capsuleId).delete().await()
+            }
         }
 }

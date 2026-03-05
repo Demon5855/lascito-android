@@ -85,6 +85,16 @@ class MainActivity : AppCompatActivity() {
         // starts in the correct locale straight away.
         LangState.selectedTag = LocaleHelper.getSavedTag(this)
 
+        // Forzar el Locale del JVM ANTES de cualquier inflación de vistas.
+        // Sin esto, DatePicker de M3 usa Locale.getDefault() del sistema operativo
+        // en vez del idioma guardado por el usuario.
+        val savedLocale = java.util.Locale.forLanguageTag(LangState.selectedTag)
+        java.util.Locale.setDefault(savedLocale)
+        @Suppress("DEPRECATION")
+        val config = resources.configuration
+        config.setLocale(savedLocale)
+        resources.updateConfiguration(config, resources.displayMetrics)
+
         val onboardingPreferences = OnboardingPreferences(this)
         lifecycleScope.launch {
             if (onboardingPreferences.isStrictVaultEnabled.first()) {
@@ -223,6 +233,25 @@ fun BiometricLockScreen(
     val currentUser = FirebaseAuth.getInstance().currentUser
     if (currentUser == null) {
         content()
+        return
+    }
+
+    val isBiometricEnabled by viewModel.isBiometricEnabled.collectAsStateWithLifecycle()
+
+    // Si el usuario no activó el bloqueo biométrico, skip directo al contenido.
+    // Firebase Auth sigue activa — la biometría es solo un overlay visual.
+    if (isBiometricEnabled == false) {
+        content()
+        return
+    }
+
+    // Mientras se carga la preferencia (null), mostrar pantalla negra para evitar flash
+    if (isBiometricEnabled == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(com.perenniasystems.lascito.ui.theme.AmoledBlack)
+        )
         return
     }
     
