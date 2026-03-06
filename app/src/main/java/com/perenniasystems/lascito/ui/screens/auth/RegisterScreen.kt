@@ -34,7 +34,7 @@ import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.components.LascitoPrimaryButton
 import com.perenniasystems.lascito.ui.components.LascitoTextField
 import com.perenniasystems.lascito.ui.theme.*
-import com.perenniasystems.lascito.util.Validators
+import com.perenniasystems.lascito.util.ValidationRules
 import com.perenniasystems.lascito.viewmodel.AuthUiState
 import com.perenniasystems.lascito.viewmodel.AuthViewModel
 
@@ -54,8 +54,8 @@ fun RegisterScreen(
     var confirmVisible  by remember { mutableStateOf(false) }
     var termsAccepted   by remember { mutableStateOf(false) }
 
-    val emailError     = email.isNotBlank()    && !Validators.EMAIL_REGEX.matches(email)
-    val passwordError   = password.isNotBlank() && !Validators.isPasswordStrong(password)
+    val emailError     = email.isNotBlank()    && ValidationRules.validateEmail(email) != null
+    val passwordError   = password.isNotBlank() && ValidationRules.validatePassword(password) != null
     val confirmError    = confirmPassword.isNotBlank() && confirmPassword != password
 
     val canSubmit = fullName.isNotBlank()

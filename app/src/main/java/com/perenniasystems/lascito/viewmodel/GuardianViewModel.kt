@@ -34,8 +34,12 @@ data class GuardianUiState(
     /** Timestamp (ms) de la última Prueba de Vida registrada. */
     val lastProofOfLife: Long    = 0L,
     @StringRes val error: Int?   = null,
-    /** true durante un breve período tras un guardado exitoso (feedback visual). */
-    val isSaved:         Boolean = false
+    val isSaved:         Boolean = false,
+    /** Controla la visibilidad del diálogo de enfriamiento anti-spam (7 días). */
+    val showCooldownDialog: Boolean = false,
+    val cooldownDaysRemaining: Int = 0,
+    /** Timestamp local guardado para validación de la próxima edición. */
+    val lastGuardianUpdatedAt: Long? = null
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -48,6 +52,11 @@ class GuardianViewModel(
 
     private val _uiState = MutableStateFlow(GuardianUiState())
     val uiState: StateFlow<GuardianUiState> = _uiState.asStateFlow()
+
+    companion object {
+        private const val GUARDIAN_UPDATE_COOLDOWN_DAYS = 7
+        private const val MILLIS_PER_DAY = 86_400_000L
+    }
 
     init {
         loadConfig()
@@ -89,7 +98,8 @@ class GuardianViewModel(
                             isSwitchActive  = dms?.isActive               ?: false,
                             inactivityDays  = dms?.inactivityThresholdDays ?: 90,
                             lastProofOfLife = (dms?.lastProofOfLife ?: 0L)
-                                .let { ts -> if (ts == 0L) System.currentTimeMillis() else ts }
+                                .let { ts -> if (ts == 0L) System.currentTimeMillis() else ts },
+                            lastGuardianUpdatedAt = g?.lastGuardianUpdatedAt
                         )
                     }
                 }
@@ -116,6 +126,7 @@ class GuardianViewModel(
     fun onDaysChange(days: Int)       = _uiState.update { it.copy(inactivityDays = days) }
     fun clearError()                  = _uiState.update { it.copy(error = null) }
     fun clearSaved()                  = _uiState.update { it.copy(isSaved = false) }
+    fun dismissCooldownDialog()       = _uiState.update { it.copy(showCooldownDialog = false) }
 
     // ── Persistencia ──────────────────────────────────────────────────────────
 
@@ -126,14 +137,40 @@ class GuardianViewModel(
      */
     fun saveGuardianConfig() {
         val state = _uiState.value
+        
+        // Validación del Cooldown de 7 Días
+        val lastUpdate = state.lastGuardianUpdatedAt
+        if (lastUpdate != null) {
+            val daysSinceLastUpdate = (System.currentTimeMillis() - lastUpdate) / MILLIS_PER_DAY
+            
+            if (daysSinceLastUpdate < GUARDIAN_UPDATE_COOLDOWN_DAYS) {
+                val daysRemaining = GUARDIAN_UPDATE_COOLDOWN_DAYS - daysSinceLastUpdate
+                _uiState.update {
+                    it.copy(
+                        showCooldownDialog = true,
+                        cooldownDaysRemaining = daysRemaining.toInt()
+                    )
+                }
+                return
+            }
+        }
+
+        // Estado previo para posible Rollback
+        val previousState = state.copy()
+
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.update { it.copy(isLoading = true, error = null, isSaved = false) }
             try {
+                // Actualizamos estado en UI interinamente (optimistic update)
+                val newTimestamp = System.currentTimeMillis()
+                _uiState.update { it.copy(lastGuardianUpdatedAt = newTimestamp) }
+
                 // 1. Guardar configuración del Heredero
                 val guardian = LegacyGuardian(
                     name          = state.guardianName.trim().ifBlank { null },
                     email         = state.guardianEmail.trim().ifBlank { null },
-                    accessPinHash = hashPin(state.guardianPin)
+                    accessPinHash = hashPin(state.guardianPin),
+                    lastGuardianUpdatedAt = newTimestamp
                 )
                 repository.updateGuardian(guardian).getOrThrow()
 
@@ -149,12 +186,11 @@ class GuardianViewModel(
                 _uiState.update { it.copy(isLoading = false, isSaved = true) }
             } catch (e: Exception) {
                 Log.e("GuardianViewModel", "Error saving guardian config", e)
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = ErrorHandler.mapExceptionToResId(e)
-                    )
-                }
+                // Ejecutando ROLLBACK en caso de fallo
+                _uiState.value = previousState.copy(
+                    isLoading = false,
+                    error = ErrorHandler.mapExceptionToResId(e)
+                )
             }
         }
     }

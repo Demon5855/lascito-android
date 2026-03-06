@@ -11,8 +11,8 @@ import androidx.navigation.navArgument
 import com.perenniasystems.lascito.ui.screens.altar.AltarScreen
 import com.perenniasystems.lascito.ui.screens.auth.LoginScreen
 import com.perenniasystems.lascito.ui.screens.auth.RegisterScreen
-import com.perenniasystems.lascito.ui.screens.capsule.AddTimeCapsuleScreen
 import com.perenniasystems.lascito.ui.screens.capsule.CapsuleVaultScreen
+import com.perenniasystems.lascito.ui.screens.capsule.CapsuleDetailScreen
 import com.perenniasystems.lascito.ui.screens.dashboard.DashboardScreen
 import com.perenniasystems.lascito.ui.screens.guardian.GuardianScreen
 import com.perenniasystems.lascito.ui.screens.memory.AddMemoryScreen
@@ -189,12 +189,27 @@ fun LascitoNavGraph(
         composable(Screen.CapsuleVault.route) {
             CapsuleVaultScreen(
                 onNavigateBack     = { navController.popBackStack() },
-                onNavigateToCreate = { navController.navigate(Screen.AddTimeCapsule.route) }
+                onNavigateToCreate = { navController.navigate(Screen.AddTimeCapsule.route) },
+                onNavigateToDetail = { capsuleId -> navController.navigate(Screen.CapsuleDetail.createRoute(capsuleId)) }
             )
         }
 
         composable(Screen.AddTimeCapsule.route) {
-            AddTimeCapsuleScreen(
+            CapsuleDetailScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onShowSnackbar = onShowSnackbar
+            )
+        }
+
+        composable(
+            route = Screen.CapsuleDetail.route,
+            arguments = listOf(
+                navArgument("capsuleId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val capsuleId = backStackEntry.arguments?.getString("capsuleId") ?: return@composable
+            CapsuleDetailScreen(
+                capsuleId = capsuleId,
                 onNavigateBack = { navController.popBackStack() },
                 onShowSnackbar = onShowSnackbar
             )

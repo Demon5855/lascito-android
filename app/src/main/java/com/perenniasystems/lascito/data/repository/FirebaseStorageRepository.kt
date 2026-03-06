@@ -25,6 +25,12 @@ interface FirebaseStorageRepository {
     suspend fun uploadMediaFile(uri: Uri, mediaType: MediaType, profileId: String, onProgress: (Float) -> Unit = {}): Result<String>
 
     /**
+     * Uploads time capsule media keeping the exact path format: capsules/{userId}/{capsuleId}.{extension}
+     */
+    suspend fun uploadCapsuleMedia(uri: Uri, userId: String, capsuleId: String, extension: String, onProgress: (Float) -> Unit = {}): Result<String>
+
+
+    /**
      * Deletes the image at the given [imageUrl].
      * Tolerates "object-not-found" errors to avoid breaking cascade deletions.
      */
@@ -75,6 +81,32 @@ class FirebaseStorageRepositoryImpl(
 
             val downloadUrl = storageRef.downloadUrl.await().toString()
 
+            Result.success(downloadUrl)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun uploadCapsuleMedia(uri: Uri, userId: String, capsuleId: String, extension: String, onProgress: (Float) -> Unit): Result<String> {
+        return try {
+            val path = "capsules/$userId/$capsuleId.$extension"
+            val storageRef = storage.reference.child(path)
+            
+            val uploadTask = storageRef.putFile(uri)
+
+            uploadTask.addOnProgressListener { snapshot ->
+                val progress = snapshot.bytesTransferred.toFloat() / snapshot.totalByteCount.toFloat()
+                onProgress(progress)
+            }
+
+            suspendCancellableCoroutine { continuation ->
+                continuation.invokeOnCancellation { uploadTask.cancel() }
+                uploadTask
+                    .addOnSuccessListener { continuation.resume(Unit) }
+                    .addOnFailureListener { e -> continuation.resumeWithException(e) }
+            }
+
+            val downloadUrl = storageRef.downloadUrl.await().toString()
             Result.success(downloadUrl)
         } catch (e: Exception) {
             Result.failure(e)

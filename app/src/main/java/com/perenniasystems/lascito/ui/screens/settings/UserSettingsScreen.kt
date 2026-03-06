@@ -47,7 +47,7 @@ import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.util.LocaleHelper
-import com.perenniasystems.lascito.util.Validators
+import com.perenniasystems.lascito.util.ValidationRules
 import com.perenniasystems.lascito.viewmodel.ChangePwdState
 import com.perenniasystems.lascito.viewmodel.DeleteAccountState
 import com.perenniasystems.lascito.viewmodel.UserSettingsUiState
@@ -276,12 +276,12 @@ fun UserSettingsScreen(
                 newPasswordError = null
                 confirmPasswordError = null
 
+                val validateNewPass = ValidationRules.validatePassword(newPass)
+
                 if (currentPass.isBlank()) {
                     currentPasswordError = R.string.error_enter_current_password
-                } else if (newPass.isBlank()) {
-                    newPasswordError = R.string.error_enter_new_password
-                } else if (newPass.length < 8) {
-                    newPasswordError = R.string.error_password_strength
+                } else if (validateNewPass != null) {
+                    newPasswordError = validateNewPass
                 } else if (currentPass == newPass) {
                     newPasswordError = R.string.error_password_same_as_current
                 } else if (confirmPass.isBlank()) {
@@ -776,7 +776,9 @@ private fun PersonalizationSection(
                         text  = stringResource(selectedLang.labelRes),
                         style = MaterialTheme.typography.labelLarge.copy(
                             color = MaterialTheme.colorScheme.primary
-                        )
+                        ),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                     Spacer(Modifier.width(4.dp))
                     Icon(
@@ -790,7 +792,8 @@ private fun PersonalizationSection(
                 ExposedDropdownMenu(
                     expanded         = langExpanded,
                     onDismissRequest = { langExpanded = false },
-                    containerColor   = MaterialTheme.colorScheme.surface
+                    containerColor   = MaterialTheme.colorScheme.surface,
+                    modifier         = Modifier.widthIn(min = 200.dp)
                 ) {
                     AppLanguage.entries.forEach { lang ->
                         DropdownMenuItem(

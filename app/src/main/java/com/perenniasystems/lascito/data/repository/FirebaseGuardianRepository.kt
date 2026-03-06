@@ -80,7 +80,7 @@ class FirebaseGuardianRepository(
                     @Suppress("UNCHECKED_CAST")
                     val map = raw as? Map<String, Any?> ?: return@let null
                     DeadManSwitch(
-                        isActive                = (map["isActive"] as? Boolean) ?: false,
+                        isActive                = (map["isActive"] as? Boolean) ?: (map["active"] as? Boolean) ?: false,
                         inactivityThresholdDays = ((map["inactivityThresholdDays"] as? Long)?.toInt()) ?: 90,
                         lastProofOfLife         = (map["lastProofOfLife"] as? Long) ?: 0L,
                         unlockStatus            = runCatching {
@@ -191,6 +191,16 @@ class FirebaseGuardianRepository(
                 .get()
                 .await()
                 .toObjects(TimeCapsule::class.java)
+        }
+
+    override suspend fun getTimeCapsule(capsuleId: String): Result<TimeCapsule> =
+        runCatching {
+            val uid = requireUid()
+            withTimeout(10_000L) {
+                val snapshot = capsulesCol(uid).document(capsuleId).get().await()
+                snapshot.toObject(TimeCapsule::class.java)
+                    ?: throw Exception("Capsule not found")
+            }
         }
 
     /**

@@ -74,7 +74,7 @@
     <string name="title_change_password">Change Password</string>
     <string name="label_current_password">Current Password</string>
     <string name="label_new_password">New Password</string>
-    <string name="label_confirm_new_password">Confirm New Password</string>
+    <string name="label_confirm_new_password">Repeat Password</string>
     <string name="error_incorrect_current_password">Incorrect current password</string>
     <string name="error_weak_password">Password is too weak</string>
     <string name="msg_password_changed">Your sanctuary key has been renewed</string>
@@ -132,6 +132,10 @@
     <string name="error_year">Year out of range (1900–%1$d)</string>
     <string name="error_future_date">Date cannot be in the future</string>
     <string name="error_invalid_date">Invalid date</string>
+
+    <string name="title_cooldown_active">Change Blocked</string>
+    <string name="message_guardian_cooldown">For security, you can only change your heir once every 7 days. %d days remaining.</string>
+    <string name="action_understood">Understood</string>
 
     <!-- ── My Account (UserSettings) ─────────────────────────────────────── -->
     <string name="screen_my_account">My Account</string>
@@ -269,6 +273,7 @@
 
     <!-- ── Time Capsules (AddTimeCapsuleScreen) ──────────────────────────────── -->
     <string name="screen_new_capsule">New Time Capsule</string>
+    <string name="screen_edit_capsule">Edit Time Capsule</string>
     <string name="capsule_section_message">The Message</string>
     <string name="capsule_section_message_sub">Your letter to the future</string>
     <string name="label_capsule_title">Capsule Title</string>
@@ -289,6 +294,9 @@
     <string name="capsule_sealing">Sealing your legacy…</string>
     <string name="toast_capsule_saved">Time capsule created</string>
     <string name="error_capsule_save_title">Error while sealing</string>
+    <string name="error_title_required">The title is required</string>
+    <string name="error_content_or_media_required">You must add a message or media file</string>
+    <string name="error_date_required">Select an opening date</string>
 
     <!-- ── Capsule Vault (CapsuleVaultScreen) ────────────────────────────── -->
     <string name="screen_capsule_vault">My Capsules</string>
@@ -302,5 +310,8 @@
     <string name="btn_new_capsule_fab">New Capsule</string>
     <string name="dialog_delete_capsule_title">Destroy this capsule?</string>
     <string name="dialog_delete_capsule_body">"%1$s" will be permanently deleted. This action cannot be undone.</string>
+
+    <string name="placeholder_new_heir_pin">Enter new PIN to change</string>
+    <string name="heartbeat_just_now">Just now</string>
 
 </resources>

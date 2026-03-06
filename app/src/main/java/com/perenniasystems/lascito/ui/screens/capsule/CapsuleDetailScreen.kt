@@ -52,6 +52,8 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
+import com.perenniasystems.lascito.ui.components.MediaPreviewPlayer
+import com.perenniasystems.lascito.ui.components.CustomAudioPlayer
 
 private const val MAX_CONTENT_LENGTH = 2000
 
@@ -61,7 +63,8 @@ private const val MAX_CONTENT_LENGTH = 2000
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTimeCapsuleScreen(
+fun CapsuleDetailScreen(
+    capsuleId:      String?              = null,
     viewModel:      TimeCapsuleViewModel = viewModel(),
     onNavigateBack: () -> Unit           = {},
     onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
@@ -70,6 +73,13 @@ fun AddTimeCapsuleScreen(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val successMsg = stringResource(R.string.toast_capsule_saved)
+
+    // Carga de cápsula si es modo edición
+    LaunchedEffect(capsuleId) {
+        if (capsuleId != null) {
+            viewModel.loadCapsule(capsuleId)
+        }
+    }
 
     // ── Promo biométrico (one-shot) ─────────────────────────────────────────
     val onboardingPreferences = remember { com.perenniasystems.lascito.data.local.OnboardingPreferences(context) }
@@ -124,11 +134,12 @@ fun AddTimeCapsuleScreen(
     var showMediaSheet by remember { mutableStateOf(false) }
     val sheetState    = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // Validation
-    val isDateRequired = uiState.triggerType == TriggerType.POST_MORTEM_DATE
-    val canSave        = uiState.title.isNotBlank() &&
-                         !(isDateRequired && uiState.scheduledDate == null) &&
-                         !uiState.isLoading
+    // Validation (viene del ViewModel reactivamente)
+    val canSave = uiState.isSaveEnabled
+    
+    // Determine screen title
+    val screenTitle = if (capsuleId != null) stringResource(R.string.screen_edit_capsule) 
+                      else stringResource(R.string.screen_new_capsule)
 
     Scaffold(
         topBar = {
@@ -136,7 +147,7 @@ fun AddTimeCapsuleScreen(
                 title = {
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Text(
-                            text  = stringResource(R.string.screen_new_capsule),
+                            text  = screenTitle,
                             style = MaterialTheme.typography.headlineLarge
                         )
                     }
@@ -170,26 +181,30 @@ fun AddTimeCapsuleScreen(
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
 
-                // ── Sección 1: El Mensaje ──────────────────────────────────────
+                // ── Sección: El Mensaje (Modo Transparente / Diario) ──────────
                 MessageSection(
-                    title      = uiState.title,
-                    content    = uiState.content,
-                    onTitle    = viewModel::onTitleChange,
-                    onContent  = viewModel::onContentChange
+                    title       = uiState.title,
+                    content     = uiState.content,
+                    titleError  = uiState.titleError,
+                    contentMediaError = uiState.contentMediaError,
+                    onTitle     = viewModel::onTitleChange,
+                    onContent   = viewModel::onContentChange
                 )
 
-                // ── Sección 2: Multimedia ──────────────────────────────────────
-                MediaSection(
-                    mediaUri   = uiState.mediaUri,
-                    mediaType  = uiState.mediaType,
-                    onAttach   = { showMediaSheet = true },
-                    onClear    = { viewModel.clearMedia() }
+                // ── Sección: Multimedia (MediaPreview Unificado) ────────────────
+                CapsuleMediaPreview(
+                    mediaUrl  = uiState.mediaUrl,
+                    mediaUri  = uiState.mediaUri,
+                    mediaType = uiState.mediaType,
+                    onAttach  = { showMediaSheet = true },
+                    onClear   = { viewModel.clearMedia() }
                 )
 
-                // ── Sección 3: Condición de Apertura ───────────────────────────
+                // ── Sección: Condición de Apertura ──────────────────────────────
                 TriggerSection(
                     triggerType    = uiState.triggerType,
                     scheduledDate  = uiState.scheduledDate,
+                    dateError      = uiState.dateError,
                     onTrigger      = viewModel::onTriggerTypeChange,
                     onPickDate     = { showDatePicker = true }
                 )
@@ -401,72 +416,92 @@ fun AddTimeCapsuleScreen(
 
 @Composable
 private fun MessageSection(
-    title:    String,
-    content:  String,
-    onTitle:  (String) -> Unit,
-    onContent:(String) -> Unit
+    title:             String,
+    content:           String,
+    titleError:        Int?,
+    contentMediaError: Int?,
+    onTitle:           (String) -> Unit,
+    onContent:         (String) -> Unit
 ) {
-    CapsuleCard {
-        // Header
-        SectionHeader(
-            icon    = Icons.Default.EditNote,
-            title   = stringResource(R.string.capsule_section_message),
-            subtitle = stringResource(R.string.capsule_section_message_sub)
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Título interactivo transparente
+        OutlinedTextField(
+            value         = title,
+            onValueChange = onTitle,
+            placeholder   = { Text(stringResource(R.string.placeholder_capsule_title), style = MaterialTheme.typography.headlineMedium.copy(color = TextDisabled)) },
+            singleLine    = true,
+            isError       = titleError != null,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            modifier      = Modifier.fillMaxWidth(),
+            colors        = TextFieldDefaults.colors(
+                focusedContainerColor    = Color.Transparent,
+                unfocusedContainerColor  = Color.Transparent,
+                errorContainerColor      = Color.Transparent,
+                focusedIndicatorColor    = Color.Transparent,
+                unfocusedIndicatorColor  = Color.Transparent,
+                errorIndicatorColor      = Color.Transparent
+            ),
+            textStyle     = MaterialTheme.typography.headlineMedium.copy(color = TextPrimary)
         )
-
-        HorizontalDivider(color = CardBorder, thickness = 0.5.dp, modifier = Modifier.padding(bottom = 18.dp))
-
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            // Título de la cápsula
-            OutlinedTextField(
-                value         = title,
-                onValueChange = onTitle,
-                label         = { Text(stringResource(R.string.label_capsule_title), color = TextSecondary) },
-                placeholder   = { Text(stringResource(R.string.placeholder_capsule_title), color = TextDisabled) },
-                leadingIcon   = {
-                    Icon(Icons.Default.Title, null,
-                        tint     = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.size(20.dp))
-                },
-                singleLine    = true,
-                modifier      = Modifier.fillMaxWidth(),
-                colors        = capsuleFieldColors(),
-                shape         = RoundedCornerShape(10.dp),
-                textStyle     = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary)
+        
+        if (titleError != null) {
+            Text(
+                text = stringResource(titleError),
+                color = ErrorRed,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(start = 16.dp, top = 2.dp)
             )
+        }
 
-            // Carta / Contenido
-            OutlinedTextField(
-                value         = content,
-                onValueChange = { if (it.length <= MAX_CONTENT_LENGTH) onContent(it) },
-                label         = { Text(stringResource(R.string.label_capsule_content), color = TextSecondary) },
-                placeholder   = {
-                    Text(
-                        text  = stringResource(R.string.placeholder_capsule_content),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color    = TextDisabled,
-                            fontSize = 14.sp
-                        )
-                    )
-                },
-                minLines      = 5,
-                maxLines      = 12,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                modifier      = Modifier.fillMaxWidth(),
-                colors        = capsuleFieldColors(),
-                shape         = RoundedCornerShape(10.dp),
-                textStyle     = MaterialTheme.typography.bodyMedium.copy(
-                    color      = TextPrimary,
-                    lineHeight = 22.sp
-                ),
-                supportingText = {
-                    Text(
-                        text      = "${content.length} / $MAX_CONTENT_LENGTH",
-                        modifier  = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.End,
-                        style     = MaterialTheme.typography.labelSmall.copy(color = TextDisabled)
-                    )
-                }
+        // Separador sutil
+        HorizontalDivider(color = SurfaceVariant, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+
+        // Contenido (diario)
+        OutlinedTextField(
+            value         = content,
+            onValueChange = { if (it.length <= MAX_CONTENT_LENGTH) onContent(it) },
+            placeholder   = {
+                Text(
+                    text  = stringResource(R.string.placeholder_capsule_content),
+                    style = MaterialTheme.typography.bodyLarge.copy(color = TextDisabled)
+                )
+            },
+            isError       = contentMediaError != null,
+            minLines      = 8,
+            maxLines      = 15,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            modifier      = Modifier.fillMaxWidth().heightIn(min = 200.dp),
+            colors        = TextFieldDefaults.colors(
+                focusedContainerColor    = Color.Transparent,
+                unfocusedContainerColor  = Color.Transparent,
+                errorContainerColor      = Color.Transparent,
+                focusedIndicatorColor    = Color.Transparent,
+                unfocusedIndicatorColor  = Color.Transparent,
+                errorIndicatorColor      = Color.Transparent
+            ),
+            textStyle     = MaterialTheme.typography.bodyLarge.copy(
+                color      = TextPrimary,
+                lineHeight = 24.sp
+            ),
+            supportingText = {
+                Text(
+                    text      = "${content.length} / $MAX_CONTENT_LENGTH",
+                    modifier  = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.End,
+                    style     = MaterialTheme.typography.labelSmall.copy(color = TextDisabled)
+                )
+            }
+        )
+        
+        if (contentMediaError != null) {
+            Text(
+                text = stringResource(contentMediaError),
+                color = ErrorRed,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(start = 16.dp)
             )
         }
     }
@@ -477,69 +512,99 @@ private fun MessageSection(
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun MediaSection(
+fun CapsuleMediaPreview(
+    mediaUrl:  String?,
     mediaUri:  Uri?,
     mediaType: MediaType,
     onAttach:  () -> Unit,
-    onClear:   () -> Unit
+    onClear:   () -> Unit,
+    modifier:  Modifier = Modifier
 ) {
-    CapsuleCard {
-        SectionHeader(
-            icon     = Icons.Default.AttachFile,
-            title    = stringResource(R.string.capsule_section_media),
-            subtitle = stringResource(R.string.capsule_section_media_sub)
-        )
-
-        HorizontalDivider(color = CardBorder, thickness = 0.5.dp, modifier = Modifier.padding(bottom = 18.dp))
-
-        if (mediaUri != null) {
-            // Vista previa + botón quitar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-                    .clip(RoundedCornerShape(12.dp))
-            ) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .clip(RoundedCornerShape(16.dp))
+            .background(SurfaceDark)
+    ) {
+        when {
+            // URI Local (durante creación/edición de nueva media)
+            mediaUri != null -> {
                 when (mediaType) {
-                    MediaType.IMAGE -> AsyncImage(
-                        model            = mediaUri,
-                        contentDescription = stringResource(R.string.desc_photo),
-                        contentScale     = ContentScale.Crop,
-                        modifier         = Modifier.fillMaxSize()
-                    )
-                    MediaType.VIDEO -> Box(
-                        modifier         = Modifier
-                            .fillMaxSize()
-                            .background(SurfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Videocam, null,
-                            tint     = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(48.dp))
-                        Text(
-                            text      = stringResource(R.string.desc_video),
-                            color     = TextSecondary,
-                            modifier  = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = 12.dp)
+                    MediaType.VIDEO -> {
+                        MediaPreviewPlayer(
+                            uri = mediaUri
                         )
                     }
-                    else -> {}
+                    MediaType.AUDIO -> {
+                        CustomAudioPlayer(
+                            url = mediaUri.toString()
+                        )
+                    }
+                    MediaType.IMAGE -> {
+                        AsyncImage(
+                            model = coil.request.ImageRequest.Builder(LocalContext.current)
+                                .data(mediaUri)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
-                // Botón X
+                
+                // Botón Quitar Local
                 IconButton(
                     onClick  = onClear,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
-                        .background(AmoledBlack.copy(alpha = 0.7f), CircleShape)
+                        .background(AmoledBlack.copy(alpha = 0.6f), CircleShape)
                 ) {
-                    Icon(Icons.Default.Clear, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Clear, null, tint = Color.White, modifier = Modifier.size(20.dp))
                 }
             }
-        } else {
-            // Zona punteada para adjuntar
-            DashedBorderBox(onClick = onAttach)
+            
+            // URL Remota (cápsula guardada anteriormente)
+            !mediaUrl.isNullOrBlank() -> {
+                when (mediaType) {
+                    MediaType.VIDEO -> {
+                        MediaPreviewPlayer(
+                            uri = Uri.parse(mediaUrl)
+                        )
+                    }
+                    MediaType.AUDIO -> {
+                        CustomAudioPlayer(
+                            url = mediaUrl
+                        )
+                    }
+                    MediaType.IMAGE -> {
+                        AsyncImage(
+                            model = mediaUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+                
+                // Botón Quitar Remota (sustituye por nada y alerta al guardar que se reseteará)
+                IconButton(
+                    onClick  = onClear,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .background(AmoledBlack.copy(alpha = 0.6f), CircleShape)
+                ) {
+                    Icon(Icons.Default.Clear, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                }
+            }
+            
+            // Sin Media (Placeholder)
+            else -> {
+                DashedBorderBox(onClick = onAttach)
+            }
         }
     }
 }
@@ -549,36 +614,34 @@ private fun DashedBorderBox(onClick: () -> Unit) {
     val primary = MaterialTheme.colorScheme.primaryContainer
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .fillMaxSize()
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val stroke = Stroke(
-                width      = 2f,
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f, 12f), 0f)
+                width      = 3f,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(24f, 16f), 0f)
             )
             drawRoundRect(
                 color       = primary,
                 style       = stroke,
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx())
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx())
             )
         }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Icon(
                 Icons.Default.AddPhotoAlternate,
                 contentDescription = null,
                 tint     = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(36.dp)
             )
             Text(
                 text  = stringResource(R.string.capsule_attach_media_hint),
-                style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
+                style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
                 textAlign = TextAlign.Center
             )
         }
@@ -593,6 +656,7 @@ private fun DashedBorderBox(onClick: () -> Unit) {
 private fun TriggerSection(
     triggerType:   TriggerType,
     scheduledDate: Long?,
+    dateError:     Int?,
     onTrigger:     (TriggerType) -> Unit,
     onPickDate:    () -> Unit
 ) {
@@ -639,11 +703,11 @@ private fun TriggerSection(
                     shape   = RoundedCornerShape(10.dp),
                     border  = BorderStroke(
                         1.dp,
-                        if (scheduledDate == null) ErrorRed.copy(alpha = 0.7f)
+                        if (scheduledDate == null || dateError != null) ErrorRed.copy(alpha = 0.7f)
                         else MaterialTheme.colorScheme.primaryContainer
                     ),
                     colors  = ButtonDefaults.outlinedButtonColors(
-                        contentColor = if (scheduledDate == null) ErrorRed else MaterialTheme.colorScheme.primary
+                        contentColor = if (scheduledDate == null || dateError != null) ErrorRed else MaterialTheme.colorScheme.primary
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -652,6 +716,15 @@ private fun TriggerSection(
                     Text(
                         text       = dateLabel,
                         fontWeight = FontWeight.SemiBold
+                    )
+                }
+                
+                if (dateError != null) {
+                    Text(
+                        text = stringResource(dateError),
+                        color = ErrorRed,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
                     )
                 }
             }

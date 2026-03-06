@@ -58,7 +58,10 @@ data class LegacyGuardian(
      * sin necesidad de una cuenta Firebase propia.
      * Almacenar SIEMPRE como hash (bcrypt/SHA-256), nunca en texto plano.
      */
-    val accessPinHash: String? = null
+    val accessPinHash: String? = null,
+    /** Timestamp (ms) de la última vez que el usuario modificó su guardián.
+     * Utilizado para el Cooldown Anti-Spam (ej: 7 días).*/
+    val lastGuardianUpdatedAt: Long? = null
 )
 
 /**

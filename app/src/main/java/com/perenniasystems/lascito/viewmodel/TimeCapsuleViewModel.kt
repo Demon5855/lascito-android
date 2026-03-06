@@ -26,22 +26,26 @@ import java.util.UUID
 // ─────────────────────────────────────────────────────────────────────────────
 
 data class CapsuleUiState(
+    val capsuleId:         String       = UUID.randomUUID().toString(),
     val title:             String       = "",
     val content:           String       = "",
-    /** URI local del archivo multimedia elegido por el usuario (aún no subido). */
     val mediaUri:          Uri?         = null,
+    val mediaUrl:          String?      = null,
     val mediaType:         MediaType    = MediaType.IMAGE,
     val triggerType:       TriggerType  = TriggerType.IMMEDIATE_POST_MORTEM,
-    /**
-     * Timestamp (ms) de la fecha de apertura programada.
-     * Solo relevante cuando [triggerType] == [TriggerType.POST_MORTEM_DATE].
-     */
     val scheduledDate:     Long?        = null,
     val isLoading:         Boolean      = false,
-    /** Progreso de subida al Storage (0f…1f). null = sin archivo o sin progreso conocido. */
     val uploadProgress:    Float?       = null,
     val isSuccess:         Boolean      = false,
-    @androidx.annotation.StringRes val errorMessageResId: Int? = null
+    
+    // Estados de validación
+    @androidx.annotation.StringRes val titleError: Int? = null,
+    @androidx.annotation.StringRes val contentMediaError: Int? = null,
+    @androidx.annotation.StringRes val dateError: Int? = null,
+    @androidx.annotation.StringRes val errorMessageResId: Int? = null,
+    
+    // Estado transitorio
+    val isSaveEnabled:     Boolean      = false
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,23 +60,113 @@ class TimeCapsuleViewModel(
     private val _uiState = MutableStateFlow(CapsuleUiState())
     val uiState: StateFlow<CapsuleUiState> = _uiState.asStateFlow()
 
+    fun loadCapsule(capsuleId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            
+            guardianRepository.getTimeCapsule(capsuleId).fold(
+                onSuccess = { capsule ->
+                    _uiState.update {
+                        it.copy(
+                            capsuleId = capsule.capsuleId,
+                            title = capsule.title,
+                            content = capsule.content ?: "",
+                            mediaUrl = capsule.mediaUrl,
+                            mediaType = capsule.mediaType,
+                            triggerType = capsule.triggerType,
+                            scheduledDate = capsule.scheduledUnlockDate,
+                            isLoading = false
+                        )
+                    }
+                    validateForm()
+                },
+                onFailure = {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            titleError = com.perenniasystems.lascito.R.string.error_generic
+                        )
+                    }
+                }
+            )
+        }
+    }
+
     // ── Mutadores de estado local ─────────────────────────────────────────────
 
-    fun onTitleChange(title: String)      = _uiState.update { it.copy(title = title) }
-    fun onContentChange(content: String)  = _uiState.update { it.copy(content = content) }
-    fun onTriggerTypeChange(t: TriggerType) = _uiState.update {
-        it.copy(
-            triggerType   = t,
-            // Resetea la fecha si vuelven a IMMEDIATE_POST_MORTEM
-            scheduledDate = if (t == TriggerType.IMMEDIATE_POST_MORTEM) null else it.scheduledDate
-        )
+    fun onTitleChange(title: String) {
+        _uiState.update { it.copy(title = title) }
+        validateForm()
     }
-    fun onScheduledDateChange(ms: Long?)  = _uiState.update { it.copy(scheduledDate = ms) }
-    fun onMediaSelected(uri: Uri, type: MediaType) =
+    
+    fun onContentChange(content: String) {
+        _uiState.update { it.copy(content = content) }
+        validateForm()
+    }
+    
+    fun onTriggerTypeChange(t: TriggerType) {
+        _uiState.update {
+            it.copy(
+                triggerType   = t,
+                scheduledDate = if (t == TriggerType.IMMEDIATE_POST_MORTEM) null else it.scheduledDate
+            )
+        }
+        validateForm()
+    }
+    
+    fun onScheduledDateChange(ms: Long?) {
+        _uiState.update { it.copy(scheduledDate = ms) }
+        validateForm()
+    }
+    
+    fun onMediaSelected(uri: Uri, type: MediaType) {
         _uiState.update { it.copy(mediaUri = uri, mediaType = type) }
-    fun clearMedia()      = _uiState.update { it.copy(mediaUri = null, mediaType = MediaType.IMAGE) }
-    fun clearError()      = _uiState.update { it.copy(errorMessageResId = null) }
-    fun resetSuccess()    = _uiState.update { it.copy(isSuccess = false) }
+        validateForm()
+    }
+    
+    fun clearMedia() {
+        _uiState.update { it.copy(mediaUri = null, mediaType = MediaType.IMAGE) }
+        validateForm()
+    }
+    
+    fun clearError() = _uiState.update { it.copy(errorMessageResId = null) }
+    fun resetSuccess() = _uiState.update { it.copy(isSuccess = false) }
+
+    // ── Validación Centralizada ───────────────────────────────────────────────
+    
+    private fun validateForm() {
+        val state = _uiState.value
+        
+        // Regla 1: Título obligatorio
+        val titleValid = state.title.isNotBlank()
+        val titleError = if (!titleValid) com.perenniasystems.lascito.R.string.error_title_required else null
+        
+        // Regla 2: Contenido O Media obligatorio
+        val hasContent = state.content.isNotBlank() || 
+                        state.mediaUri != null || 
+                        !state.mediaUrl.isNullOrBlank()
+        val contentMediaError = if (!hasContent) 
+            com.perenniasystems.lascito.R.string.error_content_or_media_required 
+        else null
+        
+        // Regla 3: Si trigger es POST_MORTEM_DATE, fecha obligatoria
+        val dateValid = state.triggerType != TriggerType.POST_MORTEM_DATE ||
+                       state.scheduledDate != null
+        val dateError = if (!dateValid) 
+            com.perenniasystems.lascito.R.string.error_date_required 
+        else null
+        
+        val isValid = titleValid && hasContent && dateValid
+        
+        _uiState.update {
+            it.copy(
+                titleError = titleError,
+                contentMediaError = contentMediaError,
+                dateError = dateError,
+                isSaveEnabled = isValid && !it.isLoading
+            )
+        }
+    }
 
     // ── Persistencia ──────────────────────────────────────────────────────────
 
@@ -86,7 +180,7 @@ class TimeCapsuleViewModel(
      */
     fun saveCapsule() {
         val state = _uiState.value
-        if (state.title.isBlank()) return
+        if (!state.isSaveEnabled) return
 
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.update { it.copy(isLoading = true, errorMessageResId = null, uploadProgress = null) }
@@ -113,21 +207,33 @@ class TimeCapsuleViewModel(
             try {
                 // 1. Subida de multimedia (opcional)
                 val remoteMediaUrl: String? = if (state.mediaUri != null) {
-                    withTimeout(120_000L) {   // 2 min máx para archivos grandes
-                        storageRepository.uploadMediaFile(
+                    withTimeout(120_000L) {
+                        val contentResolver = com.google.firebase.FirebaseApp.getInstance().applicationContext.contentResolver
+                        val mimeType = contentResolver.getType(state.mediaUri)
+                        var extension = android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+                        
+                        // Fallback seguro si MimeTypeMap falla
+                        if (extension == null) {
+                            extension = if (state.mediaType == MediaType.VIDEO) "mp4" else "jpg"
+                        }
+
+                        storageRepository.uploadCapsuleMedia(
                             uri       = state.mediaUri,
-                            mediaType = state.mediaType,
-                            profileId = "capsules",           // carpeta dedicada en Storage
+                            userId    = currentUser.uid,
+                            capsuleId = state.capsuleId,
+                            extension = extension,
                             onProgress = { progress ->
                                 _uiState.update { it.copy(uploadProgress = progress) }
                             }
                         ).getOrThrow()
                     }
-                } else null
+                } else {
+                    state.mediaUrl // Retenemos URL previa (Modo edición sin cambiar archivo)
+                }
 
                 // 2. Construcción del documento
                 val capsule = TimeCapsule(
-                    capsuleId           = UUID.randomUUID().toString(),
+                    capsuleId           = state.capsuleId,
                     title               = state.title.trim(),
                     content             = state.content.trim().ifBlank { null },
                     mediaUrl            = remoteMediaUrl,

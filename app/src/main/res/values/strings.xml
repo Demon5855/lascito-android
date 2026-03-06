@@ -73,7 +73,7 @@
     <string name="title_change_password">Cambiar Contraseña</string>
     <string name="label_current_password">Contraseña Actual</string>
     <string name="label_new_password">Nueva Contraseña</string>
-    <string name="label_confirm_new_password">Confirmar Nueva Contraseña</string>
+    <string name="label_confirm_new_password">Repetir contraseña</string>
     <string name="error_incorrect_current_password">Contraseña actual incorrecta</string>
     <string name="error_weak_password">La contraseña es muy débil</string>
     <string name="msg_password_changed">La llave de tu santuario ha sido renovada</string>
@@ -131,6 +131,10 @@
     <string name="error_year">Año fuera de rango (1900–%1$d)</string>
     <string name="error_future_date">La fecha no puede ser en el futuro</string>
     <string name="error_invalid_date">Fecha inválida</string>
+
+    <string name="title_cooldown_active">Cambio Bloqueado</string>
+    <string name="message_guardian_cooldown">Por seguridad, solo puedes cambiar tu heredero una vez cada 7 días. Faltan %d días para poder modificarlo nuevamente.</string>
+    <string name="action_understood">Entendido</string>
 
     <!-- ── Mi Cuenta (UserSettings) ─────────────────────────────────────────── -->
     <string name="screen_my_account">Mi Cuenta</string>
@@ -269,6 +273,7 @@
 
     <!-- ── Cápsulas del Tiempo (AddTimeCapsuleScreen) ──────────────────────── -->
     <string name="screen_new_capsule">Nueva Cápsula del Tiempo</string>
+    <string name="screen_edit_capsule">Editar Cápsula</string>
     <string name="capsule_section_message">El Mensaje</string>
     <string name="capsule_section_message_sub">Tu carta para el futuro</string>
     <string name="label_capsule_title">Título de la Cápsula</string>
@@ -289,6 +294,9 @@
     <string name="capsule_sealing">Sellando tu legado…</string>
     <string name="toast_capsule_saved">Cápsula del tiempo creada</string>
     <string name="error_capsule_save_title">Error al sellar</string>
+    <string name="error_title_required">El título es obligatorio</string>
+    <string name="error_content_or_media_required">Debes agregar un mensaje o archivo multimedia</string>
+    <string name="error_date_required">Selecciona una fecha de apertura</string>
 
     <!-- ── Bóveda de Cápsulas (CapsuleVaultScreen) ───────────────────────── -->
     <string name="screen_capsule_vault">Mis Cápsulas</string>
@@ -302,5 +310,8 @@
     <string name="btn_new_capsule_fab">Nueva Cápsula</string>
     <string name="dialog_delete_capsule_title">¿Destruir esta cápsula?</string>
     <string name="dialog_delete_capsule_body">"%1$s" será eliminada permanentemente. Esta acción no se puede deshacer.</string>
+
+    <string name="placeholder_new_heir_pin">Ingresar nuevo PIN para cambiar</string>
+    <string name="heartbeat_just_now">Hace un momento</string>
 
 </resources>

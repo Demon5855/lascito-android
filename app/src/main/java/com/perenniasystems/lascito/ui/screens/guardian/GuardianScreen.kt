@@ -3,6 +3,7 @@ package com.perenniasystems.lascito.ui.screens.guardian
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -30,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
+import com.perenniasystems.lascito.util.ValidationRules
 import com.perenniasystems.lascito.viewmodel.GuardianViewModel
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -46,6 +48,10 @@ fun GuardianScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val toastLegacySaved = stringResource(R.string.toast_legacy_saved)
+
+    val isGuardianSectionValid = ValidationRules.validateName(uiState.guardianName) == null &&
+            ValidationRules.validateEmail(uiState.guardianEmail) == null &&
+            ValidationRules.validatePin(uiState.guardianPin) == null
 
     // Feedback de guardado exitoso → snackbar
     LaunchedEffect(uiState.isSaved) {
@@ -116,7 +122,7 @@ fun GuardianScreen(
             // ── Botón Guardar ──────────────────────────────────────────────────
             Button(
                 onClick  = { viewModel.saveGuardianConfig() },
-                enabled  = !uiState.isLoading,
+                enabled  = !uiState.isLoading && isGuardianSectionValid,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -187,6 +193,30 @@ fun GuardianScreen(
             confirmButton = {
                 TextButton(onClick = { viewModel.clearError() }) {
                     Text(stringResource(R.string.btn_understood), color = MaterialTheme.colorScheme.primary)
+                }
+            }
+        )
+    }
+
+    // Cooldown Anti-Spam dialog
+    if (uiState.showCooldownDialog) {
+        AlertDialog(
+            onDismissRequest  = { viewModel.dismissCooldownDialog() },
+            containerColor    = SurfaceDark,
+            titleContentColor = MaterialTheme.colorScheme.primary,
+            textContentColor  = TextPrimary,
+            title = { Text(stringResource(R.string.title_cooldown_active)) },
+            text  = { 
+                Text(
+                    stringResource(
+                        R.string.message_guardian_cooldown,
+                        uiState.cooldownDaysRemaining
+                    )
+                ) 
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.dismissCooldownDialog() }) {
+                    Text(stringResource(R.string.action_understood), color = MaterialTheme.colorScheme.primary)
                 }
             }
         )
@@ -271,7 +301,7 @@ private fun BeneficiaryCard(
                 value         = pin,
                 onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) onPin(it) },
                 label         = { Text(stringResource(R.string.label_heir_pin), color = TextSecondary) },
-                placeholder   = { Text("••••", color = TextDisabled) },
+                placeholder   = { Text(stringResource(R.string.placeholder_new_heir_pin), color = TextDisabled) },
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                 leadingIcon   = {
@@ -383,33 +413,31 @@ private fun DeadManSwitchCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     dayOptions.forEach { days ->
-                        val selected = days == inactivityDays
-                        FilterChip(
-                            selected = selected,
-                            onClick  = { onDaysChange(days) },
-                            label    = {
-                                Text(
-                                    text       = "${days}d",
-                                    style      = MaterialTheme.typography.labelMedium,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                        val isSelected = days == inactivityDays
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primary 
+                                    else SurfaceVariant
                                 )
-                            },
-                            modifier = Modifier.weight(1f),
-                            shape    = RoundedCornerShape(8.dp),
-                            colors   = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                selectedLabelColor     = AmoledBlack,
-                                containerColor         = SurfaceVariant,
-                                labelColor             = TextSecondary
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled             = true,
-                                selected            = selected,
-                                selectedBorderColor = Color.Transparent,
-                                borderColor         = CardBorder,
-                                borderWidth         = 1.dp
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isSelected) Color.Transparent else CardBorder,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .clickable { onDaysChange(days) }
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text       = "${days}d",
+                                color      = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextSecondary,
+                                style      = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                             )
-                        )
+                        }
                     }
                 }
             }
@@ -484,18 +512,55 @@ private fun SystemStatusFooter(
         label = "pulse"
     )
 
-    val relativeTime = formatRelativeTime(
-        timestampMs       = lastProofOfLife,
-        never             = stringResource(R.string.heartbeat_never),
-        secondsSingular   = stringResource(R.string.heartbeat_seconds, 0),   // template
-        secondsPlural     = stringResource(R.string.heartbeat_seconds_plural, 0),
-        minutesSingular   = stringResource(R.string.heartbeat_minutes, 0),
-        minutesPlural     = stringResource(R.string.heartbeat_minutes_plural, 0),
-        hoursSingular     = stringResource(R.string.heartbeat_hours, 0),
-        hoursPlural       = stringResource(R.string.heartbeat_hours_plural, 0),
-        daysSingular      = stringResource(R.string.heartbeat_days, 0),
-        daysPlural        = stringResource(R.string.heartbeat_days_plural, 0)
-    )
+    // Formateo inyectado en un LaunchEffect para ser despachado por el Scheduler de Compose cada minuto (60,000 ms) 
+    // y no colapsar la memoria del CPU y recolector de basura
+    val justNow = stringResource(R.string.heartbeat_just_now)
+    val never = stringResource(R.string.heartbeat_never)
+    val secondsSingular = stringResource(R.string.heartbeat_seconds, 0)
+    val secondsPlural = stringResource(R.string.heartbeat_seconds_plural, 0)
+    val minutesSingular = stringResource(R.string.heartbeat_minutes, 0)
+    val minutesPlural = stringResource(R.string.heartbeat_minutes_plural, 0)
+    val hoursSingular = stringResource(R.string.heartbeat_hours, 0)
+    val hoursPlural = stringResource(R.string.heartbeat_hours_plural, 0)
+    val daysSingular = stringResource(R.string.heartbeat_days, 0)
+    val daysPlural = stringResource(R.string.heartbeat_days_plural, 0)
+
+    val timeSinceText = remember(lastProofOfLife) {
+        formatRelativeTime(
+            timestampMs = lastProofOfLife,
+            justNow = justNow,
+            never = never,
+            secondsSingular = secondsSingular,
+            secondsPlural = secondsPlural,
+            minutesSingular = minutesSingular,
+            minutesPlural = minutesPlural,
+            hoursSingular = hoursSingular,
+            hoursPlural = hoursPlural,
+            daysSingular = daysSingular,
+            daysPlural = daysPlural
+        )
+    }
+
+    var relativeTime by remember { mutableStateOf(timeSinceText) }
+
+    LaunchedEffect(lastProofOfLife) {
+        while (true) {
+            relativeTime = formatRelativeTime(
+                timestampMs = lastProofOfLife,
+                justNow = justNow,
+                never = never,
+                secondsSingular = secondsSingular,
+                secondsPlural = secondsPlural,
+                minutesSingular = minutesSingular,
+                minutesPlural = minutesPlural,
+                hoursSingular = hoursSingular,
+                hoursPlural = hoursPlural,
+                daysSingular = daysSingular,
+                daysPlural = daysPlural
+            )
+            kotlinx.coroutines.delay(60_000L) // 1 recomposición/minuto
+        }
+    }
 
     Column(
         modifier            = Modifier.fillMaxWidth(),
@@ -641,6 +706,7 @@ private fun legacyTextFieldColors() = OutlinedTextFieldDefaults.colors(
  */
 private fun formatRelativeTime(
     timestampMs:     Long,
+    justNow:         String,
     never:           String,
     secondsSingular: String,
     secondsPlural:   String,
@@ -653,6 +719,7 @@ private fun formatRelativeTime(
 ): String {
     if (timestampMs == 0L) return never
     val diffMs      = System.currentTimeMillis() - timestampMs
+    if (diffMs < 60_000L) return justNow
     val diffSeconds = diffMs / 1_000
     val diffMinutes = diffSeconds / 60
     val diffHours   = diffMinutes / 60

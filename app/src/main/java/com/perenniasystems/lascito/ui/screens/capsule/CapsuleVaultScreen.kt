@@ -7,12 +7,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LockClock
 import androidx.compose.material3.*
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,10 +41,24 @@ import java.util.*
 fun CapsuleVaultScreen(
     viewModel: CapsuleVaultViewModel = viewModel(),
     onNavigateBack: () -> Unit = {},
-    onNavigateToCreate: () -> Unit = {}
+    onNavigateToCreate: () -> Unit = {},
+    onNavigateToDetail: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var capsuleToDelete by remember { mutableStateOf<TimeCapsule?>(null) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadCapsules()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -77,7 +95,7 @@ fun CapsuleVaultScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Create,
+                    imageVector = Icons.Default.Add,
                     contentDescription = stringResource(R.string.btn_new_capsule_fab)
                 )
             }
@@ -123,6 +141,7 @@ fun CapsuleVaultScreen(
                     items(uiState.capsules, key = { it.capsuleId }) { capsule ->
                         CapsuleItemCard(
                             capsule = capsule,
+                            onClick = { onNavigateToDetail(capsule.capsuleId) },
                             onDeleteClick = { capsuleToDelete = capsule }
                         )
                     }
@@ -189,10 +208,12 @@ fun CapsuleVaultScreen(
 @Composable
 private fun CapsuleItemCard(
     capsule: TimeCapsule,
+    onClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceDark)
     ) {

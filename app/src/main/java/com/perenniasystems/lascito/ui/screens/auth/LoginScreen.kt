@@ -32,7 +32,7 @@ import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.components.LascitoPrimaryButton
 import com.perenniasystems.lascito.ui.components.LascitoTextField
 import com.perenniasystems.lascito.ui.theme.*
-import com.perenniasystems.lascito.util.Validators
+import com.perenniasystems.lascito.util.ValidationRules
 import com.perenniasystems.lascito.viewmodel.AuthUiState
 import com.perenniasystems.lascito.viewmodel.AuthViewModel
 
@@ -52,7 +52,7 @@ fun LoginScreen(
     val isLoading = authState is AuthUiState.Loading
 
     // Validate format only when the field has been touched (non-empty).
-    val emailError = email.isNotBlank() && !Validators.EMAIL_REGEX.matches(email)
+    val emailError = email.isNotBlank() && ValidationRules.validateEmail(email) != null
 
     Box(
         modifier = Modifier

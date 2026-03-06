@@ -71,6 +71,11 @@ interface GuardianRepository {
     suspend fun getTimeCapsules(): List<TimeCapsule>
 
     /**
+     * Recupera una Cápsula del Tiempo específica por su ID.
+     */
+    suspend fun getTimeCapsule(capsuleId: String): Result<TimeCapsule>
+
+    /**
      * Elimina una Cápsula del Tiempo y su archivo multimedia asociado (si existe).
      *
      * Orden de operaciones:

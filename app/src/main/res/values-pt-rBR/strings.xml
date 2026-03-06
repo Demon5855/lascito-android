@@ -73,7 +73,7 @@
     <string name="title_change_password">Alterar Senha</string>
     <string name="label_current_password">Senha Atual</string>
     <string name="label_new_password">Nova Senha</string>
-    <string name="label_confirm_new_password">Confirmar Nova Senha</string>
+    <string name="label_confirm_new_password">Repetir senha</string>
     <string name="error_incorrect_current_password">Senha atual incorreta</string>
     <string name="error_weak_password">A senha é muito fraca</string>
     <string name="msg_password_changed">A chave do seu santuário foi renovada</string>
@@ -131,6 +131,10 @@
     <string name="error_year">Ano fora do intervalo (1900–%1$d)</string>
     <string name="error_future_date">A data não pode ser no futuro</string>
     <string name="error_invalid_date">Data inválida</string>
+
+    <string name="title_cooldown_active">Mudança Bloqueada</string>
+    <string name="message_guardian_cooldown">Por segurança, você só pode alterar seu herdeiro uma vez a cada 7 dias. Faltam %d dias.</string>
+    <string name="action_understood">Entendido</string>
 
     <!-- ── Minha Conta (UserSettings) ──────────────────────────────────────── -->
     <string name="screen_my_account">Minha Conta</string>
@@ -266,6 +270,7 @@
 
     <!-- ── Time Capsules (AddTimeCapsuleScreen) ─────────────────────────── -->
     <string name="screen_new_capsule">Nova Cápsula do Tempo</string>
+    <string name="screen_edit_capsule">Editar Cápsula</string>
     <string name="capsule_section_message">A Mensagem</string>
     <string name="capsule_section_message_sub">Sua carta para o futuro</string>
     <string name="label_capsule_title">Título da Cápsula</string>
@@ -286,6 +291,9 @@
     <string name="capsule_sealing">Selando seu legado…</string>
     <string name="toast_capsule_saved">Cápsula do tempo criada</string>
     <string name="error_capsule_save_title">Erro ao selar</string>
+    <string name="error_title_required">O título é obrigatório</string>
+    <string name="error_content_or_media_required">Você deve adicionar uma mensagem ou arquivo multimídia</string>
+    <string name="error_date_required">Selecione uma data de abertura</string>
 
     <!-- ── Capsule Vault (CapsuleVaultScreen) ───────────────────────────── -->
     <string name="screen_capsule_vault">Meus Cofres</string>
@@ -299,5 +307,8 @@
     <string name="btn_new_capsule_fab">Nova Cápsula</string>
     <string name="dialog_delete_capsule_title">Destruir esta cápsula?</string>
     <string name="dialog_delete_capsule_body">"%1$s" será excluída permanentemente. Esta ação não pode ser desfeita.</string>
+
+    <string name="placeholder_new_heir_pin">Inserir novo PIN para alterar</string>
+    <string name="heartbeat_just_now">Agora mesmo</string>
 
 </resources>
