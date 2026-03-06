@@ -41,6 +41,7 @@ import coil.compose.AsyncImage
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.MediaType
 import com.perenniasystems.lascito.data.model.TriggerType
+import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.viewmodel.TimeCapsuleViewModel
 import kotlinx.coroutines.flow.first
@@ -335,19 +336,18 @@ fun AddTimeCapsuleScreen(
     }
 
     // ── Error dialog ───────────────────────────────────────────────────────────
-    uiState.errorMessage?.let { msg ->
-        AlertDialog(
-            onDismissRequest  = { viewModel.clearError() },
-            containerColor    = SurfaceDark,
-            titleContentColor = ErrorRed,
-            textContentColor  = TextPrimary,
-            title = { Text(stringResource(R.string.error_capsule_save_title)) },
-            text  = { Text(msg) },
-            confirmButton = {
-                TextButton(onClick = { viewModel.clearError() }) {
-                    Text(stringResource(R.string.btn_understood), color = MaterialTheme.colorScheme.primary)
+    uiState.errorMessageResId?.let { msgResId ->
+        LascitoAlertDialog(
+            messageRes = msgResId,
+            onDismiss  = { viewModel.clearError() },
+            actionRes  = if (msgResId == R.string.error_email_not_verified) R.string.action_resend else null,
+            onAction   = if (msgResId == R.string.error_email_not_verified) {
+                {
+                    val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                    user?.sendEmailVerification()
+                    viewModel.clearError()
                 }
-            }
+            } else null
         )
     }
 

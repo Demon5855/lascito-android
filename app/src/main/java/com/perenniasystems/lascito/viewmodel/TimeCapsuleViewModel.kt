@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import java.util.UUID
 
@@ -40,7 +41,7 @@ data class CapsuleUiState(
     /** Progreso de subida al Storage (0f…1f). null = sin archivo o sin progreso conocido. */
     val uploadProgress:    Float?       = null,
     val isSuccess:         Boolean      = false,
-    val errorMessage:      String?      = null
+    @androidx.annotation.StringRes val errorMessageResId: Int? = null
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -70,7 +71,7 @@ class TimeCapsuleViewModel(
     fun onMediaSelected(uri: Uri, type: MediaType) =
         _uiState.update { it.copy(mediaUri = uri, mediaType = type) }
     fun clearMedia()      = _uiState.update { it.copy(mediaUri = null, mediaType = MediaType.IMAGE) }
-    fun clearError()      = _uiState.update { it.copy(errorMessage = null) }
+    fun clearError()      = _uiState.update { it.copy(errorMessageResId = null) }
     fun resetSuccess()    = _uiState.update { it.copy(isSuccess = false) }
 
     // ── Persistencia ──────────────────────────────────────────────────────────
@@ -88,7 +89,27 @@ class TimeCapsuleViewModel(
         if (state.title.isBlank()) return
 
         viewModelScope.launch(Dispatchers.IO) {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null, uploadProgress = null) }
+            _uiState.update { it.copy(isLoading = true, errorMessageResId = null, uploadProgress = null) }
+            
+            // Verificación del usuario y del email
+            val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+            if (currentUser == null) {
+                _uiState.update { it.copy(isLoading = false, errorMessageResId = com.perenniasystems.lascito.R.string.error_not_authenticated) }
+                return@launch
+            }
+            
+            try {
+                currentUser.reload().await()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessageResId = com.perenniasystems.lascito.R.string.error_session_expired) }
+                return@launch
+            }
+            
+            if (currentUser.isEmailVerified == false) {
+                _uiState.update { it.copy(isLoading = false, errorMessageResId = com.perenniasystems.lascito.R.string.error_email_not_verified) }
+                return@launch
+            }
+
             try {
                 // 1. Subida de multimedia (opcional)
                 val remoteMediaUrl: String? = if (state.mediaUri != null) {
@@ -122,13 +143,22 @@ class TimeCapsuleViewModel(
                 guardianRepository.createTimeCapsule(capsule).getOrThrow()
 
                 _uiState.update { it.copy(isLoading = false, uploadProgress = null, isSuccess = true) }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                Log.e("TimeCapsuleViewModel", "Timeout saving capsule", e)
+                _uiState.update {
+                    it.copy(
+                        isLoading     = false,
+                        uploadProgress = null,
+                        errorMessageResId = com.perenniasystems.lascito.R.string.error_network
+                    )
+                }
             } catch (e: Exception) {
                 Log.e("TimeCapsuleViewModel", "Error saving capsule", e)
                 _uiState.update {
                     it.copy(
                         isLoading     = false,
                         uploadProgress = null,
-                        errorMessage  = e.message
+                        errorMessageResId = com.perenniasystems.lascito.util.ErrorHandler.mapExceptionToResId(e)
                     )
                 }
             }

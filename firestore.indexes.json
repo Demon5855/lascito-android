@@ -1,0 +1,33 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "deadManSwitch.active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "deadManSwitch.lastProofOfLife",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "_failedEmails",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "retryCount",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "failedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
