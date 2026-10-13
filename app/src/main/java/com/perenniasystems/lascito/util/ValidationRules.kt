@@ -55,6 +55,59 @@ object ValidationRules {
     }
 
     /**
+     * Valida que la pista del PIN no sea demasiado obvia.
+     * 
+     * REGLAS:
+     * - No puede ser demasiado corta (min 15 caracteres)
+     * - No puede contener el PIN exacto
+     * - No puede contener dígitos del PIN en secuencia
+     * - No puede contener palabras prohibidas
+     */
+    fun validatePinHint(pin: String, hint: String, isOptional: Boolean = false): Int? {
+        if (isOptional && hint.isEmpty()) return null
+        
+        val normalizedHint = hint.lowercase().replace(Regex("[^a-z0-9]"), "")
+        val normalizedPin = pin.lowercase()
+        
+        if (hint.isBlank()) {
+            return R.string.error_pin_hint_required
+        }
+        
+        if (hint.length < 15) {
+            return R.string.error_pin_hint_too_short
+        }
+        
+        if (normalizedHint.contains(normalizedPin)) {
+            return R.string.error_pin_hint_contains_pin
+        }
+        
+        if (pin.length >= 2) {
+            for (i in 0..pin.length - 2) {
+                val sequence = pin.substring(i, i + 2)
+                if (normalizedHint.contains(sequence)) {
+                    return R.string.error_pin_hint_contains_sequence
+                }
+            }
+        }
+        
+        val forbiddenWords = listOf(
+            "pin", "password", "clave", "codigo", "numero",
+            "uno", "dos", "tres", "cuatro", "cinco", 
+            "seis", "siete", "ocho", "nueve", "cero",
+            "one", "two", "three", "four", "five",
+            "six", "seven", "eight", "nine", "zero"
+        )
+        
+        for (word in forbiddenWords) {
+            if (normalizedHint.contains(word)) {
+                return R.string.error_pin_hint_too_obvious
+            }
+        }
+        
+        return null
+    }
+
+    /**
      * Validates a name (User or Guardian). Rule: Not empty.
      */
     fun validateName(name: String): Int? {

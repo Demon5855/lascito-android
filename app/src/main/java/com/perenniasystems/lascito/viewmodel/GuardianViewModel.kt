@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.DeadManSwitch
 import com.perenniasystems.lascito.data.model.LegacyGuardian
@@ -11,6 +12,12 @@ import com.perenniasystems.lascito.data.model.UnlockStatus
 import com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository
 import com.perenniasystems.lascito.data.repository.GuardianRepository
 import com.perenniasystems.lascito.util.ErrorHandler
+import com.perenniasystems.lascito.util.ValidationRules
+import java.security.MessageDigest
+import java.security.SecureRandom
+import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +35,10 @@ data class GuardianUiState(
     val guardianEmail:   String  = "",
     /** 4-digit PIN de acceso para el heredero. Almacenado como hash en Firestore. */
     val guardianPin:     String  = "",
+    /** Pista introducida por el usuario, sin encriptar, solo para estado de UI */
+    val guardianPinHint: String  = "",
+    /** Error detectado por el validation rules */
+    @StringRes val pinHintError: Int? = null,
     val isSwitchActive:  Boolean = false,
     /** Umbral de inactividad en días. Opciones válidas: 30, 90, 180, 365. */
     val inactivityDays:  Int     = 90,
@@ -121,7 +132,27 @@ class GuardianViewModel(
 
     fun onNameChange(name: String)    = _uiState.update { it.copy(guardianName = name) }
     fun onEmailChange(email: String)  = _uiState.update { it.copy(guardianEmail = email) }
-    fun onPinChange(pin: String)      = _uiState.update { it.copy(guardianPin = pin.take(4)) }
+    fun onPinChange(pin: String)      = _uiState.update { 
+        it.copy(
+            guardianPin = pin.filter { c -> c.isDigit() }.take(4),
+            // Re-evaluar pista cada que cambia el pin
+            pinHintError = ValidationRules.validatePinHint(
+                pin = pin.filter { c -> c.isDigit() }.take(4), 
+                hint = it.guardianPinHint, 
+                isOptional = false
+            )
+        ) 
+    }
+    fun onPinHintChange(hint: String) = _uiState.update { 
+        it.copy(
+            guardianPinHint = hint,
+            pinHintError = ValidationRules.validatePinHint(
+                pin = it.guardianPin, 
+                hint = hint, 
+                isOptional = false
+            )
+        )
+    }
     fun onSwitchChange(active: Boolean) = _uiState.update { it.copy(isSwitchActive = active) }
     fun onDaysChange(days: Int)       = _uiState.update { it.copy(inactivityDays = days) }
     fun clearError()                  = _uiState.update { it.copy(error = null) }
@@ -155,6 +186,19 @@ class GuardianViewModel(
             }
         }
 
+        // Validación de Pista Segura antes de guardar
+        if (state.guardianPin.isNotBlank()) {
+            val hintError = ValidationRules.validatePinHint(
+                pin = state.guardianPin, 
+                hint = state.guardianPinHint, 
+                isOptional = false
+            )
+            if (hintError != null) {
+                _uiState.update { it.copy(error = hintError) }
+                return
+            }
+        }
+
         // Estado previo para posible Rollback
         val previousState = state.copy()
 
@@ -165,11 +209,19 @@ class GuardianViewModel(
                 val newTimestamp = System.currentTimeMillis()
                 _uiState.update { it.copy(lastGuardianUpdatedAt = newTimestamp) }
 
-                // 1. Guardar configuración del Heredero
+                // 1. Encriptar pista si hay un nuevo PIN
+                val uid = FirebaseAuth.getInstance().currentUser?.uid ?: throw IllegalStateException("User not logged in")
+                val encryptedHintData = if (state.guardianPin.isNotBlank() && state.guardianPinHint.isNotBlank()) {
+                    encryptPinHint(state.guardianPinHint, uid)
+                } else null
+
+                // 2. Guardar configuración del Heredero
                 val guardian = LegacyGuardian(
                     name          = state.guardianName.trim().ifBlank { null },
                     email         = state.guardianEmail.trim().ifBlank { null },
                     accessPinHash = hashPin(state.guardianPin),
+                    encryptedPinHint = encryptedHintData?.data,
+                    pinHintIv = encryptedHintData?.iv,
                     lastGuardianUpdatedAt = newTimestamp
                 )
                 repository.updateGuardian(guardian).getOrThrow()
@@ -230,5 +282,32 @@ class GuardianViewModel(
         } catch (e: Exception) {
             null
         }
+    }
+
+    data class EncryptedData(val data: String, val iv: String)
+
+    /**
+     * Encripta la pista usando AES-256 CBC.
+     * Utiliza el UID del creador hasheado como clave simétrica.
+     */
+    private fun encryptPinHint(hint: String, uid: String): EncryptedData {
+        // Derivar clave desde UID
+        val keyBytes = MessageDigest.getInstance("SHA-256").digest(uid.toByteArray())
+        val key = SecretKeySpec(keyBytes, "AES")
+        
+        // Generar IV aleatorio
+        val iv = ByteArray(16)
+        SecureRandom().nextBytes(iv)
+        val ivSpec = IvParameterSpec(iv)
+        
+        // Encriptar
+        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec)
+        val encrypted = cipher.doFinal(hint.toByteArray())
+        
+        return EncryptedData(
+            data = android.util.Base64.encodeToString(encrypted, android.util.Base64.NO_WRAP),
+            iv = android.util.Base64.encodeToString(iv, android.util.Base64.NO_WRAP)
+        )
     }
 }

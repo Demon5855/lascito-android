@@ -8,9 +8,16 @@ import com.google.firebase.storage.FirebaseStorage
 import com.perenniasystems.lascito.data.model.DeadManSwitch
 import com.perenniasystems.lascito.data.model.GuardianConfig
 import com.perenniasystems.lascito.data.model.LegacyGuardian
+import com.perenniasystems.lascito.data.model.LegacyInvitation
+import com.perenniasystems.lascito.data.model.InvitationStatus
+import com.perenniasystems.lascito.data.model.InvalidPinException
+import com.perenniasystems.lascito.data.model.LegacyBlockedException
+import com.perenniasystems.lascito.data.model.LegacyExpiredException
+import com.perenniasystems.lascito.data.model.LegacyNotFoundException
 import com.perenniasystems.lascito.data.model.TimeCapsule
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
+import at.favre.lib.crypto.bcrypt.BCrypt
 
 /**
  * Implementación Firestore de [GuardianRepository].
@@ -27,6 +34,8 @@ class FirebaseGuardianRepository(
     private val auth:    FirebaseAuth      = FirebaseAuth.getInstance(),
     private val storage: FirebaseStorage   = FirebaseStorage.getInstance()
 ) : GuardianRepository {
+
+    private val invitationsCollection = db.collection("legacyInvitations")
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -233,4 +242,125 @@ class FirebaseGuardianRepository(
                 capsulesCol(uid).document(capsuleId).delete().await()
             }
         }
+
+    // ── Reclamación de Legados (Phase 4) ───────────────────────────────────
+
+    override suspend fun checkPendingLegacies(email: String): Result<Boolean> = runCatching {
+        withTimeout(10_000L) {
+            val querySnapshot = invitationsCollection
+                .whereEqualTo("guardianEmail", email.lowercase())
+                .whereEqualTo("status", "PENDING")
+                .limit(1)
+                .get()
+                .await()
+            !querySnapshot.isEmpty
+        }
+    }
+
+    override suspend fun getLegacyInvitation(email: String): Result<LegacyInvitation?> = runCatching {
+        withTimeout(10_000L) {
+            val querySnapshot = invitationsCollection
+                .whereEqualTo("guardianEmail", email.lowercase())
+                .whereEqualTo("status", "PENDING")
+                .limit(1)
+                .get()
+                .await()
+            
+            if (querySnapshot.isEmpty) {
+                return@withTimeout null
+            }
+            
+            val doc = querySnapshot.documents.first()
+            LegacyInvitation(
+                id = doc.id,
+                creatorUid = doc.getString("creatorUid") ?: "",
+                creatorName = doc.getString("creatorName") ?: "",
+                guardianEmail = doc.getString("guardianEmail") ?: "",
+                accessPinHash = doc.getString("accessPinHash") ?: "",
+                status = InvitationStatus.valueOf(doc.getString("status") ?: "PENDING"),
+                createdAt = doc.getLong("createdAt") ?: 0L,
+                expiresAt = doc.getLong("expiresAt"),
+                vaultContentRef = doc.getString("vaultContentRef") ?: "",
+                failedAttempts = doc.getLong("failedAttempts")?.toInt() ?: 0,
+                lastFailedAttempt = doc.getLong("lastFailedAttempt")
+            )
+        }
+    }
+
+    override suspend fun unlockLegacyVault(pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault> = runCatching {
+        val currentUser = auth.currentUser ?: throw IllegalStateException("User not authenticated")
+        val email = currentUser.email ?: throw IllegalStateException("User email not found")
+        
+        val invitation = getLegacyInvitation(email).getOrNull()
+            ?: throw LegacyNotFoundException("No pending legacy found for this email")
+            
+        if (invitation.failedAttempts >= 3) { // MAX_PIN_ATTEMPTS
+            throw LegacyBlockedException("Too many failed attempts. Contact the legacy sender.")
+        }
+        
+        invitation.expiresAt?.let { expiry ->
+            if (System.currentTimeMillis() > expiry) {
+                throw LegacyExpiredException("Legacy invitation has expired")
+            }
+        }
+        
+        val isPinValid = BCrypt.verifyer().verify(pin.toCharArray(), invitation.accessPinHash.toCharArray()).verified
+        
+        if (!isPinValid) {
+            incrementFailedAttempts(invitation.id)
+            val newFailedAttempts = invitation.failedAttempts + 1
+            if (newFailedAttempts >= 3) {
+                blockInvitation(invitation.id)
+                throw LegacyBlockedException("Too many failed attempts. Legacy has been blocked.")
+            }
+            throw InvalidPinException(3 - newFailedAttempts)
+        }
+        
+        resetFailedAttempts(invitation.id)
+        
+        withTimeout(10_000L) {
+            invitationsCollection.document(invitation.id).update(
+                mapOf(
+                    "status" to "CLAIMED",
+                    "claimedAt" to System.currentTimeMillis(),
+                    "claimedByUid" to currentUser.uid
+                )
+            ).await()
+        }
+        
+        com.perenniasystems.lascito.data.model.LegacyVault(
+            id = invitation.id,
+            creatorUid = invitation.creatorUid,
+            creatorName = invitation.creatorName,
+            vaultContentRef = invitation.vaultContentRef,
+            claimedAt = System.currentTimeMillis()
+        )
+    }
+
+    private suspend fun incrementFailedAttempts(invitationId: String) {
+        withTimeout(5_000L) {
+            invitationsCollection.document(invitationId).update(
+                "failedAttempts", com.google.firebase.firestore.FieldValue.increment(1),
+                "lastFailedAttempt", System.currentTimeMillis()
+            ).await()
+        }
+    }
+
+    private suspend fun blockInvitation(invitationId: String) {
+        withTimeout(5_000L) {
+            invitationsCollection.document(invitationId).update(
+                "status", "BLOCKED",
+                "blockedAt", System.currentTimeMillis()
+            ).await()
+        }
+    }
+
+    private suspend fun resetFailedAttempts(invitationId: String) {
+        withTimeout(5_000L) {
+            invitationsCollection.document(invitationId).update(
+                "failedAttempts", 0,
+                "lastFailedAttempt", com.google.firebase.firestore.FieldValue.delete()
+            ).await()
+        }
+    }
 }

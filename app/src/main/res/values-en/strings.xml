@@ -147,6 +147,24 @@
     <string name="hint_guardian_email">Heir\'s email…</string>
     <string name="guardian_help_text">In case of prolonged inactivity, this person will receive read-only access to your legacies.</string>
     <string name="btn_save_guardian">Save guardian</string>
+
+    <!-- ── PIN Hint ─────────────────────────────────────────────────────────── -->
+    <string name="label_heir_pin_hint">PIN Hint</string>
+    <string name="desc_heir_pin_hint">A hint to help your heir deduce the 4-digit PIN. This hint will travel end-to-end encrypted and will be attached to the unlocking email.</string>
+    <string name="placeholder_heir_pin_hint">Ex: The year we first traveled to Paris...</string>
+    <string name="example_heir_pin_hint">The city where we met in the summer</string>
+    <string name="label_good_hint_example">Good hint example:</string>
+    <string name="label_bad_hint_example">Avoid obvious hints:</string>
+    <string name="example_bad_hint">\"My birthday or dad\'s\"</string>
+    <string name="title_what_is_pin_hint">What is a PIN hint?</string>
+    <string name="message_what_is_pin_hint_body">The PIN hint will help your heir remember the access code when the time comes.\n\nCHARACTERISTICS:\n• Must be at least 15 characters\n• Must not reveal the PIN directly or contain sequences\n• Will be encrypted in the app and attached to the custodian\'s email\n\nSAFE EXAMPLE:\n\"The house number on the street where I grew up\"\n\nAVOID:\n\"My birth year\" (too obvious)</string>
+    <string name="error_pin_hint_required">You must add a hint for the assigned PIN</string>
+    <string name="error_pin_hint_too_short">Hint is too short (minimum 15 characters)</string>
+    <string name="error_pin_hint_contains_pin">The hint cannot contain the exact PIN</string>
+    <string name="error_pin_hint_contains_sequence">The hint contains a sequence of 2 or more digits of your PIN. It\'s too obvious!</string>
+    <string name="error_pin_hint_too_obvious">The hint cannot contain obvious words like "PIN" or "Password"</string>
+    <string name="label_pin_hint_length">%1$d/100 characters (minimum 15)</string>
+
     <string name="section_personalization">Sanctuary Personalization</string>
     <string name="label_language">Language</string>
     <string name="lang_spanish">Español</string>
@@ -247,6 +265,29 @@
     <string name="desc_switch_active_on">System active — heartbeat running</string>
     <string name="desc_switch_inactive">System inactive</string>
     <string name="guardian_inactivity_subtitle">The system will wait %1$d days of inactivity before contacting your heir.</string>
+
+    <!-- ── Reclamación de Legados ─────────────────────────────────── -->
+    <!-- Claim Legacy - Banner -->
+    <string name="banner_pending_legacy">Someone has left you a legacy. You have an encrypted vault waiting for you.</string>
+    <string name="action_claim_legacy">Claim Vault</string>
+
+    <!-- Claim Legacy - Screen -->
+    <string name="screen_claim_legacy">Claim Legacy</string>
+    <string name="desc_claim_legacy">Enter the 4-digit security PIN you received in your email to unlock the vault.</string>
+    <string name="label_pin">Access PIN</string>
+    <string name="action_unlock_vault">Unlock Vault</string>
+
+    <!-- Claim Legacy - Errors -->
+    <string name="error_incorrect_pin">Incorrect PIN. Check the code you received via email.</string>
+    <string name="error_too_many_attempts">You have exceeded the maximum number of attempts. The vault has been locked for security.</string>
+    <string name="error_unlocking_vault">Error unlocking vault. Please try again later.</string>
+    <string name="message_attempts_remaining">Attempts remaining: %d</string>
+    <string name="message_vault_locked">The vault has been locked for security. Contact the legacy sender for assistance.</string>
+
+    <!-- Claim Legacy - Success -->
+    <string name="title_unlock_success">Vault Unlocked!</string>
+    <string name="message_unlock_success">You have successfully unlocked the legacy. You can now access its content.</string>
+    <string name="action_view_legacy">View Legacy</string>
 
     <!-- Footer: System Status -->
     <string name="label_system_operative">System Operative</string>

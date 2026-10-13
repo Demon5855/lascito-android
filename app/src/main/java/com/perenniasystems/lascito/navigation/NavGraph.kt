@@ -90,6 +90,9 @@ fun LascitoNavGraph(
                 },
                 onNavigateToUserSettings = {
                     navController.navigate(Screen.UserSettings.route)
+                },
+                onNavigateToClaimLegacy = {
+                    navController.navigate(Screen.ClaimLegacy.route)
                 }
             )
         }
@@ -183,6 +186,15 @@ fun LascitoNavGraph(
                 onNavigateBack      = { navController.popBackStack() },
                 onNavigateToCapsule = { navController.navigate(Screen.CapsuleVault.route) },
                 onShowSnackbar      = onShowSnackbar
+            )
+        }
+
+        composable(Screen.ClaimLegacy.route) {
+            com.perenniasystems.lascito.ui.screens.guardian.ClaimLegacyScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToVault = { 
+                    // FASE 4.2 Navegar a la cápsula o bóveda
+                }
             )
         }
 

@@ -11,8 +11,8 @@ android {
 
     defaultConfig {
         applicationId = "com.perenniasystems.lascito"
-        minSdk = 26
-        targetSdk = 35
+        minSdk = 33
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
 
@@ -74,6 +74,9 @@ dependencies {
     
     // ── DataStore ─────────────────────────────────────────────────────────────
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // ── Security / BCrypt ───────────────────────────────────────────────────
+    implementation("at.favre.lib:bcrypt:0.10.2")
 
     debugImplementation(libs.androidx.ui.tooling)
 }

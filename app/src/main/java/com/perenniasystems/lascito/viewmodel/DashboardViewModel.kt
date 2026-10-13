@@ -24,8 +24,15 @@ import java.io.IOException
  * to follow Dependency Inversion — swap implementation without touching this class.
  */
 class DashboardViewModel(
-    private val repository: ProfileRepository = FirebaseProfileRepository()
+    private val repository: ProfileRepository = FirebaseProfileRepository(),
+    private val guardianRepository: com.perenniasystems.lascito.data.repository.GuardianRepository = com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository(),
+    private val savedStateHandle: androidx.lifecycle.SavedStateHandle? = null // For future
 ) : ViewModel() {
+
+    companion object {
+        // Feature flag para desarrollo (VISIBLE Y EXPLÍCITO)
+        private const val FEATURE_CLAIM_LEGACY_ENABLED = true
+    }
 
     // ── UI State ──────────────────────────────────────────────────────────────
     private val _uiState = MutableStateFlow<DashboardUiState>(DashboardUiState.Loading)
@@ -60,7 +67,10 @@ class DashboardViewModel(
 
                     val profiles = repository.getProfiles(userId = user.uid)
                     _isEmailVerified.value = user.isEmailVerified
-                    _uiState.value = DashboardUiState.Success(profiles)
+                    
+                    val hasPendingLegacy = checkPendingLegacyStatus(user)
+                    
+                    _uiState.value = DashboardUiState.Success(profiles, hasPendingLegacy)
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 _uiState.value = DashboardUiState.Error(R.string.error_network)
@@ -69,6 +79,19 @@ class DashboardViewModel(
                     messageResId = ErrorHandler.mapExceptionToResId(e)
                 )
             }
+        }
+    }
+
+    private suspend fun checkPendingLegacyStatus(user: com.google.firebase.auth.FirebaseUser): Boolean {
+        if (!FEATURE_CLAIM_LEGACY_ENABLED) return false
+        
+        return try {
+            user.email?.let { 
+                // FASE 4.2: Implementación real a Firebase
+                guardianRepository.checkPendingLegacies(it).getOrDefault(false) 
+            } ?: false
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -122,6 +145,6 @@ class DashboardViewModel(
 // ── Sealed UI State ────────────────────────────────────────────────────────────
 sealed interface DashboardUiState {
     data object Loading : DashboardUiState
-    data class Success(val profiles: List<Profile>) : DashboardUiState
+    data class Success(val profiles: List<Profile>, val hasPendingLegacy: Boolean = false) : DashboardUiState
     data class Error(@StringRes val messageResId: Int) : DashboardUiState
 }

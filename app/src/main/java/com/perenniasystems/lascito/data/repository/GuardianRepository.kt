@@ -87,4 +87,23 @@ interface GuardianRepository {
      * @param mediaUrl  URL de descarga del archivo en Storage, o null si la cápsula es solo texto.
      */
     suspend fun deleteTimeCapsule(capsuleId: String, mediaUrl: String?): Result<Unit>
+
+    // ── Reclamación de Legados (Phase 4) ───────────────────────────────────
+
+    /**
+     * Verifica si el correo actual tiene legados pendientes por reclamar.
+     */
+    suspend fun checkPendingLegacies(email: String): Result<Boolean>
+    
+    /**
+     * Recupera una invitación específica para reclamar un legado.
+     */
+    suspend fun getLegacyInvitation(email: String): Result<com.perenniasystems.lascito.data.model.LegacyInvitation?>
+
+    /**
+     * Intenta desbloquear la bóveda de legado utilizando el PIN.
+     * @throws InvalidPinException si el PIN es incorrecto
+     * @throws LegacyBlockedException si excedió el límite de intentos
+     */
+    suspend fun unlockLegacyVault(pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault>
 }

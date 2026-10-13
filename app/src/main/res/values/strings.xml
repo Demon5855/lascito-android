@@ -146,6 +146,25 @@
     <string name="hint_guardian_email">Correo del heredero…</string>
     <string name="guardian_help_text">En caso de inactividad prolongada, esta persona recibirá acceso de solo lectura a tus legados.</string>
     <string name="btn_save_guardian">Guardar guardián</string>
+
+    <!-- ── PIN Hint ─────────────────────────────────────────────────────────── -->
+    <string name="label_heir_pin_hint">Pista del PIN</string>
+    <string name="desc_heir_pin_hint">Una pista que ayude a tu heredero a deducir el PIN de 4 dígitos. Esta pista viajará encriptada de extremo a extremo y será adjuntada al correo de desbloqueo.</string>
+    <string name="placeholder_heir_pin_hint">Ej: El año en que viajamos por primera vez a París...</string>
+    <string name="example_heir_pin_hint">La ciudad donde nos conocimos en verano</string>
+    <string name="label_good_hint_example">Ejemplo de buena pista:</string>
+    <string name="label_bad_hint_example">Evitar pistas obvias:</string>
+    <string name="example_bad_hint">\"Mi cumpleaños o el de papá\"</string>
+    <string name="title_what_is_pin_hint">¿Qué es una pista del PIN?</string>
+    <string name="message_what_is_pin_hint_body">La pista del PIN ayudará a tu heredero a recordar el código de acceso cuando llegue el momento.\n\nCARACTERÍSTICAS:\n• Debe tener al menos 15 caracteres\n• No debe revelar el PIN directamente ni contener secuencias\n• Se codificará en la app y se adjuntará al email del custodio\n\nEJEMPLO SEGURO:\n\"El número de la casa en la calle donde crecí\"\n\nEVITAR:\n\"Mi año de nacimiento\" (demasiado obvio)</string>
+
+    <string name="error_pin_hint_required">Debes agregar una pista para el PIN asignado</string>
+    <string name="error_pin_hint_too_short">La pista es muy corta (mínimo 15 caracteres)</string>
+    <string name="error_pin_hint_contains_pin">La pista no puede contener el PIN exacto</string>
+    <string name="error_pin_hint_contains_sequence">La pista contiene una secuencia de 2 dígitos o más de tu PIN. ¡Es muy obvia!</string>
+    <string name="error_pin_hint_too_obvious">La pista no puede contener palabras obvias como "PIN" o "Clave"</string>
+    <string name="label_pin_hint_length">%1$d/100 caracteres (mínimo 15)</string>
+
     <string name="section_personalization">Personalización del Santuario</string>
     <string name="label_language">Idioma</string>
     <string name="lang_spanish">Español</string>
@@ -298,6 +317,28 @@
     <string name="error_content_or_media_required">Debes agregar un mensaje o archivo multimedia</string>
     <string name="error_date_required">Selecciona una fecha de apertura</string>
 
+    <!-- ── Reclamación de Legados ─────────────────────────────────── -->
+    <!-- Claim Legacy - Banner -->
+    <string name="banner_pending_legacy">Alguien te ha dejado un legado. Tienes una bóveda encriptada esperando por ti.</string>
+    <string name="action_claim_legacy">Reclamar Bóveda</string>
+
+    <!-- Claim Legacy - Screen -->
+    <string name="screen_claim_legacy">Reclamar Legado</string>
+    <string name="desc_claim_legacy">Ingresa el PIN de seguridad de 4 dígitos que recibiste en tu correo electrónico para desbloquear la bóveda.</string>
+    <string name="label_pin">PIN de Acceso</string>
+    <string name="action_unlock_vault">Desbloquear Bóveda</string>
+
+    <!-- Claim Legacy - Errors -->
+    <string name="error_incorrect_pin">PIN incorrecto. Verifica el código que recibiste por email.</string>
+    <string name="error_too_many_attempts">Has superado el número máximo de intentos. La bóveda ha sido bloqueada por seguridad.</string>
+    <string name="error_unlocking_vault">Error al desbloquear la bóveda. Intenta nuevamente más tarde.</string>
+    <string name="message_attempts_remaining">Intentos restantes: %d</string>
+    <string name="message_vault_locked">La bóveda ha sido bloqueada por seguridad. Contacta al remitente del legado para obtener ayuda.</string>
+
+    <!-- Claim Legacy - Success -->
+    <string name="title_unlock_success">¡Bóveda Desbloqueada!</string>
+    <string name="message_unlock_success">Has desbloqueado exitosamente el legado. Ahora puedes acceder a su contenido.</string>
+    <string name="action_view_legacy">Ver Legado</string>
     <!-- ── Bóveda de Cápsulas (CapsuleVaultScreen) ───────────────────────── -->
     <string name="screen_capsule_vault">Mis Cápsulas</string>
     <string name="vault_empty_title">Ningún mensaje sellado aún</string>

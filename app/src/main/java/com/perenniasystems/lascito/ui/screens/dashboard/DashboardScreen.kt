@@ -35,7 +35,8 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
     onNavigateToAltar:        (String) -> Unit = {},
     onNavigateToAddProfile:   (String?) -> Unit = {},
-    onNavigateToUserSettings: () -> Unit = {}
+    onNavigateToUserSettings: () -> Unit = {},
+    onNavigateToClaimLegacy:  () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isEmailVerified by viewModel.isEmailVerified.collectAsStateWithLifecycle()
@@ -124,6 +125,18 @@ fun DashboardScreen(
                     isSuccess = verificationEmailSent,
                     onActionClick = { viewModel.resendVerificationEmail() }
                 )
+            }
+            
+            // Phase 4.1: Mostrar banner de reclamo solo si el correo está verificado y hay legados
+            if (isEmailVerified) {
+                val state = uiState
+                if (state is DashboardUiState.Success && state.hasPendingLegacy) {
+                    InfoBanner(
+                        message = stringResource(R.string.banner_pending_legacy),
+                        actionText = stringResource(R.string.action_claim_legacy),
+                        onActionClick = onNavigateToClaimLegacy
+                    )
+                }
             }
             
             Box(

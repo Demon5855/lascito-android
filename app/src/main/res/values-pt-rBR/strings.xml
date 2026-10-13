@@ -146,6 +146,24 @@
     <string name="hint_guardian_email">E-mail do herdeiro…</string>
     <string name="guardian_help_text">Em caso de inatividade prolongada, esta pessoa receberá acesso de leitura aos seus legados.</string>
     <string name="btn_save_guardian">Salvar guardião</string>
+
+    <!-- ── PIN Hint ─────────────────────────────────────────────────────────── -->
+    <string name="label_heir_pin_hint">Dica do PIN</string>
+    <string name="desc_heir_pin_hint">Uma dica para ajudar seu herdeiro a deduzir o PIN de 4 dígitos. Esta dica viajará criptografada de ponta a ponta e será anexada ao e-mail de desbloqueio.</string>
+    <string name="placeholder_heir_pin_hint">Ex: O ano em que viajamos para Paris...</string>
+    <string name="example_heir_pin_hint">A cidade onde nos conhecemos no verão</string>
+    <string name="label_good_hint_example">Exemplo de boa dica:</string>
+    <string name="label_bad_hint_example">Evitar dicas óbvias:</string>
+    <string name="example_bad_hint">\"Meu aniversário ou o do papai\"</string>
+    <string name="title_what_is_pin_hint">O que é uma dica do PIN?</string>
+    <string name="message_what_is_pin_hint_body">A dica do PIN ajudará seu herdeiro a lembrar o código de acesso quando chegar a hora.\n\nCARACTERÍSTICAS:\n• Deve ter pelo menos 15 caracteres\n• Não deve revelar o PIN diretamente ou conter sequências\n• Será criptografada no aplicativo e anexada ao e-mail do custodiante\n\nEXEMPLO SEGURO:\n\"O número da casa na rua onde cresci\"\n\nEVITAR:\n\"Meu ano de nascimento\" (muito óbvio)</string>
+    <string name="error_pin_hint_required">Você deve adicionar uma dica para o PIN definido</string>
+    <string name="error_pin_hint_too_short">A dica é muito curta (mínimo de 15 caracteres)</string>
+    <string name="error_pin_hint_contains_pin">A dica não pode conter o PIN exato</string>
+    <string name="error_pin_hint_contains_sequence">A dica contém uma sequência de 2 ou mais dígitos do seu PIN. É muito óbvio!</string>
+    <string name="error_pin_hint_too_obvious">A dica não pode conter palavras óbvias como "PIN" ou "Senha"</string>
+    <string name="label_pin_hint_length">%1$d/100 caracteres (mínimo de 15)</string>
+
     <string name="section_personalization">Personalização do Santuário</string>
     <string name="label_language">Idioma</string>
     <string name="lang_spanish">Español</string>
@@ -310,5 +328,28 @@
 
     <string name="placeholder_new_heir_pin">Inserir novo PIN para alterar</string>
     <string name="heartbeat_just_now">Agora mesmo</string>
+
+    <!-- ── Reclamación de Legados ─────────────────────────────────── -->
+    <!-- Claim Legacy - Banner -->
+    <string name="banner_pending_legacy">Alguém deixou um legado para você. Você tem um cofre criptografado esperando por você.</string>
+    <string name="action_claim_legacy">Reivindicar Cofre</string>
+
+    <!-- Claim Legacy - Screen -->
+    <string name="screen_claim_legacy">Reivindicar Legado</string>
+    <string name="desc_claim_legacy">Digite o PIN de segurança de 4 dígitos que você recebeu em seu e-mail para desbloquear o cofre.</string>
+    <string name="label_pin">PIN de Acesso</string>
+    <string name="action_unlock_vault">Desbloquear Cofre</string>
+
+    <!-- Claim Legacy - Errors -->
+    <string name="error_incorrect_pin">PIN incorreto. Verifique o código que você recebeu por e-mail.</string>
+    <string name="error_too_many_attempts">Você excedeu o número máximo de tentativas. O cofre foi bloqueado por segurança.</string>
+    <string name="error_unlocking_vault">Erro ao desbloquear cofre. Tente novamente mais tarde.</string>
+    <string name="message_attempts_remaining">Tentativas restantes: %d</string>
+    <string name="message_vault_locked">O cofre foi bloqueado por segurança. Entre em contato com o remetente do legado para obter ajuda.</string>
+
+    <!-- Claim Legacy - Success -->
+    <string name="title_unlock_success">Cofre Desbloqueado!</string>
+    <string name="message_unlock_success">Você desbloqueou com sucesso o legado. Agora você pode acessar seu conteúdo.</string>
+    <string name="action_view_legacy">Ver Legado</string>
 
 </resources>

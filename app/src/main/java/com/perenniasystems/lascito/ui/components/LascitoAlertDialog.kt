@@ -25,7 +25,8 @@ fun LascitoAlertDialog(
     onDismiss: () -> Unit,
     @StringRes actionRes: Int? = null,
     onAction: (() -> Unit)? = null,
-    formatArgs: List<Any> = emptyList()
+    formatArgs: List<Any> = emptyList(),
+    @StringRes titleRes: Int? = null
 ) {
     val context = LocalContext.current
     val messageText = if (formatArgs.isNotEmpty()) {
@@ -39,6 +40,18 @@ fun LascitoAlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color(0xFF1A1A1A), // Dark gray, premium look
         shape = RoundedCornerShape(16.dp),
+        title = titleRes?.let { resId -> 
+            {
+                Text(
+                    text = context.getString(resId),
+                    color = Color(0xFFC9A96E), // Gold for premium aspect
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
         text = {
             Text(
                 text = messageText,

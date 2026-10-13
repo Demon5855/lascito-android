@@ -24,6 +24,7 @@ sealed class Screen(val route: String) {
     }
     data object UserSettings    : Screen("user_settings")
     data object Guardian         : Screen("guardian")
+    data object ClaimLegacy      : Screen("claim_legacy")
     data object AddTimeCapsule   : Screen("add_time_capsule")
     data object CapsuleDetail    : Screen("capsule_detail/{capsuleId}") {
         fun createRoute(capsuleId: String) = "capsule_detail/$capsuleId"

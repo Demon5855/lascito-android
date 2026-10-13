@@ -1,9 +1,11 @@
 package com.perenniasystems.lascito.ui.screens.guardian
 
 import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -101,14 +103,17 @@ fun GuardianScreen(
                 .padding(horizontal = 24.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
-            // ── Tarjeta A: El Heredero ─────────────────────────────────────────
+            // A — Beneficiario / Heredero
             BeneficiaryCard(
-                name      = uiState.guardianName,
-                email     = uiState.guardianEmail,
-                pin       = uiState.guardianPin,
-                onName    = viewModel::onNameChange,
-                onEmail   = viewModel::onEmailChange,
-                onPin     = viewModel::onPinChange
+                name    = uiState.guardianName,
+                email   = uiState.guardianEmail,
+                pin     = uiState.guardianPin,
+                pinHint = uiState.guardianPinHint,
+                pinHintError = uiState.pinHintError,
+                onName  = { viewModel.onNameChange(it) },
+                onEmail = { viewModel.onEmailChange(it) },
+                onPin   = { viewModel.onPinChange(it) },
+                onPinHint = { viewModel.onPinHintChange(it) }
             )
 
             // ── Tarjeta B: Protocolo de Ausencia ───────────────────────────────
@@ -232,10 +237,15 @@ private fun BeneficiaryCard(
     name:    String,
     email:   String,
     pin:     String,
+    pinHint: String,
+    pinHintError: Int?,
     onName:  (String) -> Unit,
     onEmail: (String) -> Unit,
-    onPin:   (String) -> Unit
+    onPin:   (String) -> Unit,
+    onPinHint: (String) -> Unit
 ) {
+    var showHintHelpDialog by remember { mutableStateOf(false) }
+
     LegacyCard {
         // Encabezado
         Row(
@@ -343,6 +353,158 @@ private fun BeneficiaryCard(
                     )
                 )
             }
+
+            // PIN Hint Dinámico
+            AnimatedVisibility(visible = pin.isNotEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lightbulb,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.label_heir_pin_hint),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.weight(1f))
+                        IconButton(
+                            onClick = { showHintHelpDialog = true },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Ayuda",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = stringResource(R.string.desc_heir_pin_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 16.sp
+                    )
+
+                    OutlinedTextField(
+                        value = pinHint,
+                        onValueChange = onPinHint,
+                        label = { Text(stringResource(R.string.placeholder_heir_pin_hint), color = TextDisabled) },
+                        isError = pinHintError != null,
+                        supportingText = {
+                            if (pinHintError != null) {
+                                Text(
+                                    text = stringResource(pinHintError),
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            } else {
+                                Text(
+                                    text = stringResource(R.string.label_pin_hint_length, pinHint.length),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (pinHint.length >= 15) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
+                                )
+                            }
+                        },
+                        maxLines = 3,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = legacyTextFieldColors(),
+                        shape = RoundedCornerShape(10.dp),
+                        textStyle     = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary)
+                    )
+
+                    HintExamplesCard()
+                }
+            }
+        }
+    }
+
+    if (showHintHelpDialog) {
+        LascitoAlertDialog(
+            titleRes = R.string.title_what_is_pin_hint,
+            messageRes = R.string.message_what_is_pin_hint_body,
+            onDismiss = { showHintHelpDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun HintExamplesCard() {
+    androidx.compose.material3.Card(
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+        ),
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircleOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = stringResource(R.string.label_good_hint_example),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            Text(
+                text = "\"${stringResource(R.string.example_heir_pin_hint)}\"",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+            )
+            
+            Spacer(Modifier.height(4.dp))
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Cancel,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = stringResource(R.string.label_bad_hint_example),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            Text(
+                text = stringResource(R.string.example_bad_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+            )
         }
     }
 }
