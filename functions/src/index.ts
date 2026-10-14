@@ -21,6 +21,7 @@ import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { randomUUID } from "crypto";
 import * as crypto from "crypto";  // ✅ NUEVO: Importar módulo crypto
+import { sendGuardianEmail, RESEND_API_KEY, EMAIL_PROVIDER } from "./guardianEmail";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INICIALIZACIÓN DE FIREBASE ADMIN SDK
@@ -164,254 +165,6 @@ function decryptPinHint(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SERVICIO DE ENVÍO DE EMAILS
-// ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * Envía el correo de notificación al heredero/guardian con la pista del PIN desencriptada.
- * 
- * Este email NO contiene el PIN real, solo la pista desencriptada.
- * 
- * @param guardianEmail Email del heredero
- * @param userName Nombre del usuario fallecido/inactivo
- * @param decryptedPinHint Pista desencriptada (opcional)
- * @returns Promise que resuelve cuando el email se envía exitosamente
- * @throws Error si el proveedor de email falla
- */
-async function sendGuardianEmail(
-    guardianEmail: string,
-    userName: string,
-    decryptedPinHint?: string  // ✅ MODIFICADO: Recibe pista desencriptada (opcional)
-): Promise<void> {
-    logger.info(`[Email Service] Preparando notificación confidencial`, {
-        recipient: guardianEmail,
-        userName,
-        hasPinHint: !!decryptedPinHint,
-        hintLength: decryptedPinHint?.length || 0,
-        provider: "MOCK (Development Mode)"
-    });
-
-    // Simulación de latencia de red
-    const latency = 200 + Math.random() * 300;
-    await new Promise((resolve) => setTimeout(resolve, latency));
-
-    // Simulación aleatoria de fallo (5% probabilidad)
-    if (Math.random() < 0.05) {
-        throw new Error("Email provider rate limit exceeded (simulated failure)");
-    }
-
-    logger.info(`[Email Service] ✅ Notificación enviada exitosamente a ${guardianEmail}`);
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // REEMPLAZAR EN PRODUCCIÓN CON CÓDIGO REAL (SendGrid, Resend, etc.)
-    // ═══════════════════════════════════════════════════════════════════════════
-    /*
-    const emailProvider = process.env.EMAIL_PROVIDER || "resend";
-    
-    if (emailProvider === "resend") {
-      const { Resend } = await import("resend");
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      
-      const { data, error } = await resend.emails.send({
-        from: "Lascito <noreply@lascito.app>",
-        to: guardianEmail,
-        subject: `🔓 Acceso de Emergencia Activado - Bóveda de ${userName}`,
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <style>
-              body { 
-                font-family: 'Playfair Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', serif; 
-                background: #0D0D0D; 
-                color: #E8E8E8; 
-                margin: 0; 
-                padding: 0; 
-              }
-              .container { 
-                max-width: 600px; 
-                margin: 0 auto; 
-                padding: 40px 20px; 
-              }
-              .header { 
-                text-align: center; 
-                margin-bottom: 40px; 
-              }
-              .logo { 
-                color: #D4AF37; 
-                font-size: 32px; 
-                font-weight: 700; 
-                letter-spacing: 2px;
-              }
-              .content { 
-                background: #1A1A1A; 
-                border: 1px solid #2A2A2A; 
-                border-radius: 16px; 
-                padding: 35px; 
-                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-              }
-              .hint-box { 
-                background: linear-gradient(135deg, #252525 0%, #1F1F1F 100%);
-                border: 2px solid #D4AF37; 
-                border-radius: 12px; 
-                padding: 25px; 
-                margin: 25px 0; 
-              }
-              .hint-icon { 
-                font-size: 56px; 
-                text-align: center; 
-                margin-bottom: 15px; 
-                filter: drop-shadow(0 2px 8px rgba(212, 175, 55, 0.3));
-              }
-              .hint-label {
-                margin: 0 0 12px 0; 
-                color: #D4AF37; 
-                font-weight: 700; 
-                text-align: center;
-                font-size: 14px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-              }
-              .hint-text { 
-                font-size: 18px; 
-                color: #F5F5F5; 
-                font-style: italic; 
-                text-align: center; 
-                line-height: 1.7;
-                font-weight: 500;
-                padding: 15px;
-                background: rgba(212, 175, 55, 0.05);
-                border-radius: 8px;
-              }
-              .hint-note {
-                margin: 15px 0 0 0; 
-                font-size: 12px; 
-                color: #999; 
-                text-align: center;
-                line-height: 1.5;
-              }
-              .no-hint-box {
-                background: #1F1F1F;
-                border: 2px solid #555;
-                border-radius: 12px;
-                padding: 25px;
-                margin: 25px 0;
-                text-align: center;
-              }
-              .security-notice {
-                margin-top: 30px; 
-                padding: 20px; 
-                background: #1F1F1F; 
-                border-left: 4px solid #D4AF37; 
-                border-radius: 6px;
-              }
-              .footer { 
-                margin-top: 40px; 
-                text-align: center; 
-                color: #666; 
-                font-size: 13px; 
-                line-height: 1.6;
-              }
-              h2 { 
-                color: #D4AF37; 
-                margin-top: 0; 
-                font-size: 26px;
-              }
-              h3 { 
-                color: #E8E8E8; 
-                font-size: 18px;
-                margin-top: 30px;
-              }
-              ol { 
-                line-height: 1.8; 
-                padding-left: 25px;
-              }
-              a { 
-                color: #D4AF37; 
-                text-decoration: none;
-              }
-              a:hover {
-                text-decoration: underline;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <div class="logo">⚱️ LASCITO</div>
-                <p style="color: #999; margin: 10px 0 0 0; font-size: 14px;">Protocolo de Emergencia Activado</p>
-              </div>
-              
-              <div class="content">
-                <h2>Acceso a la Bóveda Digital</h2>
-                <p style="margin-bottom: 20px;">Estimado Heredero/Guardian,</p>
-                <p>El protocolo de inactividad (Dead Man's Switch) ha sido activado para la cuenta de <strong style="color: #D4AF37;">${userName}</strong>.</p>
-                <p>De acuerdo con las instrucciones dejadas por el titular, ahora tienes acceso completo a su bóveda digital de memorias y documentos.</p>
-                
-                <h3>🔐 Requisito de Acceso</h3>
-                <p>Para desbloquear la bóveda en la aplicación, necesitarás ingresar el <strong>PIN de seguridad de 4 dígitos</strong> que <strong>${userName}</strong> te compartió personalmente.</p>
-                
-                ${decryptedPinHint ? `
-                  <div class="hint-box">
-                    <div class="hint-icon">💡</div>
-                    <p class="hint-label">Pista del Creador</p>
-                    <div class="hint-text">"${decryptedPinHint}"</div>
-                    <p class="hint-note">Esta pista fue configurada por ${userName} para ayudarte a recordar el código de acceso</p>
-                  </div>
-                ` : `
-                  <div class="no-hint-box">
-                    <div style="font-size: 48px; margin-bottom: 15px;">🔒</div>
-                    <p style="margin: 0; color: #CCC; font-size: 15px;">No se configuró una pista para este PIN</p>
-                    <p style="margin: 12px 0 0 0; font-size: 13px; color: #888;">Intenta recordar el código que ${userName} te compartió, o consulta con familiares cercanos que puedan conocerlo</p>
-                  </div>
-                `}
-                
-                <h3>Próximos Pasos</h3>
-                <ol style="color: #CCC;">
-                  <li>Descarga la aplicación <strong style="color: #FFF;">Lascito</strong> desde Google Play Store o App Store</li>
-                  <li>Selecciona <strong style="color: #FFF;">"Acceso de Heredero"</strong> en la pantalla de inicio</li>
-                  <li>Ingresa tu email asociado: <strong style="color: #D4AF37;">${guardianEmail}</strong></li>
-                  <li>Introduce el PIN de 4 dígitos cuando te lo solicite la aplicación</li>
-                  <li>Una vez autenticado, podrás acceder a todo el contenido de la bóveda</li>
-                </ol>
-                
-                <div class="security-notice">
-                  <p style="margin: 0; font-size: 14px; color: #D4AF37; font-weight: 700;">⚠️ Importante sobre Seguridad</p>
-                  <p style="margin: 10px 0 0 0; font-size: 13px; color: #BBB; line-height: 1.6;">
-                    Por razones de seguridad, tienes un <strong>máximo de 3 intentos</strong> para ingresar el PIN correcto. 
-                    Después de 3 intentos fallidos, la bóveda se bloqueará automáticamente y necesitarás contactar 
-                    a nuestro equipo de soporte en <a href="mailto:soporte@lascito.app">soporte@lascito.app</a>
-                  </p>
-                </div>
-                
-                <p style="margin-top: 35px; padding-top: 25px; border-top: 1px solid #2A2A2A; color: #888; font-size: 13px; line-height: 1.6;">
-                  Este correo fue generado automáticamente por el sistema de seguridad de Lascito. 
-                  Si crees que esto es un error o no esperabas recibir este mensaje, contacta inmediatamente a 
-                  <a href="mailto:soporte@lascito.app" style="color: #D4AF37;">soporte@lascito.app</a>
-                </p>
-              </div>
-              
-              <div class="footer">
-                <p style="margin: 0 0 8px 0;">© 2026 Lascito Digital Vault · Todos los derechos reservados</p>
-                <p style="margin: 0;">Este es un correo confidencial. No lo compartas con terceros.</p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `
-      });
-      
-      if (error) {
-        throw new Error(`Resend API Error: ${error.message}`);
-      }
-      
-      logger.info(`[Resend] Email entregado con ID: ${data?.id}`);
-    }
-    */
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
 // FUNCIÓN PRINCIPAL: DEAD MAN'S SWITCH CHECKER
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -421,7 +174,8 @@ export const checkDeadManSwitches = onSchedule(
         timeZone: "America/Guayaquil",
         timeoutSeconds: FUNCTION_TIMEOUT,
         memory: FUNCTION_MEMORY,
-        maxInstances: 1
+        maxInstances: 1,
+        secrets: [RESEND_API_KEY]
     },
     async (event) => {
         const executionId = `exec-${Date.now()}-${randomUUID().slice(0, 8)}`;
@@ -612,7 +366,7 @@ export const checkDeadManSwitches = onSchedule(
                                     userName,
                                     sentAt: now,
                                     scheduledRunTime,
-                                    emailProvider: "MOCK",
+                                    emailProvider: EMAIL_PROVIDER,
                                     hasPinHint: !!decryptedPinHint,
                                     functionExecutionId: executionId,
                                     inactivityDays: daysSinceLastActivity
@@ -704,7 +458,8 @@ export const retryFailedEmails = onSchedule(
         timeZone: "America/Guayaquil",
         timeoutSeconds: 300,
         memory: "512MiB",
-        maxInstances: 1
+        maxInstances: 1,
+        secrets: [RESEND_API_KEY]
     },
     async (event) => {
         const now = Date.now();
@@ -762,7 +517,7 @@ export const retryFailedEmails = onSchedule(
                         userName,
                         sentAt: now,
                         scheduledRunTime: event.scheduleTime,
-                        emailProvider: "MOCK",
+                        emailProvider: EMAIL_PROVIDER,
                         hasPinHint: !!pinHint,
                         functionExecutionId: executionId,
                         originalFailureAt: record.failedAt,
