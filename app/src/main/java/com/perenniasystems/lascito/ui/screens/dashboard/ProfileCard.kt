@@ -53,7 +53,8 @@ fun ProfileCard(
     modifier: Modifier = Modifier,
     onClick:  () -> Unit = {},
     onEdit:   () -> Unit = {},
-    onDelete: () -> Unit = {}
+    onDelete: () -> Unit = {},
+    readOnly: Boolean = false
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val cardShape = RoundedCornerShape(16.dp)
@@ -196,7 +197,7 @@ fun ProfileCard(
                     .align(Alignment.TopEnd)
                     .padding(end = 8.dp, top = 8.dp)
             ) {
-                if (profile.status == ProfileStatus.ACTIVE) {
+                if (!readOnly && profile.status == ProfileStatus.ACTIVE) {
                     Box(
                         modifier = Modifier
                             .size(28.dp)

@@ -1,6 +1,5 @@
 package com.perenniasystems.lascito.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -102,7 +101,7 @@ class AuthViewModel(
      * Registra una Prueba de Vida de forma silenciosa (fire-and-forget).
      *
      * - Se ejecuta en [Dispatchers.IO] para no bloquear el hilo principal.
-     * - Un fallo de red NO se propaga a la UI: solo se loguea en consola.
+     * - Un fallo de red NO se propaga a la UI.
      *   La Prueba de Vida es una mejora de calidad, nunca un bloqueante crítico.
      */
     private fun sendProofOfLife() {
@@ -112,7 +111,6 @@ class AuthViewModel(
             } catch (e: Exception) {
                 // Fallo silencioso: sin internet o usuario sin switch configurado.
                 // No mostramos error en la UI; el latido se enviará en la próxima sesión.
-                Log.w("AuthViewModel", "Proof of Life no registrada: ${e.message}")
             }
         }
     }

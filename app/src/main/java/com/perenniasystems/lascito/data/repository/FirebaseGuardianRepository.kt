@@ -1,9 +1,12 @@
 package com.perenniasystems.lascito.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.FirebaseFunctionsException
 import com.google.firebase.storage.FirebaseStorage
 import com.perenniasystems.lascito.data.model.DeadManSwitch
 import com.perenniasystems.lascito.data.model.GuardianConfig
@@ -11,8 +14,10 @@ import com.perenniasystems.lascito.data.model.LegacyGuardian
 import com.perenniasystems.lascito.data.model.LegacyInvitation
 import com.perenniasystems.lascito.data.model.InvitationStatus
 import com.perenniasystems.lascito.data.model.InvalidPinException
+import com.perenniasystems.lascito.data.model.LegacyAlreadyClaimedException
 import com.perenniasystems.lascito.data.model.LegacyBlockedException
 import com.perenniasystems.lascito.data.model.LegacyExpiredException
+import com.perenniasystems.lascito.data.model.LegacyNotConfiguredException
 import com.perenniasystems.lascito.data.model.LegacyNotFoundException
 import com.perenniasystems.lascito.data.model.TimeCapsule
 import kotlinx.coroutines.tasks.await
@@ -25,6 +30,7 @@ import at.favre.lib.crypto.bcrypt.BCrypt
  * Rutas:
  *   Guardián / Switch → campo embebido en `users/{uid}` (merge parcial)
  *   Cápsulas          → subcolección `users/{uid}/capsules/{capsuleId}`
+ *   Hash del PIN      → `users/{uid}/private/inheritance` (solo escritura)
  *
  * Todas las operaciones de red están protegidas por [withTimeout] de 10 s
  * para garantizar Fail Fast ante inestabilidad de conexión.
@@ -32,8 +38,13 @@ import at.favre.lib.crypto.bcrypt.BCrypt
 class FirebaseGuardianRepository(
     private val db:      FirebaseFirestore = FirebaseFirestore.getInstance(),
     private val auth:    FirebaseAuth      = FirebaseAuth.getInstance(),
-    private val storage: FirebaseStorage   = FirebaseStorage.getInstance()
+    private val storage: FirebaseStorage   = FirebaseStorage.getInstance(),
+    private val functions: FirebaseFunctions = FirebaseFunctions.getInstance()
 ) : GuardianRepository {
+
+    private companion object {
+        const val PIN_HASH_COST = 10
+    }
 
     private val invitationsCollection = db.collection("legacyInvitations")
 
@@ -51,6 +62,9 @@ class FirebaseGuardianRepository(
 
     private fun capsulesCol(uid: String) =
         userDoc(uid).collection("capsules")
+
+    private fun inheritanceSecretDoc(uid: String) =
+        userDoc(uid).collection("private").document("inheritance")
 
     // ── Guardián del Legado ───────────────────────────────────────────────────
 
@@ -79,7 +93,7 @@ class FirebaseGuardianRepository(
                             com.perenniasystems.lascito.data.model.GuardianStatus
                                 .valueOf((map["status"] as? String) ?: "PENDING")
                         }.getOrDefault(com.perenniasystems.lascito.data.model.GuardianStatus.PENDING),
-                        accessPinHash = map["accessPinHash"] as? String
+                        lastGuardianUpdatedAt = map["lastGuardianUpdatedAt"] as? Long
                     )
                 }
             }.getOrNull()
@@ -107,13 +121,26 @@ class FirebaseGuardianRepository(
      * Persiste el [LegacyGuardian] del usuario mediante un merge parcial.
      * Solo sobreescribe el campo `legacyGuardian`; el resto del documento
      * permanece intacto.
+     *
+     * La pista del PIN solo se escribe cuando llega una nueva: guardar el
+     * guardián sin cambiar el PIN conserva la pista existente.
      */
     override suspend fun updateGuardian(guardian: LegacyGuardian): Result<Unit> =
         runCatching {
             val uid = requireUid()
+            val fields = buildMap<String, Any?> {
+                put("email", guardian.email)
+                put("name", guardian.name)
+                put("status", guardian.status.name)
+                put("lastGuardianUpdatedAt", guardian.lastGuardianUpdatedAt)
+                if (guardian.encryptedPinHint != null && guardian.pinHintIv != null) {
+                    put("encryptedPinHint", guardian.encryptedPinHint)
+                    put("pinHintIv", guardian.pinHintIv)
+                }
+            }
             withTimeout(10_000L) {
                 userDoc(uid)
-                    .set(mapOf("legacyGuardian" to guardian), SetOptions.merge())
+                    .set(mapOf("legacyGuardian" to fields), SetOptions.merge())
                     .await()
             }
         }
@@ -245,122 +272,113 @@ class FirebaseGuardianRepository(
 
     // ── Reclamación de Legados (Phase 4) ───────────────────────────────────
 
-    override suspend fun checkPendingLegacies(email: String): Result<Boolean> = runCatching {
+    override suspend fun getPendingInvitations(): Result<List<LegacyInvitation>> = runCatching {
+        val email = auth.currentUser?.email ?: throw IllegalStateException("User email not found")
         withTimeout(10_000L) {
-            val querySnapshot = invitationsCollection
+            invitationsCollection
                 .whereEqualTo("guardianEmail", email.lowercase())
                 .whereEqualTo("status", "PENDING")
-                .limit(1)
                 .get()
                 .await()
-            !querySnapshot.isEmpty
+                .documents
+                .map { it.toInvitation() }
+                .sortedBy { it.createdAt }
         }
     }
 
-    override suspend fun getLegacyInvitation(email: String): Result<LegacyInvitation?> = runCatching {
+    override suspend fun getPendingInvitation(invitationId: String): Result<LegacyInvitation?> = runCatching {
         withTimeout(10_000L) {
-            val querySnapshot = invitationsCollection
-                .whereEqualTo("guardianEmail", email.lowercase())
-                .whereEqualTo("status", "PENDING")
-                .limit(1)
-                .get()
-                .await()
-            
-            if (querySnapshot.isEmpty) {
-                return@withTimeout null
-            }
-            
-            val doc = querySnapshot.documents.first()
-            LegacyInvitation(
-                id = doc.id,
-                creatorUid = doc.getString("creatorUid") ?: "",
-                creatorName = doc.getString("creatorName") ?: "",
-                guardianEmail = doc.getString("guardianEmail") ?: "",
-                accessPinHash = doc.getString("accessPinHash") ?: "",
-                status = InvitationStatus.valueOf(doc.getString("status") ?: "PENDING"),
-                createdAt = doc.getLong("createdAt") ?: 0L,
-                expiresAt = doc.getLong("expiresAt"),
-                vaultContentRef = doc.getString("vaultContentRef") ?: "",
-                failedAttempts = doc.getLong("failedAttempts")?.toInt() ?: 0,
-                lastFailedAttempt = doc.getLong("lastFailedAttempt")
-            )
+            val doc = invitationsCollection.document(invitationId).get().await()
+            if (!doc.exists()) return@withTimeout null
+            doc.toInvitation().takeIf { it.status == InvitationStatus.PENDING }
         }
     }
 
-    override suspend fun unlockLegacyVault(pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault> = runCatching {
+    override suspend fun getClaimedInheritances(): Result<List<com.perenniasystems.lascito.data.model.LegacyVault>> = runCatching {
         val currentUser = auth.currentUser ?: throw IllegalStateException("User not authenticated")
         val email = currentUser.email ?: throw IllegalStateException("User email not found")
-        
-        val invitation = getLegacyInvitation(email).getOrNull()
-            ?: throw LegacyNotFoundException("No pending legacy found for this email")
-            
-        if (invitation.failedAttempts >= 3) { // MAX_PIN_ATTEMPTS
-            throw LegacyBlockedException("Too many failed attempts. Contact the legacy sender.")
-        }
-        
-        invitation.expiresAt?.let { expiry ->
-            if (System.currentTimeMillis() > expiry) {
-                throw LegacyExpiredException("Legacy invitation has expired")
-            }
-        }
-        
-        val isPinValid = BCrypt.verifyer().verify(pin.toCharArray(), invitation.accessPinHash.toCharArray()).verified
-        
-        if (!isPinValid) {
-            incrementFailedAttempts(invitation.id)
-            val newFailedAttempts = invitation.failedAttempts + 1
-            if (newFailedAttempts >= 3) {
-                blockInvitation(invitation.id)
-                throw LegacyBlockedException("Too many failed attempts. Legacy has been blocked.")
-            }
-            throw InvalidPinException(3 - newFailedAttempts)
-        }
-        
-        resetFailedAttempts(invitation.id)
-        
         withTimeout(10_000L) {
-            invitationsCollection.document(invitation.id).update(
-                mapOf(
-                    "status" to "CLAIMED",
-                    "claimedAt" to System.currentTimeMillis(),
-                    "claimedByUid" to currentUser.uid
-                )
-            ).await()
+            invitationsCollection
+                .whereEqualTo("guardianEmail", email.lowercase())
+                .whereEqualTo("status", "CLAIMED")
+                .get()
+                .await()
+                .documents
+                .filter { it.getString("claimedByUid") == currentUser.uid }
+                .map { doc ->
+                    com.perenniasystems.lascito.data.model.LegacyVault(
+                        id = doc.id,
+                        creatorUid = doc.getString("creatorUid") ?: "",
+                        creatorName = doc.getString("creatorName") ?: "",
+                        vaultContentRef = doc.getString("vaultContentRef") ?: "",
+                        claimedAt = doc.getLong("claimedAt") ?: 0L
+                    )
+                }
         }
-        
+    }
+
+    private fun DocumentSnapshot.toInvitation() = LegacyInvitation(
+        id = id,
+        creatorUid = getString("creatorUid") ?: "",
+        creatorName = getString("creatorName") ?: "",
+        guardianEmail = getString("guardianEmail") ?: "",
+        status = runCatching { InvitationStatus.valueOf(getString("status") ?: "PENDING") }
+            .getOrDefault(InvitationStatus.PENDING),
+        // El Cron Job escribe createdAt como serverTimestamp
+        createdAt = getTimestamp("createdAt")?.toDate()?.time ?: 0L,
+        expiresAt = getLong("expiresAt"),
+        vaultContentRef = getString("vaultContentRef") ?: ""
+    )
+
+    override suspend fun setInheritancePin(pin: String): Result<Unit> = runCatching {
+        val uid = requireUid()
+        val accessPinHash = BCrypt.withDefaults().hashToString(PIN_HASH_COST, pin.toCharArray())
+        withTimeout(10_000L) {
+            inheritanceSecretDoc(uid)
+                .set(
+                    mapOf(
+                        "accessPinHash" to accessPinHash,
+                        "updatedAt" to System.currentTimeMillis()
+                    )
+                )
+                .await()
+        }
+    }
+
+    override suspend fun claimInheritance(invitationId: String, pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault> = runCatching {
+        auth.currentUser ?: throw IllegalStateException("User not authenticated")
+
+        val response = try {
+            withTimeout(15_000L) {
+                functions.getHttpsCallable("claimInheritance")
+                    .call(mapOf("invitationId" to invitationId, "pin" to pin))
+                    .await()
+            }
+        } catch (e: FirebaseFunctionsException) {
+            throw e.toClaimException()
+        }
+
+        val data = response.getData() as? Map<*, *>
         com.perenniasystems.lascito.data.model.LegacyVault(
-            id = invitation.id,
-            creatorUid = invitation.creatorUid,
-            creatorName = invitation.creatorName,
-            vaultContentRef = invitation.vaultContentRef,
-            claimedAt = System.currentTimeMillis()
+            id = data?.get("invitationId") as? String ?: invitationId,
+            creatorUid = data?.get("creatorUid") as? String ?: "",
+            creatorName = data?.get("creatorName") as? String ?: "",
+            vaultContentRef = data?.get("vaultContentRef") as? String ?: "",
+            claimedAt = (data?.get("claimedAt") as? Number)?.toLong() ?: System.currentTimeMillis()
         )
     }
 
-    private suspend fun incrementFailedAttempts(invitationId: String) {
-        withTimeout(5_000L) {
-            invitationsCollection.document(invitationId).update(
-                "failedAttempts", com.google.firebase.firestore.FieldValue.increment(1),
-                "lastFailedAttempt", System.currentTimeMillis()
-            ).await()
-        }
-    }
-
-    private suspend fun blockInvitation(invitationId: String) {
-        withTimeout(5_000L) {
-            invitationsCollection.document(invitationId).update(
-                "status", "BLOCKED",
-                "blockedAt", System.currentTimeMillis()
-            ).await()
-        }
-    }
-
-    private suspend fun resetFailedAttempts(invitationId: String) {
-        withTimeout(5_000L) {
-            invitationsCollection.document(invitationId).update(
-                "failedAttempts", 0,
-                "lastFailedAttempt", com.google.firebase.firestore.FieldValue.delete()
-            ).await()
+    /** Traduce el `reason` devuelto por `claimInheritance` a las excepciones de dominio. */
+    private fun FirebaseFunctionsException.toClaimException(): Exception {
+        val details = details as? Map<*, *>
+        return when (details?.get("reason") as? String) {
+            "INVALID_PIN" -> InvalidPinException((details["attemptsRemaining"] as? Number)?.toInt() ?: 0)
+            "BLOCKED" -> LegacyBlockedException()
+            "EXPIRED" -> LegacyExpiredException()
+            "NOT_FOUND" -> LegacyNotFoundException()
+            "ALREADY_CLAIMED" -> LegacyAlreadyClaimedException()
+            "NOT_CONFIGURED" -> LegacyNotConfiguredException()
+            else -> this
         }
     }
 }

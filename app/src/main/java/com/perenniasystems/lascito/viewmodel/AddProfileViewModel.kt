@@ -1,6 +1,6 @@
 package com.perenniasystems.lascito.viewmodel
 
-import android.util.Log
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -94,7 +94,6 @@ class AddProfileViewModel(
                     try {
                         currentUser.reload().await()
                     } catch (e: Exception) {
-                        Log.e("FirebaseAuth", "Failed to reload user", e)
                         _uiState.value = AddProfileUiState.Error(R.string.error_session_expired)
                         return@withTimeout
                     }
@@ -107,8 +106,13 @@ class AddProfileViewModel(
                     _uploadProgress.value = 0.3f
                     val profileId = currentProfileId ?: UUID.randomUUID().toString()
                     val finalAvatarUrl = if (imageBytes != null) {
-                        val path = "profiles/covers/${profileId}.jpg"
+                        val path = "profiles/covers/${currentUser.uid}/${profileId}.jpg"
                         val url = storage.uploadImage(imageBytes, path)
+                        // Portada anterior en otra ruta (esquema previo sin UID): se limpia.
+                        val previousUrl = currentAvatarUrl
+                        if (!previousUrl.isNullOrBlank() && !previousUrl.contains(Uri.encode(path))) {
+                            storage.deleteImage(previousUrl)
+                        }
                         _uploadProgress.value = 0.6f
                         url
                     } else {
@@ -136,7 +140,6 @@ class AddProfileViewModel(
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 _uiState.value = AddProfileUiState.Error(R.string.error_network)
             } catch (e: Exception) {
-                Log.e("FirestoreError", "Error al guardar altar", e)
                 _uiState.value = AddProfileUiState.Error(ErrorHandler.mapExceptionToResId(e))
             }
         }

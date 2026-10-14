@@ -32,18 +32,13 @@ import com.perenniasystems.lascito.viewmodel.ClaimLegacyViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClaimLegacyScreen(
+    invitationId: String,
     viewModel: ClaimLegacyViewModel = viewModel(),
     onNavigateBack: () -> Unit,
     onNavigateToVault: (String) -> Unit
 ) {
+    LaunchedEffect(invitationId) { viewModel.load(invitationId) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(uiState.unlockSuccess) {
-        if (uiState.unlockSuccess) {
-            // Fase 4.1: Mostrar dialogo, se cierra automaticamente despues. (Fase 4.2 sera el salto a la boveda)
-            // onNavigateToVault(uiState.legacyVault?.id ?: "")
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -82,7 +77,11 @@ fun ClaimLegacyScreen(
             Spacer(Modifier.height(24.dp))
 
             Text(
-                text = stringResource(R.string.desc_claim_legacy),
+                text = if (uiState.creatorName.isNotBlank()) {
+                    stringResource(R.string.desc_claim_legacy_from, uiState.creatorName)
+                } else {
+                    stringResource(R.string.desc_claim_legacy)
+                },
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface
@@ -98,22 +97,24 @@ fun ClaimLegacyScreen(
                 isError = uiState.unlockError != null,
                 supportingText = {
                     val errorRes = uiState.unlockError
-                    errorRes?.let {
-                        Text(
-                            text = stringResource(it),
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-
-                    if (uiState.unlockError != null && !uiState.isLocked) {
-                        Text(
-                            text = stringResource(
-                                R.string.message_attempts_remaining,
-                                uiState.attemptsRemaining
-                            ),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                    if (errorRes != null) {
+                        Column {
+                            Text(
+                                text = stringResource(errorRes),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            // Los intentos restantes solo aplican a un PIN incorrecto
+                            if (errorRes == R.string.error_incorrect_pin && !uiState.isLocked) {
+                                Text(
+                                    text = stringResource(
+                                        R.string.message_attempts_remaining,
+                                        uiState.attemptsRemaining
+                                    ),
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
                     }
                 },
                 visualTransformation = PasswordVisualTransformation(),
@@ -180,8 +181,9 @@ fun ClaimLegacyScreen(
             messageRes = R.string.message_unlock_success,
             actionRes = R.string.action_view_legacy,
             onAction = {
+                val creatorUid = uiState.legacyVault?.creatorUid
                 viewModel.dismissSuccessDialog()
-                onNavigateBack() // FASE 4.1 Volver por defecto 
+                if (creatorUid.isNullOrBlank()) onNavigateBack() else onNavigateToVault(creatorUid)
             },
             onDismiss = { viewModel.dismissSuccessDialog() }
         )

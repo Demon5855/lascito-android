@@ -5,7 +5,6 @@ import com.google.firebase.firestore.Query
 import com.perenniasystems.lascito.data.model.Profile
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
-import android.util.Log
 
 /**
  * Firestore implementation of [ProfileRepository].
@@ -69,16 +68,9 @@ class FirebaseProfileRepository(
 
             // 3. Delete the memory's media from Storage if it exists
             if (!mediaUrl.isNullOrBlank()) {
-                val result = storageRepo.deleteImage(mediaUrl)
-                if (result.isFailure) {
-                    // Log or handle non-object-not-found errors if strictness is required,
-                    // but we continue the loop to ensure maximum cleanup effort.
-                    val exception = result.exceptionOrNull()
-                    if (exception !is com.google.firebase.storage.StorageException ||
-                        exception.errorCode != com.google.firebase.storage.StorageException.ERROR_OBJECT_NOT_FOUND) {
-                        Log.e("FirebaseProfileRepo", "Warning: Failed to delete media for memory ${document.id}", exception)
-                    }
-                }
+                // A failed media deletion does not stop the loop: we continue to
+                // ensure maximum cleanup effort.
+                storageRepo.deleteImage(mediaUrl)
             }
 
             // 4. Delete the memory document from Firestore
@@ -87,14 +79,8 @@ class FirebaseProfileRepository(
 
         // 5. Delete the main profile's cover image from Storage if it exists
         if (!imageUrl.isNullOrBlank()) {
-            val result = storageRepo.deleteImage(imageUrl)
-            if (result.isFailure) {
-                val exception = result.exceptionOrNull()
-                if (exception !is com.google.firebase.storage.StorageException ||
-                    exception.errorCode != com.google.firebase.storage.StorageException.ERROR_OBJECT_NOT_FOUND) {
-                    Log.e("FirebaseProfileRepo", "Warning: Failed to delete cover image for profile $profileId", exception)
-                }
-            }
+            // Best effort, same as the memories above.
+            storageRepo.deleteImage(imageUrl)
         }
 
         // 6. Delete the main profile document

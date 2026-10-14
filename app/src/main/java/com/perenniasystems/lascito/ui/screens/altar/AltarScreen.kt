@@ -71,6 +71,7 @@ fun AltarScreen(
     onDeleteMemory: (String) -> Unit = {},
     onEditProfileClick: () -> Unit = {},
     onDeleteProfileClick: () -> Unit = {},
+    readOnly:       Boolean = false,
     viewModel:      AltarViewModel = viewModel()
 ) {
     // Trigger reload when the profileId changes OR when the screen becomes active again
@@ -82,7 +83,7 @@ fun AltarScreen(
     Scaffold(
         containerColor = AmoledBlack,
         floatingActionButton = {
-            if (uiState is AltarUiState.Success) {
+            if (uiState is AltarUiState.Success && !readOnly) {
                 FloatingActionButton(
                     onClick        = onAddMemory,
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -120,6 +121,7 @@ fun AltarScreen(
                     AltarContent(
                         profile        = state.profile,
                         memories       = state.memories,
+                        readOnly       = readOnly,
                         onNavigateBack = onNavigateBack,
                         onEditProfileClick = onEditProfileClick,
                         onDeleteProfileClick = { showDeleteProfileDialog = true },
@@ -136,7 +138,7 @@ fun AltarScreen(
                 val textMem = stringResource(R.string.confirm_delete_memory_text)
                 val btnDeleteMem = stringResource(R.string.action_delete)
                 val btnCancelMem = stringResource(R.string.btn_cancel)
-                
+
                 AlertDialog(
                     onDismissRequest = { memoryToDelete = null },
                     containerColor = SurfaceDark,
@@ -174,7 +176,7 @@ fun AltarScreen(
                 val textProf = stringResource(R.string.confirm_delete_profile_text, profile?.fullName ?: "")
                 val btnDeleteProf = stringResource(R.string.action_delete)
                 val btnCancelProf = stringResource(R.string.btn_cancel)
-                
+
                 AlertDialog(
                     onDismissRequest = { showDeleteProfileDialog = false },
                     containerColor = SurfaceDark,
@@ -211,6 +213,7 @@ fun AltarScreen(
 private fun AltarContent(
     profile:       Profile,
     memories:      List<Memory>,
+    readOnly:      Boolean,
     onNavigateBack: () -> Unit,
     onEditProfileClick: () -> Unit,
     onDeleteProfileClick: () -> Unit,
@@ -317,7 +320,7 @@ private fun AltarContent(
                     )
                 }
 
-                Box(
+                if (!readOnly) Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(12.dp)
@@ -416,8 +419,9 @@ private fun AltarContent(
         } else {
             items(memories, key = { it.memoryId }) { memory ->
                 MemoryItem(
-                    memory = memory, 
+                    memory = memory,
                     dateFmt = dateFmt,
+                    readOnly = readOnly,
                     onEdit = { onEditMemory(memory.memoryId) },
                     onDelete = { onDeleteMemory(memory.memoryId) }
                 )
@@ -433,8 +437,9 @@ private fun AltarContent(
 
 @Composable
 private fun MemoryItem(
-    memory: Memory, 
+    memory: Memory,
     dateFmt: SimpleDateFormat,
+    readOnly: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -505,7 +510,7 @@ private fun MemoryItem(
             Column(modifier = Modifier.weight(1f).animateContentSize()) {
                 var isExpanded by remember { mutableStateOf(false) }
                 var showSeeMore by remember { mutableStateOf(false) }
-                
+
                 Text(
                     text  = memory.contextText,
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -520,7 +525,7 @@ private fun MemoryItem(
                         }
                     }
                 )
-                
+
                 if (showSeeMore || isExpanded) {
                     Text(
                         text = if (isExpanded) stringResource(R.string.action_see_less) else stringResource(R.string.action_see_more),
@@ -537,12 +542,12 @@ private fun MemoryItem(
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primaryContainer)
                 )
             }
-            
+
             var showMenu by remember { mutableStateOf(false) }
             val textEditMem = stringResource(R.string.action_edit)
             val textDeleteMem = stringResource(R.string.action_delete)
 
-            Box {
+            if (!readOnly) Box {
                 IconButton(onClick = { showMenu = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
@@ -584,6 +589,7 @@ private fun MemoryItem(
 // ----------------------------------------------------------------------------
 // FeedMediaItem — Dynamic AV renderer with safe ExoPlayer lifting
 // ----------------------------------------------------------------------------
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 private fun FeedMediaItem(url: String, isAudioOnly: Boolean) {
     if (url.isBlank()) return

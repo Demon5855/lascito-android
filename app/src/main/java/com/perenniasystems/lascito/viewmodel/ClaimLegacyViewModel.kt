@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.InvalidPinException
 import com.perenniasystems.lascito.data.model.LegacyBlockedException
+import com.perenniasystems.lascito.data.model.LegacyExpiredException
+import com.perenniasystems.lascito.data.model.LegacyNotConfiguredException
 import com.perenniasystems.lascito.data.model.LegacyVault
 import com.perenniasystems.lascito.data.repository.GuardianRepository
 import com.perenniasystems.lascito.util.ValidationRules
@@ -25,7 +27,10 @@ data class ClaimLegacyUiState(
     val unlockSuccess: Boolean = false,
     val attemptsRemaining: Int = 3,
     val isLocked: Boolean = false,
-    val legacyVault: LegacyVault? = null
+    val legacyVault: LegacyVault? = null,
+    /** Creador de la invitación: indica al guardián de quién es el PIN que debe escribir. */
+    val creatorName: String = "",
+    val isInvitationLoaded: Boolean = false
 )
 
 class ClaimLegacyViewModel(
@@ -35,6 +40,31 @@ class ClaimLegacyViewModel(
 
     private val _uiState = MutableStateFlow(ClaimLegacyUiState())
     val uiState: StateFlow<ClaimLegacyUiState> = _uiState.asStateFlow()
+
+    private var invitationId: String? = null
+
+    /** Carga la invitación que se va a reclamar para mostrar de quién es. */
+    fun load(invitationId: String) {
+        if (this.invitationId == invitationId) return
+        this.invitationId = invitationId
+
+        viewModelScope.launch {
+            guardianRepository.getPendingInvitation(invitationId)
+                .onSuccess { invitation ->
+                    if (invitation == null) {
+                        _uiState.update { it.copy(unlockError = R.string.error_legacy_not_available) }
+                    } else {
+                        _uiState.update {
+                            it.copy(creatorName = invitation.creatorName, isInvitationLoaded = true)
+                        }
+                        updateUnlockButtonState()
+                    }
+                }
+                .onFailure {
+                    _uiState.update { it.copy(unlockError = R.string.error_load_inheritance) }
+                }
+        }
+    }
 
     fun onPinChanged(pin: String) {
         val digitsOnly = pin.filter { it.isDigit() }
@@ -52,15 +82,16 @@ class ClaimLegacyViewModel(
 
     private fun updateUnlockButtonState() {
         val state = _uiState.value
-        val isValid = state.pinError == null
+        val isValid = state.pinError == null && state.pin.isNotEmpty()
         _uiState.update {
-            it.copy(isUnlockEnabled = isValid && !state.isLoading)
+            it.copy(isUnlockEnabled = isValid && state.isInvitationLoaded && !state.isLoading)
         }
     }
 
     fun claimVault() {
         val state = _uiState.value
-        if (!state.isUnlockEnabled) return
+        val invitationId = invitationId ?: return
+        if (!state.isUnlockEnabled || state.isLoading) return
 
         viewModelScope.launch {
             _uiState.update {
@@ -71,8 +102,8 @@ class ClaimLegacyViewModel(
             }
 
             try {
-                // FASE 4.2: Llamada a la red
-                val legacyVault = guardianRepository.unlockLegacyVault(
+                val legacyVault = guardianRepository.claimInheritance(
+                    invitationId = invitationId,
                     pin = state.pin
                 ).getOrThrow()
 
@@ -102,6 +133,14 @@ class ClaimLegacyViewModel(
                         attemptsRemaining = 0,
                         unlockError = R.string.error_too_many_attempts
                     )
+                }
+            } catch (e: LegacyNotConfiguredException) {
+                _uiState.update {
+                    it.copy(isLoading = false, unlockError = R.string.error_legacy_not_configured)
+                }
+            } catch (e: LegacyExpiredException) {
+                _uiState.update {
+                    it.copy(isLoading = false, unlockError = R.string.error_legacy_expired)
                 }
             } catch (e: Exception) {
                 _uiState.update {

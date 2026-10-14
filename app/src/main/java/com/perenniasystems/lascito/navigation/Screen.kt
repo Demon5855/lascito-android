@@ -14,8 +14,8 @@ sealed class Screen(val route: String) {
             return if (profileId != null) "add_profile?profileId=$profileId" else "add_profile"
         }
     }
-    data object Altar       : Screen("altar/{profileId}") {
-        fun createRoute(profileId: String) = "altar/$profileId"
+    data object Altar       : Screen("altar/{profileId}?readOnly={readOnly}") {
+        fun createRoute(profileId: String, readOnly: Boolean = false) = "altar/$profileId?readOnly=$readOnly"
     }
     data object AddMemory   : Screen("add_memory/{profileId}?memoryId={memoryId}") {
         fun createRoute(profileId: String, memoryId: String? = null): String {
@@ -24,7 +24,12 @@ sealed class Screen(val route: String) {
     }
     data object UserSettings    : Screen("user_settings")
     data object Guardian         : Screen("guardian")
-    data object ClaimLegacy      : Screen("claim_legacy")
+    data object ClaimLegacy      : Screen("claim_legacy/{invitationId}") {
+        fun createRoute(invitationId: String) = "claim_legacy/$invitationId"
+    }
+    data object Inheritance      : Screen("inheritance/{creatorUid}") {
+        fun createRoute(creatorUid: String) = "inheritance/$creatorUid"
+    }
     data object AddTimeCapsule   : Screen("add_time_capsule")
     data object CapsuleDetail    : Screen("capsule_detail/{capsuleId}") {
         fun createRoute(capsuleId: String) = "capsule_detail/$capsuleId"

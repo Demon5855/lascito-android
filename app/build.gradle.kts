@@ -7,7 +7,7 @@
 
 android {
     namespace = "com.perenniasystems.lascito"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.perenniasystems.lascito"
@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.functions)
     
     // ── DataStore ─────────────────────────────────────────────────────────────
     implementation("androidx.datastore:datastore-preferences:1.0.0")

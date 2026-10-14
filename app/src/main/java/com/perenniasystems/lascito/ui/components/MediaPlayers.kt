@@ -162,6 +162,7 @@ fun formatMillisToMMSS(millis: Long): String {
     return String.format(Locale.getDefault(), "%02d:%02d", min, sec)
 }
 
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun MediaPreviewPlayer(uri: Uri, isAudioOnly: Boolean = false) {
     val context = LocalContext.current

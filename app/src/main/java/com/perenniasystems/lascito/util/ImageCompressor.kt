@@ -73,7 +73,7 @@ object ImageCompressor {
                     }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                // Sin EXIF legible se asume orientación normal.
             }
 
             // Aplicar la matriz de rotacion usando el decodedBitmap ya reducido por inSampleSize (menor costo de RAM)
@@ -102,7 +102,6 @@ object ImageCompressor {
             
             return@withContext outputStream.toByteArray()
         } catch (e: Exception) {
-            e.printStackTrace()
             return@withContext null
         } finally {
             inputStream?.close()

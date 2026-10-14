@@ -91,19 +91,32 @@ interface GuardianRepository {
     // ── Reclamación de Legados (Phase 4) ───────────────────────────────────
 
     /**
-     * Verifica si el correo actual tiene legados pendientes por reclamar.
+     * Invitaciones pendientes de reclamar dirigidas al correo del usuario actual.
+     * Hay una por cada creador que lo designó guardián.
      */
-    suspend fun checkPendingLegacies(email: String): Result<Boolean>
-    
-    /**
-     * Recupera una invitación específica para reclamar un legado.
-     */
-    suspend fun getLegacyInvitation(email: String): Result<com.perenniasystems.lascito.data.model.LegacyInvitation?>
+    suspend fun getPendingInvitations(): Result<List<com.perenniasystems.lascito.data.model.LegacyInvitation>>
 
     /**
-     * Intenta desbloquear la bóveda de legado utilizando el PIN.
+     * Una invitación concreta del usuario actual, o null si ya no está pendiente.
+     */
+    suspend fun getPendingInvitation(invitationId: String): Result<com.perenniasystems.lascito.data.model.LegacyInvitation?>
+
+    /**
+     * Herencias que el usuario actual ya reclamó (invitación CLAIMED con su UID).
+     */
+    suspend fun getClaimedInheritances(): Result<List<com.perenniasystems.lascito.data.model.LegacyVault>>
+
+    /**
+     * Guarda el PIN de herencia del usuario actual como hash bcrypt en un documento
+     * que ningún cliente puede leer. El PIN en claro nunca se persiste.
+     */
+    suspend fun setInheritancePin(pin: String): Result<Unit>
+
+    /**
+     * Reclama la herencia de la invitación [invitationId]. La verificación del PIN y el
+     * conteo de intentos ocurren en la Cloud Function `claimInheritance`.
      * @throws InvalidPinException si el PIN es incorrecto
      * @throws LegacyBlockedException si excedió el límite de intentos
      */
-    suspend fun unlockLegacyVault(pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault>
+    suspend fun claimInheritance(invitationId: String, pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault>
 }

@@ -5,15 +5,10 @@ data class LegacyInvitation(
     val creatorUid: String = "",
     val creatorName: String = "",
     val guardianEmail: String = "",
-    val accessPinHash: String = "",
     val status: InvitationStatus = InvitationStatus.PENDING,
     val createdAt: Long = 0L,
     val expiresAt: Long? = null,
-    val vaultContentRef: String = "",
-    val encryptedPinHint: String? = null,
-    val pinHintIv: String? = null,
-    val failedAttempts: Int = 0,
-    val lastFailedAttempt: Long? = null
+    val vaultContentRef: String = ""
 )
 
 enum class InvitationStatus {
@@ -38,4 +33,5 @@ class InvalidPinException(val attemptsRemaining: Int) : Exception("Invalid PIN. 
 class LegacyNotFoundException(message: String = "Legacy not found") : Exception(message)
 class LegacyExpiredException(message: String = "Legacy expired") : Exception(message)
 class LegacyBlockedException(message: String = "Legacy blocked due to too many failed attempts") : Exception(message)
+class LegacyNotConfiguredException(message: String = "Legacy PIN not configured by its creator") : Exception(message)
 class LegacyAlreadyClaimedException(message: String = "Legacy already claimed") : Exception(message)

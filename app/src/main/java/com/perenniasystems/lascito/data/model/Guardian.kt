@@ -54,12 +54,9 @@ data class LegacyGuardian(
     /** Estado actual de la aceptación del rol. */
     val status: GuardianStatus = GuardianStatus.PENDING,
     /**
-     * Hash del PIN de acceso temporal que el guardián usará para autenticarse
-     * sin necesidad de una cuenta Firebase propia.
-     * Almacenar SIEMPRE como hash (bcrypt/SHA-256), nunca en texto plano.
+     * Pista del PIN ofuscada con AES-256 desde el cliente. La clave se deriva del UID,
+     * así que el servidor puede leerla (la necesita para enviarla por email al guardián).
      */
-    val accessPinHash: String? = null,
-    /** Pista del PIN encriptada en AES-256 desde el cliente para mantener seguridad E2E a Firestore. */
     val encryptedPinHint: String? = null,
     /** IV generado para desencriptar la pista. */
     val pinHintIv: String? = null,

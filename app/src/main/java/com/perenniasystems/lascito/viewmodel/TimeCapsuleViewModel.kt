@@ -1,7 +1,6 @@
 package com.perenniasystems.lascito.viewmodel
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.data.model.MediaType
@@ -250,7 +249,6 @@ class TimeCapsuleViewModel(
 
                 _uiState.update { it.copy(isLoading = false, uploadProgress = null, isSuccess = true) }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                Log.e("TimeCapsuleViewModel", "Timeout saving capsule", e)
                 _uiState.update {
                     it.copy(
                         isLoading     = false,
@@ -259,7 +257,6 @@ class TimeCapsuleViewModel(
                     )
                 }
             } catch (e: Exception) {
-                Log.e("TimeCapsuleViewModel", "Error saving capsule", e)
                 _uiState.update {
                     it.copy(
                         isLoading     = false,

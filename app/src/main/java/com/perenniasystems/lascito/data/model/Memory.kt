@@ -30,6 +30,9 @@ data class Memory(
     val capturedDate: Long = 0L            // Unix timestamp (ms)
 )
 
+/** El archivo supera el límite de tamaño que aplican las reglas de Storage. */
+class MediaTooLargeException(val isVideo: Boolean) : Exception("Media exceeds the upload size limit")
+
 @Keep
 enum class MediaType {
     IMAGE,
