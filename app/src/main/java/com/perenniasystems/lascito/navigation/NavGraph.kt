@@ -92,8 +92,8 @@ fun LascitoNavGraph(
                 onNavigateToUserSettings = {
                     navController.navigate(Screen.UserSettings.route)
                 },
-                onNavigateToClaimLegacy = {
-                    navController.navigate(Screen.ClaimLegacy.route)
+                onNavigateToClaimLegacy = { invitationId ->
+                    navController.navigate(Screen.ClaimLegacy.createRoute(invitationId))
                 },
                 onNavigateToInheritance = { creatorUid ->
                     navController.navigate(Screen.Inheritance.createRoute(creatorUid))
@@ -200,8 +200,13 @@ fun LascitoNavGraph(
             )
         }
 
-        composable(Screen.ClaimLegacy.route) {
+        composable(
+            route     = Screen.ClaimLegacy.route,
+            arguments = listOf(navArgument("invitationId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val invitationId = backStackEntry.arguments?.getString("invitationId") ?: return@composable
             com.perenniasystems.lascito.ui.screens.guardian.ClaimLegacyScreen(
+                invitationId   = invitationId,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToVault = { creatorUid ->
                     navController.navigate(Screen.Inheritance.createRoute(creatorUid)) {

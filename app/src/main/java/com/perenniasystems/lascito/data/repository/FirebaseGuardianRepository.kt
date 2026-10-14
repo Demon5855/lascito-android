@@ -1,6 +1,7 @@
 package com.perenniasystems.lascito.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
@@ -16,6 +17,7 @@ import com.perenniasystems.lascito.data.model.InvalidPinException
 import com.perenniasystems.lascito.data.model.LegacyAlreadyClaimedException
 import com.perenniasystems.lascito.data.model.LegacyBlockedException
 import com.perenniasystems.lascito.data.model.LegacyExpiredException
+import com.perenniasystems.lascito.data.model.LegacyNotConfiguredException
 import com.perenniasystems.lascito.data.model.LegacyNotFoundException
 import com.perenniasystems.lascito.data.model.TimeCapsule
 import kotlinx.coroutines.tasks.await
@@ -270,15 +272,25 @@ class FirebaseGuardianRepository(
 
     // ── Reclamación de Legados (Phase 4) ───────────────────────────────────
 
-    override suspend fun checkPendingLegacies(email: String): Result<Boolean> = runCatching {
+    override suspend fun getPendingInvitations(): Result<List<LegacyInvitation>> = runCatching {
+        val email = auth.currentUser?.email ?: throw IllegalStateException("User email not found")
         withTimeout(10_000L) {
-            val querySnapshot = invitationsCollection
+            invitationsCollection
                 .whereEqualTo("guardianEmail", email.lowercase())
                 .whereEqualTo("status", "PENDING")
-                .limit(1)
                 .get()
                 .await()
-            !querySnapshot.isEmpty
+                .documents
+                .map { it.toInvitation() }
+                .sortedBy { it.createdAt }
+        }
+    }
+
+    override suspend fun getPendingInvitation(invitationId: String): Result<LegacyInvitation?> = runCatching {
+        withTimeout(10_000L) {
+            val doc = invitationsCollection.document(invitationId).get().await()
+            if (!doc.exists()) return@withTimeout null
+            doc.toInvitation().takeIf { it.status == InvitationStatus.PENDING }
         }
     }
 
@@ -305,33 +317,18 @@ class FirebaseGuardianRepository(
         }
     }
 
-    override suspend fun getLegacyInvitation(email: String): Result<LegacyInvitation?> = runCatching {
-        withTimeout(10_000L) {
-            val querySnapshot = invitationsCollection
-                .whereEqualTo("guardianEmail", email.lowercase())
-                .whereEqualTo("status", "PENDING")
-                .limit(1)
-                .get()
-                .await()
-            
-            if (querySnapshot.isEmpty) {
-                return@withTimeout null
-            }
-            
-            val doc = querySnapshot.documents.first()
-            LegacyInvitation(
-                id = doc.id,
-                creatorUid = doc.getString("creatorUid") ?: "",
-                creatorName = doc.getString("creatorName") ?: "",
-                guardianEmail = doc.getString("guardianEmail") ?: "",
-                status = InvitationStatus.valueOf(doc.getString("status") ?: "PENDING"),
-                // El Cron Job escribe createdAt como serverTimestamp
-                createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
-                expiresAt = doc.getLong("expiresAt"),
-                vaultContentRef = doc.getString("vaultContentRef") ?: ""
-            )
-        }
-    }
+    private fun DocumentSnapshot.toInvitation() = LegacyInvitation(
+        id = id,
+        creatorUid = getString("creatorUid") ?: "",
+        creatorName = getString("creatorName") ?: "",
+        guardianEmail = getString("guardianEmail") ?: "",
+        status = runCatching { InvitationStatus.valueOf(getString("status") ?: "PENDING") }
+            .getOrDefault(InvitationStatus.PENDING),
+        // El Cron Job escribe createdAt como serverTimestamp
+        createdAt = getTimestamp("createdAt")?.toDate()?.time ?: 0L,
+        expiresAt = getLong("expiresAt"),
+        vaultContentRef = getString("vaultContentRef") ?: ""
+    )
 
     override suspend fun setInheritancePin(pin: String): Result<Unit> = runCatching {
         val uid = requireUid()
@@ -348,17 +345,13 @@ class FirebaseGuardianRepository(
         }
     }
 
-    override suspend fun claimInheritance(pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault> = runCatching {
-        val currentUser = auth.currentUser ?: throw IllegalStateException("User not authenticated")
-        val email = currentUser.email ?: throw IllegalStateException("User email not found")
-
-        val invitation = getLegacyInvitation(email).getOrThrow()
-            ?: throw LegacyNotFoundException("No pending legacy found for this email")
+    override suspend fun claimInheritance(invitationId: String, pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault> = runCatching {
+        auth.currentUser ?: throw IllegalStateException("User not authenticated")
 
         val response = try {
             withTimeout(15_000L) {
                 functions.getHttpsCallable("claimInheritance")
-                    .call(mapOf("invitationId" to invitation.id, "pin" to pin))
+                    .call(mapOf("invitationId" to invitationId, "pin" to pin))
                     .await()
             }
         } catch (e: FirebaseFunctionsException) {
@@ -367,10 +360,10 @@ class FirebaseGuardianRepository(
 
         val data = response.getData() as? Map<*, *>
         com.perenniasystems.lascito.data.model.LegacyVault(
-            id = data?.get("invitationId") as? String ?: invitation.id,
-            creatorUid = data?.get("creatorUid") as? String ?: invitation.creatorUid,
-            creatorName = data?.get("creatorName") as? String ?: invitation.creatorName,
-            vaultContentRef = data?.get("vaultContentRef") as? String ?: invitation.vaultContentRef,
+            id = data?.get("invitationId") as? String ?: invitationId,
+            creatorUid = data?.get("creatorUid") as? String ?: "",
+            creatorName = data?.get("creatorName") as? String ?: "",
+            vaultContentRef = data?.get("vaultContentRef") as? String ?: "",
             claimedAt = (data?.get("claimedAt") as? Number)?.toLong() ?: System.currentTimeMillis()
         )
     }
@@ -384,6 +377,7 @@ class FirebaseGuardianRepository(
             "EXPIRED" -> LegacyExpiredException()
             "NOT_FOUND" -> LegacyNotFoundException()
             "ALREADY_CLAIMED" -> LegacyAlreadyClaimedException()
+            "NOT_CONFIGURED" -> LegacyNotConfiguredException()
             else -> this
         }
     }

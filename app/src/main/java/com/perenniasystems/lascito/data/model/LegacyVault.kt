@@ -33,4 +33,5 @@ class InvalidPinException(val attemptsRemaining: Int) : Exception("Invalid PIN. 
 class LegacyNotFoundException(message: String = "Legacy not found") : Exception(message)
 class LegacyExpiredException(message: String = "Legacy expired") : Exception(message)
 class LegacyBlockedException(message: String = "Legacy blocked due to too many failed attempts") : Exception(message)
+class LegacyNotConfiguredException(message: String = "Legacy PIN not configured by its creator") : Exception(message)
 class LegacyAlreadyClaimedException(message: String = "Legacy already claimed") : Exception(message)

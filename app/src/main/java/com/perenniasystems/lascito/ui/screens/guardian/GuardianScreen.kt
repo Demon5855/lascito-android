@@ -185,21 +185,11 @@ fun GuardianScreen(
         }
     }
 
-    // Error dialog
-    uiState.error?.let {
-        val errorBody = stringResource(R.string.error_guardian_save_body)
-        AlertDialog(
-            onDismissRequest  = { viewModel.clearError() },
-            containerColor    = SurfaceDark,
-            titleContentColor = ErrorRed,
-            textContentColor  = TextPrimary,
-            title = { Text(stringResource(R.string.error_generic).split(".").first()) },
-            text  = { Text(errorBody) },
-            confirmButton = {
-                TextButton(onClick = { viewModel.clearError() }) {
-                    Text(stringResource(R.string.btn_understood), color = MaterialTheme.colorScheme.primary)
-                }
-            }
+    // Error dialog: muestra el mensaje concreto (validación, red, genérico...)
+    uiState.error?.let { errorRes ->
+        LascitoAlertDialog(
+            messageRes = errorRes,
+            onDismiss  = { viewModel.clearError() }
         )
     }
 
@@ -211,13 +201,13 @@ fun GuardianScreen(
             titleContentColor = MaterialTheme.colorScheme.primary,
             textContentColor  = TextPrimary,
             title = { Text(stringResource(R.string.title_cooldown_active)) },
-            text  = { 
+            text  = {
                 Text(
                     stringResource(
                         R.string.message_guardian_cooldown,
                         uiState.cooldownDaysRemaining
                     )
-                ) 
+                )
             },
             confirmButton = {
                 TextButton(onClick = { viewModel.dismissCooldownDialog() }) {
@@ -479,9 +469,9 @@ private fun HintExamplesCard() {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
             )
-            
+
             Spacer(Modifier.height(4.dp))
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -581,7 +571,7 @@ private fun DeadManSwitchCard(
                                 .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
-                                    if (isSelected) MaterialTheme.colorScheme.primary 
+                                    if (isSelected) MaterialTheme.colorScheme.primary
                                     else SurfaceVariant
                                 )
                                 .border(
@@ -674,7 +664,7 @@ private fun SystemStatusFooter(
         label = "pulse"
     )
 
-    // Formateo inyectado en un LaunchEffect para ser despachado por el Scheduler de Compose cada minuto (60,000 ms) 
+    // Formateo inyectado en un LaunchEffect para ser despachado por el Scheduler de Compose cada minuto (60,000 ms)
     // y no colapsar la memoria del CPU y recolector de basura
     val justNow = stringResource(R.string.heartbeat_just_now)
     val never = stringResource(R.string.heartbeat_never)

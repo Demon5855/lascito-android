@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,10 +32,12 @@ import com.perenniasystems.lascito.viewmodel.ClaimLegacyViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClaimLegacyScreen(
+    invitationId: String,
     viewModel: ClaimLegacyViewModel = viewModel(),
     onNavigateBack: () -> Unit,
     onNavigateToVault: (String) -> Unit
 ) {
+    LaunchedEffect(invitationId) { viewModel.load(invitationId) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -74,7 +77,11 @@ fun ClaimLegacyScreen(
             Spacer(Modifier.height(24.dp))
 
             Text(
-                text = stringResource(R.string.desc_claim_legacy),
+                text = if (uiState.creatorName.isNotBlank()) {
+                    stringResource(R.string.desc_claim_legacy_from, uiState.creatorName)
+                } else {
+                    stringResource(R.string.desc_claim_legacy)
+                },
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface
@@ -90,22 +97,24 @@ fun ClaimLegacyScreen(
                 isError = uiState.unlockError != null,
                 supportingText = {
                     val errorRes = uiState.unlockError
-                    errorRes?.let {
-                        Text(
-                            text = stringResource(it),
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-
-                    if (uiState.unlockError != null && !uiState.isLocked) {
-                        Text(
-                            text = stringResource(
-                                R.string.message_attempts_remaining,
-                                uiState.attemptsRemaining
-                            ),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                    if (errorRes != null) {
+                        Column {
+                            Text(
+                                text = stringResource(errorRes),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            // Los intentos restantes solo aplican a un PIN incorrecto
+                            if (errorRes == R.string.error_incorrect_pin && !uiState.isLocked) {
+                                Text(
+                                    text = stringResource(
+                                        R.string.message_attempts_remaining,
+                                        uiState.attemptsRemaining
+                                    ),
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
                     }
                 },
                 visualTransformation = PasswordVisualTransformation(),

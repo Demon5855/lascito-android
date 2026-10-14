@@ -268,17 +268,17 @@
 
     <!-- ── Reclamación de Legados ─────────────────────────────────── -->
     <!-- Claim Legacy - Banner -->
-    <string name="banner_pending_legacy">Someone has left you a legacy. You have an encrypted vault waiting for you.</string>
+    <string name="banner_pending_legacy">Someone left you a legacy. A vault is waiting for you.</string>
     <string name="action_claim_legacy">Claim Vault</string>
 
     <!-- Claim Legacy - Screen -->
     <string name="screen_claim_legacy">Claim Legacy</string>
-    <string name="desc_claim_legacy">Enter the 4-digit security PIN you received in your email to unlock the vault.</string>
+    <string name="desc_claim_legacy">Enter the 4-digit PIN the creator of the legacy shared with you to unlock it.</string>
     <string name="label_pin">Access PIN</string>
     <string name="action_unlock_vault">Unlock Vault</string>
 
     <!-- Claim Legacy - Errors -->
-    <string name="error_incorrect_pin">Incorrect PIN. Check the code you received via email.</string>
+    <string name="error_incorrect_pin">Incorrect PIN. Check the code the creator shared with you.</string>
     <string name="error_too_many_attempts">You have exceeded the maximum number of attempts. The vault has been locked for security.</string>
     <string name="error_unlocking_vault">Error unlocking vault. Please try again later.</string>
     <string name="message_attempts_remaining">Attempts remaining: %d</string>
@@ -307,7 +307,6 @@
     <string name="btn_save_legacy_config">Save Configuration</string>
     <string name="btn_saving">Saving…</string>
     <string name="toast_legacy_saved">Legacy configuration saved</string>
-    <string name="error_guardian_save_body">Could not save the configuration. Check your connection and try again.</string>
 
     <!-- Navigation card in My Account -->
     <string name="nav_card_guardian_title">Legacy Plan</string>
@@ -362,5 +361,10 @@
     <string name="error_load_inheritance">The inheritance could not be loaded. Please try again later.</string>
     <string name="banner_claimed_inheritance">You have access to the inheritance from %1$s.</string>
     <string name="action_view_inheritance">View</string>
+    <string name="error_legacy_not_configured">This legacy is not ready to be claimed yet: its creator needs to save the access PIN again.</string>
+    <string name="error_legacy_expired">This legacy invitation has expired.</string>
+    <string name="banner_pending_legacy_from">%1$s left you a legacy. A vault is waiting for you.</string>
+    <string name="desc_claim_legacy_from">Enter the 4-digit PIN that %1$s shared with you to unlock their legacy.</string>
+    <string name="error_legacy_not_available">This invitation is no longer available.</string>
 
 </resources>

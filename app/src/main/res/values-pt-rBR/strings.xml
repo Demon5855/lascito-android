@@ -281,7 +281,6 @@
     <string name="btn_save_legacy_config">Salvar Configuração</string>
     <string name="btn_saving">Salvando…</string>
     <string name="toast_legacy_saved">Configuração de legado salva</string>
-    <string name="error_guardian_save_body">Não foi possível salvar a configuração. Verifique sua conexão e tente novamente.</string>
 
     <!-- Navigation card in My Account -->
     <string name="nav_card_guardian_title">Plano de Legado</string>
@@ -331,17 +330,17 @@
 
     <!-- ── Reclamación de Legados ─────────────────────────────────── -->
     <!-- Claim Legacy - Banner -->
-    <string name="banner_pending_legacy">Alguém deixou um legado para você. Você tem um cofre criptografado esperando por você.</string>
+    <string name="banner_pending_legacy">Alguém deixou um legado para você. Há um cofre esperando por você.</string>
     <string name="action_claim_legacy">Reivindicar Cofre</string>
 
     <!-- Claim Legacy - Screen -->
     <string name="screen_claim_legacy">Reivindicar Legado</string>
-    <string name="desc_claim_legacy">Digite o PIN de segurança de 4 dígitos que você recebeu em seu e-mail para desbloquear o cofre.</string>
+    <string name="desc_claim_legacy">Digite o PIN de 4 dígitos que o criador do legado compartilhou com você para desbloqueá-lo.</string>
     <string name="label_pin">PIN de Acesso</string>
     <string name="action_unlock_vault">Desbloquear Cofre</string>
 
     <!-- Claim Legacy - Errors -->
-    <string name="error_incorrect_pin">PIN incorreto. Verifique o código que você recebeu por e-mail.</string>
+    <string name="error_incorrect_pin">PIN incorreto. Verifique o código que o criador compartilhou com você.</string>
     <string name="error_too_many_attempts">Você excedeu o número máximo de tentativas. O cofre foi bloqueado por segurança.</string>
     <string name="error_unlocking_vault">Erro ao desbloquear cofre. Tente novamente mais tarde.</string>
     <string name="message_attempts_remaining">Tentativas restantes: %d</string>
@@ -359,5 +358,10 @@
     <string name="error_load_inheritance">Não foi possível carregar a herança. Tente novamente mais tarde.</string>
     <string name="banner_claimed_inheritance">Você tem acesso à herança de %1$s.</string>
     <string name="action_view_inheritance">Ver</string>
+    <string name="error_legacy_not_configured">Este legado ainda não está pronto para ser reivindicado: o criador precisa salvar o PIN de acesso novamente.</string>
+    <string name="error_legacy_expired">Este convite de legado expirou.</string>
+    <string name="banner_pending_legacy_from">%1$s deixou um legado para você. Há um cofre esperando por você.</string>
+    <string name="desc_claim_legacy_from">Digite o PIN de 4 dígitos que %1$s compartilhou com você para desbloquear o legado.</string>
+    <string name="error_legacy_not_available">Este convite não está mais disponível.</string>
 
 </resources>

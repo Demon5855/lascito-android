@@ -24,7 +24,9 @@ sealed class Screen(val route: String) {
     }
     data object UserSettings    : Screen("user_settings")
     data object Guardian         : Screen("guardian")
-    data object ClaimLegacy      : Screen("claim_legacy")
+    data object ClaimLegacy      : Screen("claim_legacy/{invitationId}") {
+        fun createRoute(invitationId: String) = "claim_legacy/$invitationId"
+    }
     data object Inheritance      : Screen("inheritance/{creatorUid}") {
         fun createRoute(creatorUid: String) = "inheritance/$creatorUid"
     }

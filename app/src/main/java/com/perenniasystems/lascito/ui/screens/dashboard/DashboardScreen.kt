@@ -36,7 +36,7 @@ fun DashboardScreen(
     onNavigateToAltar:        (String) -> Unit = {},
     onNavigateToAddProfile:   (String?) -> Unit = {},
     onNavigateToUserSettings: () -> Unit = {},
-    onNavigateToClaimLegacy:  () -> Unit = {},
+    onNavigateToClaimLegacy:  (String) -> Unit = {},
     onNavigateToInheritance:  (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -131,14 +131,18 @@ fun DashboardScreen(
             // Phase 4.1: Mostrar banner de reclamo solo si el correo está verificado y hay legados
             if (isEmailVerified) {
                 val state = uiState
-                if (state is DashboardUiState.Success && state.hasPendingLegacy) {
-                    InfoBanner(
-                        message = stringResource(R.string.banner_pending_legacy),
-                        actionText = stringResource(R.string.action_claim_legacy),
-                        onActionClick = onNavigateToClaimLegacy
-                    )
-                }
                 if (state is DashboardUiState.Success) {
+                    state.pendingInvitations.forEach { invitation ->
+                        InfoBanner(
+                            message = if (invitation.creatorName.isNotBlank()) {
+                                stringResource(R.string.banner_pending_legacy_from, invitation.creatorName)
+                            } else {
+                                stringResource(R.string.banner_pending_legacy)
+                            },
+                            actionText = stringResource(R.string.action_claim_legacy),
+                            onActionClick = { onNavigateToClaimLegacy(invitation.id) }
+                        )
+                    }
                     state.claimedInheritances.forEach { inheritance ->
                         InfoBanner(
                             message = stringResource(R.string.banner_claimed_inheritance, inheritance.creatorName),

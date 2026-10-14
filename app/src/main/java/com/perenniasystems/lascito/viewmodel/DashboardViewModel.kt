@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.data.model.LegacyInvitation
 import com.perenniasystems.lascito.data.model.LegacyVault
 import com.perenniasystems.lascito.data.model.Profile
 import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
@@ -69,11 +70,11 @@ class DashboardViewModel(
                     val profiles = repository.getProfiles(userId = user.uid)
                     _isEmailVerified.value = user.isEmailVerified
 
-                    val hasPendingLegacy = checkPendingLegacyStatus(user)
+                    val pendingInvitations = loadPendingInvitations()
                     val claimedInheritances = guardianRepository.getClaimedInheritances()
                         .getOrDefault(emptyList())
 
-                    _uiState.value = DashboardUiState.Success(profiles, hasPendingLegacy, claimedInheritances)
+                    _uiState.value = DashboardUiState.Success(profiles, pendingInvitations, claimedInheritances)
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 _uiState.value = DashboardUiState.Error(R.string.error_network)
@@ -85,17 +86,9 @@ class DashboardViewModel(
         }
     }
 
-    private suspend fun checkPendingLegacyStatus(user: com.google.firebase.auth.FirebaseUser): Boolean {
-        if (!FEATURE_CLAIM_LEGACY_ENABLED) return false
-
-        return try {
-            user.email?.let {
-                // FASE 4.2: Implementación real a Firebase
-                guardianRepository.checkPendingLegacies(it).getOrDefault(false)
-            } ?: false
-        } catch (e: Exception) {
-            false
-        }
+    private suspend fun loadPendingInvitations(): List<LegacyInvitation> {
+        if (!FEATURE_CLAIM_LEGACY_ENABLED) return emptyList()
+        return guardianRepository.getPendingInvitations().getOrDefault(emptyList())
     }
 
     fun deleteProfile(profileId: String, imageUrl: String?) {
@@ -150,7 +143,7 @@ sealed interface DashboardUiState {
     data object Loading : DashboardUiState
     data class Success(
         val profiles: List<Profile>,
-        val hasPendingLegacy: Boolean = false,
+        val pendingInvitations: List<LegacyInvitation> = emptyList(),
         val claimedInheritances: List<LegacyVault> = emptyList()
     ) : DashboardUiState
     data class Error(@StringRes val messageResId: Int) : DashboardUiState
