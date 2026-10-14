@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.TimeCapsule
 import com.perenniasystems.lascito.data.model.TriggerType
@@ -39,7 +39,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CapsuleVaultScreen(
-    viewModel: CapsuleVaultViewModel = viewModel(),
+    viewModel: CapsuleVaultViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {},
     onNavigateToCreate: () -> Unit = {},
     onNavigateToDetail: (String) -> Unit = {}

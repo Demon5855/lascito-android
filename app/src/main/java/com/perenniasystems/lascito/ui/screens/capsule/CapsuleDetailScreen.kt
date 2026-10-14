@@ -36,7 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.MediaType
@@ -65,7 +65,7 @@ private const val MAX_CONTENT_LENGTH = 2000
 @Composable
 fun CapsuleDetailScreen(
     capsuleId:      String?              = null,
-    viewModel:      TimeCapsuleViewModel = viewModel(),
+    viewModel:      TimeCapsuleViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit           = {},
     onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {

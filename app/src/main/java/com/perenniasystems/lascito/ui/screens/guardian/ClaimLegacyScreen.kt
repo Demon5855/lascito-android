@@ -22,7 +22,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.theme.AmoledBlack
@@ -33,7 +33,7 @@ import com.perenniasystems.lascito.viewmodel.ClaimLegacyViewModel
 @Composable
 fun ClaimLegacyScreen(
     invitationId: String,
-    viewModel: ClaimLegacyViewModel = viewModel(),
+    viewModel: ClaimLegacyViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit,
     onNavigateToVault: (String) -> Unit
 ) {

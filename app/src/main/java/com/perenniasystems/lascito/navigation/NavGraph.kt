@@ -2,7 +2,7 @@ package com.perenniasystems.lascito.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -42,7 +42,7 @@ fun LascitoNavGraph(
     onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
     // Shared AuthViewModel — survives across Login ↔ Register navigation
-    val authViewModel: AuthViewModel = viewModel()
+    val authViewModel: AuthViewModel = hiltViewModel()
 
     NavHost(
         navController    = navController,
@@ -110,7 +110,7 @@ fun LascitoNavGraph(
             })
         ) { backStackEntry ->
             val profileId = backStackEntry.arguments?.getString("profileId")
-            val addProfileViewModel: AddProfileViewModel = viewModel()
+            val addProfileViewModel: AddProfileViewModel = hiltViewModel()
 
             LaunchedEffect(profileId) {
                 if (profileId != null) {
@@ -160,7 +160,7 @@ fun LascitoNavGraph(
         ) { backStackEntry ->
             val profileId = backStackEntry.arguments?.getString("profileId") ?: return@composable
             val memoryId  = backStackEntry.arguments?.getString("memoryId")
-            val addMemoryViewModel: AddMemoryViewModel = viewModel()
+            val addMemoryViewModel: AddMemoryViewModel = hiltViewModel()
 
             LaunchedEffect(memoryId) {
                 if (memoryId != null) {

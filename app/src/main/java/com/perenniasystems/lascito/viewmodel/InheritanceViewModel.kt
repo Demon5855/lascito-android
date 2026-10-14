@@ -1,12 +1,12 @@
 package com.perenniasystems.lascito.viewmodel
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.Profile
-import com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository
-import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
 import com.perenniasystems.lascito.data.repository.GuardianRepository
 import com.perenniasystems.lascito.data.repository.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,9 +26,10 @@ sealed interface InheritanceUiState {
  * El acceso lo conceden las reglas de Firestore mientras la invitación esté
  * CLAIMED con el UID del guardián.
  */
-class InheritanceViewModel(
-    private val profileRepo: ProfileRepository = FirebaseProfileRepository(),
-    private val guardianRepo: GuardianRepository = FirebaseGuardianRepository()
+@HiltViewModel
+class InheritanceViewModel @Inject constructor(
+    private val profileRepo: ProfileRepository,
+    private val guardianRepo: GuardianRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<InheritanceUiState>(InheritanceUiState.Loading)

@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.data.repository
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import com.google.firebase.storage.FirebaseStorage
@@ -43,8 +45,9 @@ interface FirebaseStorageRepository {
 /**
  * Implementation of [FirebaseStorageRepository] using Firebase Storage.
  */
-class FirebaseStorageRepositoryImpl(
-    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+@Singleton
+class FirebaseStorageRepositoryImpl @Inject constructor(
+    private val storage: FirebaseStorage
 ) : FirebaseStorageRepository {
 
     private companion object {

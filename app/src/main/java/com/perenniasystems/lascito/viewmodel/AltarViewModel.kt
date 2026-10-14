@@ -1,11 +1,11 @@
 package com.perenniasystems.lascito.viewmodel
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.data.model.Memory
 import com.perenniasystems.lascito.data.model.Profile
-import com.perenniasystems.lascito.data.repository.FirebaseMemoryRepository
-import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
 import com.perenniasystems.lascito.data.repository.MemoryRepository
 import com.perenniasystems.lascito.data.repository.ProfileRepository
 import com.perenniasystems.lascito.R
@@ -23,9 +23,10 @@ sealed class AltarUiState {
     data class Error(val messageResId: Int) : AltarUiState()
 }
 
-class AltarViewModel(
-    private val profileRepo: ProfileRepository = FirebaseProfileRepository(),
-    private val memoryRepo:  MemoryRepository  = FirebaseMemoryRepository()
+@HiltViewModel
+class AltarViewModel @Inject constructor(
+    private val profileRepo: ProfileRepository,
+    private val memoryRepo:  MemoryRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AltarUiState>(AltarUiState.Loading)

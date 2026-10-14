@@ -1,5 +1,6 @@
 package com.perenniasystems.lascito
 
+import dagger.hilt.android.AndroidEntryPoint
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
@@ -63,7 +64,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import com.google.firebase.auth.FirebaseAuth
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.perenniasystems.lascito.viewmodel.BiometricLockViewModel
 
 
@@ -75,6 +76,7 @@ import com.perenniasystems.lascito.viewmodel.BiometricLockViewModel
  * This triggers instant recomposition of all [stringResource] calls in the
  * subtree — no [Activity.recreate()] needed, no UI flicker.
  */
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     override fun attachBaseContext(newBase: android.content.Context) {
@@ -125,7 +127,7 @@ class MainActivity : AppCompatActivity() {
             val baseContext = LocalContext.current
             val registryOwner = androidx.activity.compose.LocalActivityResultRegistryOwner.current
             val localizedContext = remember(langTag) {
-                LocaleHelper.wrapContext(baseContext, langTag)
+                LocaleHelper.localizedWrapper(baseContext, langTag)
             }
 
             // Create DataStore Preferences Repository
@@ -227,7 +229,7 @@ class MainActivity : AppCompatActivity() {
 @Composable
 fun BiometricLockScreen(
     activity: FragmentActivity,
-    viewModel: BiometricLockViewModel = viewModel(),
+    viewModel: BiometricLockViewModel = hiltViewModel(),
     content: @Composable () -> Unit
 ) {
     val currentUser = FirebaseAuth.getInstance().currentUser

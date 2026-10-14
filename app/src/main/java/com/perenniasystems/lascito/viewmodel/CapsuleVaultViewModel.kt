@@ -1,9 +1,10 @@
 package com.perenniasystems.lascito.viewmodel
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.data.model.TimeCapsule
-import com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository
 import com.perenniasystems.lascito.data.repository.GuardianRepository
 import com.perenniasystems.lascito.util.ErrorHandler
 import kotlinx.coroutines.Dispatchers
@@ -27,8 +28,9 @@ data class VaultUiState(
 // ViewModel
 // ─────────────────────────────────────────────────────────────────────────────
 
-class CapsuleVaultViewModel(
-    private val repository: GuardianRepository = FirebaseGuardianRepository()
+@HiltViewModel
+class CapsuleVaultViewModel @Inject constructor(
+    private val repository: GuardianRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VaultUiState())

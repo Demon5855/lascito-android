@@ -41,8 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.perenniasystems.lascito.data.repository.ThemeRepository
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.theme.*
@@ -66,17 +65,7 @@ fun UserSettingsScreen(
     onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
     val context = LocalContext.current
-    val themeRepository = remember { ThemeRepository(context) }
-    
-    val viewModel: UserSettingsViewModel = viewModel(
-        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                val prefs = com.perenniasystems.lascito.data.local.OnboardingPreferences(context.applicationContext)
-                @Suppress("UNCHECKED_CAST")
-                return UserSettingsViewModel(prefs = prefs, themeRepository = themeRepository) as T
-            }
-        }
-    )
+    val viewModel: UserSettingsViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 

@@ -1,8 +1,9 @@
 package com.perenniasystems.lascito.viewmodel
 
-import android.app.Application
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import android.os.SystemClock
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.data.local.OnboardingPreferences
@@ -12,16 +13,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 
-class BiometricLockViewModel(
-    application: Application,
+@HiltViewModel
+class BiometricLockViewModel @Inject constructor(
+    private val prefs: OnboardingPreferences,
     private val savedStateHandle: SavedStateHandle
-) : AndroidViewModel(application) {
+) : ViewModel() {
 
     companion object {
         private const val GRACE_PERIOD_MS = 30_000L
     }
 
-    private val prefs = OnboardingPreferences(application)
 
     /** null = cargando, false = desactivado, true = activado */
     val isBiometricEnabled: StateFlow<Boolean?> = prefs.isBiometricLockEnabled

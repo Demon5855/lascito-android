@@ -1,10 +1,10 @@
 package com.perenniasystems.lascito.viewmodel
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.perenniasystems.lascito.data.repository.FirebaseAuthRepository
-import com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository
 import com.perenniasystems.lascito.data.repository.GuardianRepository
 import com.perenniasystems.lascito.data.repository.UserRepository
 import kotlinx.coroutines.Dispatchers
@@ -25,9 +25,10 @@ import java.io.IOException
  * Shared between LoginScreen and RegisterScreen via the NavGraph
  * (scoped to the navigation back-stack).
  */
-class AuthViewModel(
-    private val repo:         UserRepository     = FirebaseAuthRepository(),
-    private val guardianRepo: GuardianRepository = FirebaseGuardianRepository()
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val repo:         UserRepository,
+    private val guardianRepo: GuardianRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)

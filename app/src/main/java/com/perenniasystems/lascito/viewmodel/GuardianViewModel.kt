@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.viewmodel
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,7 +10,6 @@ import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.DeadManSwitch
 import com.perenniasystems.lascito.data.model.LegacyGuardian
 import com.perenniasystems.lascito.data.model.UnlockStatus
-import com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository
 import com.perenniasystems.lascito.data.repository.GuardianRepository
 import com.perenniasystems.lascito.util.ErrorHandler
 import com.perenniasystems.lascito.util.ValidationRules
@@ -56,8 +57,9 @@ data class GuardianUiState(
 // ViewModel
 // ─────────────────────────────────────────────────────────────────────────────
 
-class GuardianViewModel(
-    private val repository: GuardianRepository = FirebaseGuardianRepository()
+@HiltViewModel
+class GuardianViewModel @Inject constructor(
+    private val repository: GuardianRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GuardianUiState())

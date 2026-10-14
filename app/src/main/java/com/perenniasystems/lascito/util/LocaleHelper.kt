@@ -1,6 +1,8 @@
 package com.perenniasystems.lascito.util
 
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.res.Resources
 import android.content.res.Configuration
 import java.util.Locale
 
@@ -57,6 +59,18 @@ object LocaleHelper {
             setLayoutDirection(locale) // Fix core: Force layout direction
         }
         return base.createConfigurationContext(config)
+    }
+
+    /**
+     * Contexto para Compose: envuelve a [base] (la Activity) y solo sustituye
+     * sus recursos por los del idioma [tag]. Mantener la Activity en la cadena
+     * de [ContextWrapper] es necesario para que hiltViewModel() la encuentre.
+     */
+    fun localizedWrapper(base: Context, tag: String): Context {
+        val localizedResources = wrapContext(base, tag).resources
+        return object : ContextWrapper(base) {
+            override fun getResources(): Resources = localizedResources
+        }
     }
 }
 

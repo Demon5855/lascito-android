@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.viewmodel
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +11,6 @@ import com.perenniasystems.lascito.data.model.ProfileStatus
 import com.perenniasystems.lascito.data.model.ProfileType
 import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
 import com.perenniasystems.lascito.data.repository.FirebaseStorageRepository
-import com.perenniasystems.lascito.data.repository.FirebaseStorageRepositoryImpl
 import com.perenniasystems.lascito.data.repository.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,9 +33,10 @@ sealed interface AddProfileUiState {
     data class Error(@StringRes val messageResId: Int) : AddProfileUiState
 }
 
-class AddProfileViewModel(
-    private val repository: ProfileRepository = FirebaseProfileRepository(),
-    private val storage: FirebaseStorageRepository = FirebaseStorageRepositoryImpl()
+@HiltViewModel
+class AddProfileViewModel @Inject constructor(
+    private val repository: ProfileRepository,
+    private val storage: FirebaseStorageRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AddProfileUiState>(AddProfileUiState.Idle)

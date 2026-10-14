@@ -29,7 +29,6 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.annotation.StringRes
 import com.perenniasystems.lascito.R
@@ -700,10 +699,3 @@ private fun pickerColors() = DatePickerDefaults.colors(
     todayContentColor          = MaterialTheme.colorScheme.primary,
     todayDateBorderColor       = MaterialTheme.colorScheme.primary
 )
-
-@Preview(showBackground = true, backgroundColor = 0xFF0D0D0D)
-@Composable
-private fun AddProfileScreenPreview() {
-    LascitoTheme { AddProfileScreen(viewModel = AddProfileViewModel(), onNavigateBack = {}) }
-}
-

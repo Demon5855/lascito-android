@@ -1,5 +1,8 @@
 package com.perenniasystems.lascito.data.repository
 
+import javax.inject.Inject
+import javax.inject.Singleton
+import dagger.hilt.android.qualifiers.ApplicationContext
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -12,7 +15,10 @@ import kotlinx.coroutines.withTimeout
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "theme_settings")
 
-class ThemeRepository(private val context: Context) {
+@Singleton
+class ThemeRepository @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
 
     private val THEME_COLOR_KEY = stringPreferencesKey("selected_theme_color")
     private val LANGUAGE_KEY = stringPreferencesKey("language")

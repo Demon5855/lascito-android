@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.data.repository
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -35,11 +37,12 @@ import at.favre.lib.crypto.bcrypt.BCrypt
  * Todas las operaciones de red están protegidas por [withTimeout] de 10 s
  * para garantizar Fail Fast ante inestabilidad de conexión.
  */
-class FirebaseGuardianRepository(
-    private val db:      FirebaseFirestore = FirebaseFirestore.getInstance(),
-    private val auth:    FirebaseAuth      = FirebaseAuth.getInstance(),
-    private val storage: FirebaseStorage   = FirebaseStorage.getInstance(),
-    private val functions: FirebaseFunctions = FirebaseFunctions.getInstance()
+@Singleton
+class FirebaseGuardianRepository @Inject constructor(
+    private val db:      FirebaseFirestore,
+    private val auth:    FirebaseAuth,
+    private val storage: FirebaseStorage,
+    private val functions: FirebaseFunctions
 ) : GuardianRepository {
 
     private companion object {

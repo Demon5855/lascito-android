@@ -22,7 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
@@ -32,7 +32,7 @@ import com.perenniasystems.lascito.viewmodel.DashboardViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    viewModel: DashboardViewModel = viewModel(),
+    viewModel: DashboardViewModel = hiltViewModel(),
     onNavigateToAltar:        (String) -> Unit = {},
     onNavigateToAddProfile:   (String?) -> Unit = {},
     onNavigateToUserSettings: () -> Unit = {},

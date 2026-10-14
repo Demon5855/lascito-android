@@ -24,7 +24,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.perenniasystems.lascito.R
@@ -226,10 +225,3 @@ fun LoginScreen(
         }
     }
 }
-
-@Preview(showBackground = true, backgroundColor = 0xFF0D0D0D)
-@Composable
-private fun LoginScreenPreview() {
-    LascitoTheme { LoginScreen(authViewModel = AuthViewModel()) }
-}
-

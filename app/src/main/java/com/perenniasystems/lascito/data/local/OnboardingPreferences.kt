@@ -1,5 +1,8 @@
 package com.perenniasystems.lascito.data.local
 
+import javax.inject.Inject
+import javax.inject.Singleton
+import dagger.hilt.android.qualifiers.ApplicationContext
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -11,7 +14,10 @@ import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-class OnboardingPreferences(private val context: Context) {
+@Singleton
+class OnboardingPreferences @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
 
     companion object {
         private val HAS_SEEN_ONBOARDING = booleanPreferencesKey("has_seen_onboarding")

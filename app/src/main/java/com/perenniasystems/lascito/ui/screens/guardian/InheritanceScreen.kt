@@ -31,7 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.Profile
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
@@ -47,7 +47,7 @@ fun InheritanceRoute(
     creatorUid: String,
     onNavigateBack: () -> Unit,
     onOpenLegacy: (String) -> Unit,
-    viewModel: InheritanceViewModel = viewModel()
+    viewModel: InheritanceViewModel = hiltViewModel()
 ) {
     LaunchedEffect(creatorUid) { viewModel.load(creatorUid) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

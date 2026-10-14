@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.viewmodel
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -7,7 +9,6 @@ import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.LegacyInvitation
 import com.perenniasystems.lascito.data.model.LegacyVault
 import com.perenniasystems.lascito.data.model.Profile
-import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
 import com.perenniasystems.lascito.data.repository.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,10 +26,10 @@ import java.io.IOException
  * Owns the UI state for the profile list. The [ProfileRepository] is injected
  * to follow Dependency Inversion — swap implementation without touching this class.
  */
-class DashboardViewModel(
-    private val repository: ProfileRepository = FirebaseProfileRepository(),
-    private val guardianRepository: com.perenniasystems.lascito.data.repository.GuardianRepository = com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository(),
-    private val savedStateHandle: androidx.lifecycle.SavedStateHandle? = null // For future
+@HiltViewModel
+class DashboardViewModel @Inject constructor(
+    private val repository: ProfileRepository,
+    private val guardianRepository: com.perenniasystems.lascito.data.repository.GuardianRepository
 ) : ViewModel() {
 
     companion object {

@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.viewmodel
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -22,9 +24,7 @@ import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.repository.ProfileRepository
 import com.perenniasystems.lascito.util.ErrorHandler
-import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
 import com.perenniasystems.lascito.data.repository.UserRepository
-import com.perenniasystems.lascito.data.repository.FirebaseAuthRepository
 
 sealed class DeleteAccountState {
     object Idle : DeleteAccountState()
@@ -54,13 +54,14 @@ data class UserSettingsUiState(
     val changePwdState: ChangePwdState = ChangePwdState.Idle
 )
 
-class UserSettingsViewModel(
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
-    private val userRepository: UserRepository = FirebaseAuthRepository(),
-    private val profileRepository: ProfileRepository = FirebaseProfileRepository(),
-    private val prefs: com.perenniasystems.lascito.data.local.OnboardingPreferences? = null,
-    private val themeRepository: com.perenniasystems.lascito.data.repository.ThemeRepository? = null
+@HiltViewModel
+class UserSettingsViewModel @Inject constructor(
+    private val auth: FirebaseAuth,
+    private val db: FirebaseFirestore,
+    private val userRepository: UserRepository,
+    private val profileRepository: ProfileRepository,
+    private val prefs: com.perenniasystems.lascito.data.local.OnboardingPreferences,
+    private val themeRepository: com.perenniasystems.lascito.data.repository.ThemeRepository
 ) : ViewModel() {
 
     private val _selectedMetal = MutableStateFlow(com.perenniasystems.lascito.ui.theme.AccentMetal.GOLD)
@@ -75,16 +76,14 @@ class UserSettingsViewModel(
     init {
         loadUserData()
         
-        themeRepository?.let { repo ->
-            viewModelScope.launch {
-                repo.accentMetalFlow.collect { metal ->
-                    _selectedMetal.value = metal
-                }
+        viewModelScope.launch {
+            themeRepository.accentMetalFlow.collect { metal ->
+                _selectedMetal.value = metal
             }
-            viewModelScope.launch {
-                repo.languageFlow.collect { lang ->
-                    _selectedLanguage.value = lang
-                }
+        }
+        viewModelScope.launch {
+            themeRepository.languageFlow.collect { lang ->
+                _selectedLanguage.value = lang
             }
         }
     }
@@ -92,7 +91,7 @@ class UserSettingsViewModel(
     fun changeLanguage(language: com.perenniasystems.lascito.data.model.AppLanguage) {
         viewModelScope.launch {
             _selectedLanguage.value = language
-            themeRepository?.saveLanguage(language)
+            themeRepository.saveLanguage(language)
             com.perenniasystems.lascito.ui.theme.LangState.selectedTag = language.tag
         }
     }
@@ -107,7 +106,7 @@ class UserSettingsViewModel(
     fun changeMetal(metal: com.perenniasystems.lascito.ui.theme.AccentMetal) {
         viewModelScope.launch {
             _selectedMetal.value = metal
-            themeRepository?.saveAccentMetal(metal)
+            themeRepository.saveAccentMetal(metal)
             com.perenniasystems.lascito.ui.theme.ThemeState.selectedMetal = metal
         }
     }
@@ -246,25 +245,23 @@ class UserSettingsViewModel(
 
     // ── Bóveda Estricta (stateIn elimina el flicker del toggle) ──────────────
 
-    val isStrictVaultEnabled: StateFlow<Boolean?> = prefs?.isStrictVaultEnabled
-        ?.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
-        ?: MutableStateFlow(null)
+    val isStrictVaultEnabled: StateFlow<Boolean?> = prefs.isStrictVaultEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun toggleStrictVault(enabled: Boolean) {
         viewModelScope.launch {
-            prefs?.saveStrictVaultState(enabled)
+            prefs.saveStrictVaultState(enabled)
         }
     }
 
     // ── Bloqueo Biométrico Voluntario ─────────────────────────────────────────
 
-    val isBiometricLockEnabled: StateFlow<Boolean?> = prefs?.isBiometricLockEnabled
-        ?.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
-        ?: MutableStateFlow(null)
+    val isBiometricLockEnabled: StateFlow<Boolean?> = prefs.isBiometricLockEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun toggleBiometricLock(enabled: Boolean) {
         viewModelScope.launch {
-            prefs?.saveBiometricLockState(enabled)
+            prefs.saveBiometricLockState(enabled)
         }
     }
 }

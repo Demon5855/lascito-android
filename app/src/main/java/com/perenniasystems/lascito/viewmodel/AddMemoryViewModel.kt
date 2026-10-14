@@ -1,13 +1,13 @@
 package com.perenniasystems.lascito.viewmodel
 
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.perenniasystems.lascito.data.model.Memory
 import com.perenniasystems.lascito.data.model.MediaType
-import com.perenniasystems.lascito.data.repository.FirebaseMemoryRepository
 import com.perenniasystems.lascito.data.repository.FirebaseStorageRepository
-import com.perenniasystems.lascito.data.repository.FirebaseStorageRepositoryImpl
 import com.perenniasystems.lascito.data.repository.MemoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,9 +31,10 @@ sealed interface AddMemoryUiState {
     data class Error(@StringRes val messageResId: Int) : AddMemoryUiState
 }
 
-class AddMemoryViewModel(
-    private val repository: MemoryRepository = FirebaseMemoryRepository(),
-    private val storage: FirebaseStorageRepository = FirebaseStorageRepositoryImpl()
+@HiltViewModel
+class AddMemoryViewModel @Inject constructor(
+    private val repository: MemoryRepository,
+    private val storage: FirebaseStorageRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AddMemoryUiState>(AddMemoryUiState.Idle)

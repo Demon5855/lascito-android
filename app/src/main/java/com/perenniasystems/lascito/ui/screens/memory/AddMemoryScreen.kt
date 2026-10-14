@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.theme.*
 import com.perenniasystems.lascito.ui.theme.*
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.perenniasystems.lascito.ui.components.CustomAudioPlayer
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.components.MediaPreviewPlayer
@@ -74,7 +74,7 @@ private const val MAX_CONTEXT_LENGTH = 1000
 @Composable
 fun AddMemoryScreen(
     profileId:      String,
-    viewModel:      AddMemoryViewModel = viewModel(),
+    viewModel:      AddMemoryViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {},
     onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {

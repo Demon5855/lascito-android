@@ -34,7 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.perenniasystems.lascito.R
@@ -72,7 +72,7 @@ fun AltarScreen(
     onEditProfileClick: () -> Unit = {},
     onDeleteProfileClick: () -> Unit = {},
     readOnly:       Boolean = false,
-    viewModel:      AltarViewModel = viewModel()
+    viewModel:      AltarViewModel = hiltViewModel()
 ) {
     // Trigger reload when the profileId changes OR when the screen becomes active again
     LaunchedEffect(profileId, Unit) { viewModel.load(profileId) }

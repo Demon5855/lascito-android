@@ -1,6 +1,7 @@
 package com.perenniasystems.lascito.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.R
@@ -33,9 +34,9 @@ data class ClaimLegacyUiState(
     val isInvitationLoaded: Boolean = false
 )
 
-class ClaimLegacyViewModel(
-    private val guardianRepository: GuardianRepository = com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository(),
-    private val savedStateHandle: SavedStateHandle? = null
+@HiltViewModel
+class ClaimLegacyViewModel @Inject constructor(
+    private val guardianRepository: GuardianRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ClaimLegacyUiState())

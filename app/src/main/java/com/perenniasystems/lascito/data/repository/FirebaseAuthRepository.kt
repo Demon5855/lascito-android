@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.data.repository
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
@@ -13,9 +15,10 @@ import kotlinx.coroutines.withTimeout
  * - On successful register, creates a `users/{uid}` document in Firestore
  *   with the user's displayName, email, and creation timestamp.
  */
-class FirebaseAuthRepository(
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
-    private val db:   FirebaseFirestore = FirebaseFirestore.getInstance()
+@Singleton
+class FirebaseAuthRepository @Inject constructor(
+    private val auth: FirebaseAuth,
+    private val db:   FirebaseFirestore
 ) : UserRepository {
 
     override suspend fun login(email: String, password: String): Result<String> =
