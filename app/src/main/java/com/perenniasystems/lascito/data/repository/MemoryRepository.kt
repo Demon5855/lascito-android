@@ -4,10 +4,10 @@ import com.perenniasystems.lascito.data.model.Memory
 
 /**
  * Contract for fetching and persisting [Memory] objects from any data source.
- * Phase 2: implemented with Firestore subcollection `profiles/{id}/memories`.
+ * Phase 2: implemented with Firestore subcollection `legacies/{id}/memories`.
  */
 interface MemoryRepository {
-    suspend fun getMemoriesByProfile(profileId: String): List<Memory>
+    suspend fun getMemoriesByLegacy(profileId: String): List<Memory>
 
     /**
      * Fetches a single [Memory] by its ID without downloading the entire collection.

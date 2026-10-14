@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.data.repository
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import com.google.firebase.storage.FirebaseStorage
@@ -34,6 +36,11 @@ interface FirebaseStorageRepository {
 
 
     /**
+     * File extension for [uri] according to its MIME type, or [fallback] if it cannot be resolved.
+     */
+    fun extensionFor(uri: Uri, fallback: String): String
+
+    /**
      * Deletes the image at the given [imageUrl].
      * Tolerates "object-not-found" errors to avoid breaking cascade deletions.
      */
@@ -43,8 +50,9 @@ interface FirebaseStorageRepository {
 /**
  * Implementation of [FirebaseStorageRepository] using Firebase Storage.
  */
-class FirebaseStorageRepositoryImpl(
-    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+@Singleton
+class FirebaseStorageRepositoryImpl @Inject constructor(
+    private val storage: FirebaseStorage
 ) : FirebaseStorageRepository {
 
     private companion object {
@@ -136,6 +144,9 @@ class FirebaseStorageRepositoryImpl(
             Result.failure(e)
         }
     }
+
+    override fun extensionFor(uri: Uri, fallback: String): String =
+        MimeTypeMap.getSingleton().getExtensionFromMimeType(resolveContentType(uri)) ?: fallback
 
     private fun metadataOf(contentType: String): StorageMetadata =
         StorageMetadata.Builder().setContentType(contentType).build()

@@ -8,6 +8,6 @@ package com.perenniasystems.lascito.data.model
  * (documento existe pero los campos aún no han sido escritos).
  */
 data class GuardianConfig(
-    val guardian:      LegacyGuardian?,
+    val guardian:      Guardian?,
     val deadManSwitch: DeadManSwitch?
 )

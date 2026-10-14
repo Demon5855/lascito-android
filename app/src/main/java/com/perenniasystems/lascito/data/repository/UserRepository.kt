@@ -13,11 +13,14 @@ interface UserRepository {
     /** Register a new user and return the UID on success. */
     suspend fun register(name: String, email: String, password: String): Result<String>
 
-    /** Returns the currently signed-in user's UID, or null if signed out. */
-    fun currentUserId(): String?
+    /** Sends the password reset email to [email]. */
+    suspend fun sendPasswordReset(email: String): Result<Unit>
 
-    /** Sign out the current user. */
-    fun logout()
+    /** Re-authenticates the current user with [currentPassword] and sets [newPassword]. */
+    suspend fun changePassword(currentPassword: String, newPassword: String): Result<Unit>
+
+    /** Reads the display name stored in `users/{uid}`. */
+    suspend fun fetchDisplayName(uid: String): Result<String?>
 
     /** Verifies and deletes the user document from Firestore */
     suspend fun deleteUserDocument(userId: String): Result<Unit>

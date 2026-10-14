@@ -28,7 +28,7 @@ data class User(
      * Guardián del Legado designado por el usuario.
      * Null si el usuario aún no ha configurado esta función.
      */
-    val legacyGuardian: LegacyGuardian? = null,
+    val legacyGuardian: Guardian? = null,
     /**
      * Configuración del Dead Man's Switch.
      * Null si el usuario nunca ha activado esta función.
