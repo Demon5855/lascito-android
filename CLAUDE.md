@@ -6,14 +6,16 @@ Lascito (Perennia Systems) es una app Android para preservar recuerdos (foto, vi
 - Kotlin, Jetpack Compose, Material 3, Navigation Compose, un solo Activity (`MainActivity`).
 - Firebase: Auth (email/password), Firestore, Storage. Cloud Functions en `functions/` (TypeScript, v2 scheduler).
 - Media3 (ExoPlayer), Coil, DataStore, BCrypt (`at.favre.lib:bcrypt`).
-- Idiomas: `values/` (es), `values-en/`, `values-pt-rBR/`. Siempre mantener paridad de claves.
+- Idiomas: `values/` (inglés, respaldo para idiomas no soportados), `values-es/`, `values-pt-rBR/`. Siempre mantener paridad de claves.
+  El idioma lo gestiona Android como idioma por app (`AppCompatDelegate.setApplicationLocales`, `res/xml/locales_config.xml`).
 
 ## Comandos
 - Compilar: `./gradlew assembleDebug`
 - Lint: `./gradlew lint`
 - Tests unitarios (cuando existan): `./gradlew testDebugUnitTest`
 - Functions: `cd functions && npm run build` · desplegar: `firebase deploy --only functions`
-- Reglas (cuando estén versionadas): `firebase deploy --only firestore:rules,storage`
+- Reglas: `firebase deploy --only firestore:rules,storage` (nunca `--only firestore`: el índice de `profiles` no está en `firestore.indexes.json`)
+- Sin la CLI instalada: `npx firebase-tools@latest <comando>`
 
 Después de cada cambio: compilar. Si falla, arreglar antes de seguir.
 
