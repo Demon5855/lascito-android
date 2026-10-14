@@ -82,7 +82,6 @@ fun CapsuleDetailScreen(
     }
 
     // ── Promo biométrico (one-shot) ─────────────────────────────────────────
-    val onboardingPreferences = remember { com.perenniasystems.lascito.data.local.OnboardingPreferences(context) }
     var showBiometricPromo by remember { mutableStateOf(false) }
     var pendingNavigateBack by remember { mutableStateOf(false) }
 
@@ -101,15 +100,7 @@ fun CapsuleDetailScreen(
             viewModel.resetSuccess()
 
             // Evaluar si mostrar promo biométrico
-            val hasSeen = try {
-                onboardingPreferences.hasSeenBiometricPromo.first()
-            } catch (_: Exception) { true }
-
-            val biometricAlreadyOn = try {
-                onboardingPreferences.isBiometricLockEnabled.first()
-            } catch (_: Exception) { false }
-
-            if (!hasSeen && canUseBiometric && !biometricAlreadyOn) {
+            if (viewModel.shouldOfferBiometricPromo(canUseBiometric)) {
                 showBiometricPromo = true
             } else {
                 onNavigateBack()
@@ -128,7 +119,7 @@ fun CapsuleDetailScreen(
 
     // DatePicker state
     var showDatePicker by remember { mutableStateOf(false) }
-    val currentLangTag = LangState.selectedTag
+    val currentLocale = LocalConfiguration.current.locales[0]
 
     // BottomSheet para elegir tipo de media
     var showMediaSheet by remember { mutableStateOf(false) }
@@ -243,9 +234,9 @@ fun CapsuleDetailScreen(
 
     // ── DatePickerDialog (con forzado de Locale) ──────────────────────────────
     if (showDatePicker) {
-        key(currentLangTag) {
+        key(currentLocale) {
             val contextLoc = LocalContext.current
-            val locale = java.util.Locale(currentLangTag)
+            val locale = currentLocale
             val configuration = android.content.res.Configuration(contextLoc.resources.configuration)
             configuration.setLocale(locale)
             val localizedContext = contextLoc.createConfigurationContext(configuration)
@@ -300,7 +291,7 @@ fun CapsuleDetailScreen(
             onDismissRequest = {
                 showBiometricPromo = false
                 coroutineScope.launch {
-                    onboardingPreferences.saveBiometricPromoSeen()
+                    viewModel.markBiometricPromoSeen()
                     onNavigateBack()
                 }
             },
@@ -321,8 +312,8 @@ fun CapsuleDetailScreen(
                 TextButton(onClick = {
                     showBiometricPromo = false
                     coroutineScope.launch {
-                        onboardingPreferences.saveBiometricLockState(true)
-                        onboardingPreferences.saveBiometricPromoSeen()
+                        viewModel.enableBiometricLock()
+                        viewModel.markBiometricPromoSeen()
                         onNavigateBack()
                     }
                 }) {
@@ -337,7 +328,7 @@ fun CapsuleDetailScreen(
                 TextButton(onClick = {
                     showBiometricPromo = false
                     coroutineScope.launch {
-                        onboardingPreferences.saveBiometricPromoSeen()
+                        viewModel.markBiometricPromoSeen()
                         onNavigateBack()
                     }
                 }) {

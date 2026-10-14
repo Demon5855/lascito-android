@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.data.di
 
+import com.perenniasystems.lascito.data.repository.DataStorePreferencesRepository
+import com.perenniasystems.lascito.data.repository.PreferencesRepository
 import com.perenniasystems.lascito.data.repository.FirebaseSessionRepository
 import com.perenniasystems.lascito.data.repository.SessionRepository
 import com.perenniasystems.lascito.data.repository.FirebaseAuthRepository
@@ -24,6 +26,9 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindSessionRepository(impl: FirebaseSessionRepository): SessionRepository
+
+    @Binds
+    abstract fun bindPreferencesRepository(impl: DataStorePreferencesRepository): PreferencesRepository
 
     @Binds
     abstract fun bindUserRepository(impl: FirebaseAuthRepository): UserRepository

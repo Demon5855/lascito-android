@@ -258,7 +258,7 @@ fun InfoBanner(
         Text(
             text = message,
             style = MaterialTheme.typography.bodySmall.copy(
-                color = if (isSuccess) ThemeState.selectedMetal.color else TextPrimary
+                color = if (isSuccess) LocalAccentMetal.current.color else TextPrimary
             ),
             modifier = Modifier.weight(1f)
         )
@@ -266,14 +266,14 @@ fun InfoBanner(
             if (isLoading) {
                 CircularProgressIndicator(
                     strokeWidth = 2.dp,
-                    color = ThemeState.selectedMetal.color,
+                    color = LocalAccentMetal.current.color,
                     modifier = Modifier.size(24.dp).padding(end = 8.dp)
                 )
             } else {
                 TextButton(onClick = onActionClick) {
                     Text(
                         text = actionText,
-                        style = MaterialTheme.typography.labelLarge.copy(color = ThemeState.selectedMetal.color)
+                        style = MaterialTheme.typography.labelLarge.copy(color = LocalAccentMetal.current.color)
                     )
                 }
             }

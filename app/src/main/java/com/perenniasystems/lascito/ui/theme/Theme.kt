@@ -1,5 +1,6 @@
 package com.perenniasystems.lascito.ui.theme
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
@@ -8,16 +9,14 @@ import androidx.compose.runtime.Composable
 /**
  * LascitoTheme — always dark. Never a light theme.
  *
- * The [darkColorScheme] is built dynamically from [ThemeState.selectedMetal],
- * so a simple `ThemeState.selectedMetal = AccentMetal.SILVER` anywhere in the
- * app will trigger an instant recomposition with the new accent applied.
+ * The [darkColorScheme] is built from [metal], which the app root reads from
+ * the preferences; the same value is exposed to the tree as [LocalAccentMetal].
  */
 @Composable
 fun LascitoTheme(
+    metal: AccentMetal = AccentMetal.GOLD,
     content: @Composable () -> Unit
 ) {
-    val metal = ThemeState.selectedMetal          // ← reads Compose mutableStateOf
-
     val colorScheme = darkColorScheme(
         primary            = metal.color,
         onPrimary          = AmoledBlack,
@@ -42,10 +41,12 @@ fun LascitoTheme(
         onError            = AmoledBlack,
     )
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography  = LascitoTypography,
-        content     = content
-    )
+    CompositionLocalProvider(LocalAccentMetal provides metal) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography  = LascitoTypography,
+            content     = content
+        )
+    }
 }
 

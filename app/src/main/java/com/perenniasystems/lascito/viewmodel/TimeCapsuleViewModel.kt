@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.viewmodel
 
+import com.perenniasystems.lascito.data.repository.PreferencesRepository
+import kotlinx.coroutines.flow.first
 import com.perenniasystems.lascito.data.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -55,7 +57,8 @@ data class CapsuleUiState(
 class TimeCapsuleViewModel @Inject constructor(
     private val guardianRepository: GuardianRepository,
     private val storageRepository:  FirebaseStorageRepository,
-    private val session:            SessionRepository
+    private val session:            SessionRepository,
+    private val preferences:        PreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CapsuleUiState())
@@ -135,6 +138,17 @@ class TimeCapsuleViewModel @Inject constructor(
     fun resendVerificationEmail() {
         viewModelScope.launch { session.resendVerificationEmail() }
     }
+
+    /** El promo biométrico se ofrece una sola vez, si el dispositivo puede y aún no está activo. */
+    suspend fun shouldOfferBiometricPromo(canUseBiometric: Boolean): Boolean {
+        val hasSeen = runCatching { preferences.hasSeenBiometricPromo.first() }.getOrDefault(true)
+        val alreadyOn = runCatching { preferences.isBiometricLockEnabled.first() }.getOrDefault(false)
+        return !hasSeen && canUseBiometric && !alreadyOn
+    }
+
+    suspend fun markBiometricPromoSeen() = preferences.setBiometricPromoSeen()
+
+    suspend fun enableBiometricLock() = preferences.setBiometricLockEnabled(true)
     fun resetSuccess() = _uiState.update { it.copy(isSuccess = false) }
 
     // ── Validación Centralizada ───────────────────────────────────────────────

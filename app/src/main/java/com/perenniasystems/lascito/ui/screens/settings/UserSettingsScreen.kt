@@ -1,6 +1,6 @@
 ﻿package com.perenniasystems.lascito.ui.screens.settings
 
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,13 +39,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.ui.components.LascitoAlertDialog
 import com.perenniasystems.lascito.ui.theme.*
-import com.perenniasystems.lascito.util.LocaleHelper
 import com.perenniasystems.lascito.util.ValidationRules
 import com.perenniasystems.lascito.viewmodel.ChangePwdState
 import com.perenniasystems.lascito.viewmodel.DeleteAccountState
@@ -71,7 +69,8 @@ fun UserSettingsScreen(
 
     // SOLUCIÓN BUG #2: Estado desde ViewModel (sobrevive recreación)
     val selectedMetal by viewModel.selectedMetal.collectAsStateWithLifecycle()
-    val selectedLang by viewModel.selectedLanguage.collectAsStateWithLifecycle()
+    // El idioma activo es el que Android está aplicando (también si se cambió en Ajustes del sistema)
+    val selectedLang = AppLanguage.fromLocale(LocalConfiguration.current.locales[0])
 
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
 
@@ -155,12 +154,6 @@ fun UserSettingsScreen(
                     scope.launch {
                         kotlinx.coroutines.delay(180) // yield + ~3 frames para la animación del Popup
                         viewModel.changeLanguage(lang)
-
-                        // Aplicar locale a nivel de plataforma
-                        LocaleHelper.save(context, lang.tag)
-                        java.util.Locale.setDefault(java.util.Locale.forLanguageTag(lang.tag))
-                        val localeList = LocaleListCompat.forLanguageTags(lang.tag)
-                        AppCompatDelegate.setApplicationLocales(localeList)
                     }
                 },
                 onMetalChange = { metal ->
@@ -907,7 +900,7 @@ private fun SecuritySection(
                 enabled = isStrictVault != null,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = AmoledBlack,
-                    checkedTrackColor = ThemeState.selectedMetal.color,
+                    checkedTrackColor = LocalAccentMetal.current.color,
                     uncheckedThumbColor = TextSecondary,
                     uncheckedTrackColor = SurfaceDark
                 )
@@ -944,7 +937,7 @@ private fun SecuritySection(
                 enabled = canUseBiometric && isBiometricLock != null,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = AmoledBlack,
-                    checkedTrackColor = ThemeState.selectedMetal.color,
+                    checkedTrackColor = LocalAccentMetal.current.color,
                     uncheckedThumbColor = TextSecondary,
                     uncheckedTrackColor = SurfaceDark
                 )

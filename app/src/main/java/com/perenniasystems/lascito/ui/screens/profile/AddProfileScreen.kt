@@ -159,7 +159,7 @@ fun AddProfileScreen(
     ) { uri -> if (uri != null) selectedImageUri = uri }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val currentLangTag = com.perenniasystems.lascito.ui.theme.LangState.selectedTag
+    val currentLocale = LocalConfiguration.current.locales[0]
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isLoading = uiState is AddProfileUiState.Loading
@@ -206,9 +206,9 @@ fun AddProfileScreen(
 
     // -- Fecha de Nacimiento picker --------------------------------------------
     if (showBirthPicker) {
-        key(currentLangTag) {
+        key(currentLocale) {
             val contextLoc = LocalContext.current
-            val locale = java.util.Locale(currentLangTag)
+            val locale = currentLocale
             val configuration = android.content.res.Configuration(contextLoc.resources.configuration)
             configuration.setLocale(locale)
             val localizedContext = contextLoc.createConfigurationContext(configuration)
@@ -223,11 +223,11 @@ fun AddProfileScreen(
                         TextButton(onClick = {
                             birthPickerState.selectedDateMillis?.let { birthDigits = it.toRawDigits() }
                             showBirthPicker = false
-                        }) { Text("Aceptar", color = MaterialTheme.colorScheme.primary) }
+                        }) { Text(stringResource(R.string.btn_ok), color = MaterialTheme.colorScheme.primary) }
                     },
                     dismissButton = {
                         TextButton(onClick = { showBirthPicker = false }) {
-                            Text("Cancelar", color = TextSecondary)
+                            Text(stringResource(R.string.btn_cancel), color = TextSecondary)
                         }
                     },
                     colors = pickerColors()
@@ -238,9 +238,9 @@ fun AddProfileScreen(
 
     // -- Fecha de Partida picker -----------------------------------------------
     if (showPassingPicker) {
-        key(currentLangTag) {
+        key(currentLocale) {
             val contextLoc = LocalContext.current
-            val locale = java.util.Locale(currentLangTag)
+            val locale = currentLocale
             val configuration = android.content.res.Configuration(contextLoc.resources.configuration)
             configuration.setLocale(locale)
             val localizedContext = contextLoc.createConfigurationContext(configuration)
@@ -255,11 +255,11 @@ fun AddProfileScreen(
                         TextButton(onClick = {
                             passingPickerState.selectedDateMillis?.let { passDigits = it.toRawDigits() }
                             showPassingPicker = false
-                        }) { Text("Aceptar", color = MaterialTheme.colorScheme.primary) }
+                        }) { Text(stringResource(R.string.btn_ok), color = MaterialTheme.colorScheme.primary) }
                     },
                     dismissButton = {
                         TextButton(onClick = { showPassingPicker = false }) {
-                            Text("Cancelar", color = TextSecondary)
+                            Text(stringResource(R.string.btn_cancel), color = TextSecondary)
                         }
                     },
                     colors = pickerColors()

@@ -1,5 +1,6 @@
 package com.perenniasystems.lascito.viewmodel
 
+import com.perenniasystems.lascito.data.repository.PreferencesRepository
 import com.perenniasystems.lascito.data.repository.SessionRepository
 import com.perenniasystems.lascito.data.error.DataErrors
 import com.perenniasystems.lascito.data.error.DataErrorKind
@@ -55,55 +56,26 @@ class UserSettingsViewModel @Inject constructor(
     private val session: SessionRepository,
     private val userRepository: UserRepository,
     private val profileRepository: ProfileRepository,
-    private val prefs: com.perenniasystems.lascito.data.local.OnboardingPreferences,
-    private val themeRepository: com.perenniasystems.lascito.data.repository.ThemeRepository
+    private val preferences: PreferencesRepository
 ) : ViewModel() {
 
-    private val _selectedMetal = MutableStateFlow(com.perenniasystems.lascito.ui.theme.AccentMetal.GOLD)
-    val selectedMetal: StateFlow<com.perenniasystems.lascito.ui.theme.AccentMetal> = _selectedMetal.asStateFlow()
-    
-    private val _selectedLanguage = MutableStateFlow(com.perenniasystems.lascito.data.model.AppLanguage.SPANISH)
-    val selectedLanguage: StateFlow<com.perenniasystems.lascito.data.model.AppLanguage> = _selectedLanguage.asStateFlow()
+    val selectedMetal: StateFlow<com.perenniasystems.lascito.ui.theme.AccentMetal> = preferences.accentMetal
+        .stateIn(viewModelScope, SharingStarted.Eagerly, com.perenniasystems.lascito.ui.theme.AccentMetal.GOLD)
 
     private val _uiState = MutableStateFlow(UserSettingsUiState())
     val uiState: StateFlow<UserSettingsUiState> = _uiState.asStateFlow()
 
     init {
         loadUserData()
-        
-        viewModelScope.launch {
-            themeRepository.accentMetalFlow.collect { metal ->
-                _selectedMetal.value = metal
-            }
-        }
-        viewModelScope.launch {
-            themeRepository.languageFlow.collect { lang ->
-                _selectedLanguage.value = lang
-            }
-        }
     }
 
+    /** Android guarda el idioma por app y recrea la Activity para aplicarlo. */
     fun changeLanguage(language: com.perenniasystems.lascito.data.model.AppLanguage) {
-        viewModelScope.launch {
-            _selectedLanguage.value = language
-            themeRepository.saveLanguage(language)
-            com.perenniasystems.lascito.ui.theme.LangState.selectedTag = language.tag
-        }
+        preferences.setLanguage(language)
     }
-    
-    fun changeLanguageWithDelay(language: com.perenniasystems.lascito.data.model.AppLanguage) {
-        viewModelScope.launch {
-            kotlinx.coroutines.delay(50)
-            changeLanguage(language)
-        }
-    }
-    
+
     fun changeMetal(metal: com.perenniasystems.lascito.ui.theme.AccentMetal) {
-        viewModelScope.launch {
-            _selectedMetal.value = metal
-            themeRepository.saveAccentMetal(metal)
-            com.perenniasystems.lascito.ui.theme.ThemeState.selectedMetal = metal
-        }
+        viewModelScope.launch { preferences.setAccentMetal(metal) }
     }
 
     private fun loadUserData() {
@@ -238,23 +210,23 @@ class UserSettingsViewModel @Inject constructor(
 
     // ── Bóveda Estricta (stateIn elimina el flicker del toggle) ──────────────
 
-    val isStrictVaultEnabled: StateFlow<Boolean?> = prefs.isStrictVaultEnabled
+    val isStrictVaultEnabled: StateFlow<Boolean?> = preferences.isStrictVaultEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun toggleStrictVault(enabled: Boolean) {
         viewModelScope.launch {
-            prefs.saveStrictVaultState(enabled)
+            preferences.setStrictVaultEnabled(enabled)
         }
     }
 
     // ── Bloqueo Biométrico Voluntario ─────────────────────────────────────────
 
-    val isBiometricLockEnabled: StateFlow<Boolean?> = prefs.isBiometricLockEnabled
+    val isBiometricLockEnabled: StateFlow<Boolean?> = preferences.isBiometricLockEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun toggleBiometricLock(enabled: Boolean) {
         viewModelScope.launch {
-            prefs.saveBiometricLockState(enabled)
+            preferences.setBiometricLockEnabled(enabled)
         }
     }
 }
