@@ -366,5 +366,16 @@
     <string name="banner_pending_legacy_from">%1$s left you a legacy. A vault is waiting for you.</string>
     <string name="desc_claim_legacy_from">Enter the 4-digit PIN that %1$s shared with you to unlock their legacy.</string>
     <string name="error_legacy_not_available">This invitation is no longer available.</string>
+    <string name="biometric_default_name">Guardian</string>
+    <string name="desc_attachment">Attachment</string>
+    <string name="desc_trigger_type">Opening condition</string>
+    <string name="desc_help">Help</string>
+    <string name="desc_selected_photo">Selected photo</string>
+    <string name="desc_current_photo">Current photo</string>
+    <string name="desc_remove">Remove</string>
+    <string name="desc_record">Record</string>
+    <string name="desc_stop_recording">Stop recording</string>
+    <string name="desc_play">Play</string>
+    <string name="desc_pause">Pause</string>
 
 </resources>

@@ -8,22 +8,22 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.perenniasystems.lascito.ui.screens.altar.AltarScreen
-import com.perenniasystems.lascito.ui.screens.auth.LoginScreen
-import com.perenniasystems.lascito.ui.screens.auth.RegisterScreen
-import com.perenniasystems.lascito.ui.screens.capsule.CapsuleVaultScreen
-import com.perenniasystems.lascito.ui.screens.capsule.CapsuleDetailScreen
-import com.perenniasystems.lascito.ui.screens.dashboard.DashboardScreen
-import com.perenniasystems.lascito.ui.screens.guardian.GuardianScreen
-import com.perenniasystems.lascito.ui.screens.guardian.InheritanceRoute
-import com.perenniasystems.lascito.ui.screens.memory.AddMemoryScreen
-import com.perenniasystems.lascito.ui.screens.profile.AddProfileScreen
-import com.perenniasystems.lascito.ui.screens.settings.UserSettingsScreen
-import com.perenniasystems.lascito.viewmodel.AddMemoryViewModel
-import com.perenniasystems.lascito.viewmodel.AddProfileViewModel
-import com.perenniasystems.lascito.viewmodel.AuthViewModel
+import com.perenniasystems.lascito.feature.legacy.AltarScreen
+import com.perenniasystems.lascito.feature.auth.LoginScreen
+import com.perenniasystems.lascito.feature.auth.RegisterScreen
+import com.perenniasystems.lascito.feature.custody.CapsuleVaultScreen
+import com.perenniasystems.lascito.feature.custody.CapsuleDetailScreen
+import com.perenniasystems.lascito.feature.legacy.DashboardScreen
+import com.perenniasystems.lascito.feature.custody.GuardianScreen
+import com.perenniasystems.lascito.feature.custody.InheritanceRoute
+import com.perenniasystems.lascito.feature.memory.AddMemoryScreen
+import com.perenniasystems.lascito.feature.legacy.AddProfileScreen
+import com.perenniasystems.lascito.feature.settings.UserSettingsScreen
+import com.perenniasystems.lascito.feature.memory.AddMemoryViewModel
+import com.perenniasystems.lascito.feature.legacy.AddProfileViewModel
+import com.perenniasystems.lascito.feature.auth.AuthViewModel
 
-import com.perenniasystems.lascito.ui.screens.onboarding.OnboardingScreen
+import com.perenniasystems.lascito.feature.auth.OnboardingScreen
 
 /**
  * NavGraph wires up all application destinations.
@@ -205,7 +205,7 @@ fun LascitoNavGraph(
             arguments = listOf(navArgument("invitationId") { type = NavType.StringType })
         ) { backStackEntry ->
             val invitationId = backStackEntry.arguments?.getString("invitationId") ?: return@composable
-            com.perenniasystems.lascito.ui.screens.guardian.ClaimLegacyScreen(
+            com.perenniasystems.lascito.feature.custody.ClaimLegacyScreen(
                 invitationId   = invitationId,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToVault = { creatorUid ->

@@ -366,5 +366,16 @@
     <string name="banner_pending_legacy_from">%1$s te ha dejado un legado. Tienes una bóveda esperando por ti.</string>
     <string name="desc_claim_legacy_from">Ingresa el PIN de 4 dígitos que %1$s te compartió para desbloquear su legado.</string>
     <string name="error_legacy_not_available">Esta invitación ya no está disponible.</string>
+    <string name="biometric_default_name">Guardián</string>
+    <string name="desc_attachment">Adjunto</string>
+    <string name="desc_trigger_type">Condición de apertura</string>
+    <string name="desc_help">Ayuda</string>
+    <string name="desc_selected_photo">Foto elegida</string>
+    <string name="desc_current_photo">Foto actual</string>
+    <string name="desc_remove">Quitar</string>
+    <string name="desc_record">Grabar</string>
+    <string name="desc_stop_recording">Detener grabación</string>
+    <string name="desc_play">Reproducir</string>
+    <string name="desc_pause">Pausar</string>
 
 </resources>

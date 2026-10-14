@@ -9,8 +9,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.perenniasystems.lascito.data.repository.PreferencesRepository
-import com.perenniasystems.lascito.ui.app.LascitoAppRoot
-import com.perenniasystems.lascito.ui.theme.AmoledBlack
+import com.perenniasystems.lascito.app.LascitoAppRoot
+import com.perenniasystems.lascito.core.designsystem.theme.AmoledBlack
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch

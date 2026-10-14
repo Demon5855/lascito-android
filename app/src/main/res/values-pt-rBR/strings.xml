@@ -363,5 +363,16 @@
     <string name="banner_pending_legacy_from">%1$s deixou um legado para você. Há um cofre esperando por você.</string>
     <string name="desc_claim_legacy_from">Digite o PIN de 4 dígitos que %1$s compartilhou com você para desbloquear o legado.</string>
     <string name="error_legacy_not_available">Este convite não está mais disponível.</string>
+    <string name="biometric_default_name">Guardião</string>
+    <string name="desc_attachment">Anexo</string>
+    <string name="desc_trigger_type">Condição de abertura</string>
+    <string name="desc_help">Ajuda</string>
+    <string name="desc_selected_photo">Foto escolhida</string>
+    <string name="desc_current_photo">Foto atual</string>
+    <string name="desc_remove">Remover</string>
+    <string name="desc_record">Gravar</string>
+    <string name="desc_stop_recording">Parar gravação</string>
+    <string name="desc_play">Reproduzir</string>
+    <string name="desc_pause">Pausar</string>
 
 </resources>

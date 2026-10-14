@@ -1,7 +1,7 @@
 package com.perenniasystems.lascito.data.repository
 
 import com.perenniasystems.lascito.data.model.AppLanguage
-import com.perenniasystems.lascito.ui.theme.AccentMetal
+import com.perenniasystems.lascito.core.designsystem.theme.AccentMetal
 import kotlinx.coroutines.flow.Flow
 
 /**
