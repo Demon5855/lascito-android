@@ -1,26 +1,22 @@
 package com.perenniasystems.lascito.viewmodel
 
+import com.perenniasystems.lascito.data.repository.SessionRepository
+import com.perenniasystems.lascito.data.error.DataErrors
+import com.perenniasystems.lascito.data.error.DataErrorKind
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import java.io.IOException
 
 import androidx.annotation.StringRes
-import com.google.firebase.auth.EmailAuthProvider
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthWeakPasswordException
-import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.repository.ProfileRepository
 import com.perenniasystems.lascito.util.ErrorHandler
@@ -56,8 +52,7 @@ data class UserSettingsUiState(
 
 @HiltViewModel
 class UserSettingsViewModel @Inject constructor(
-    private val auth: FirebaseAuth,
-    private val db: FirebaseFirestore,
+    private val session: SessionRepository,
     private val userRepository: UserRepository,
     private val profileRepository: ProfileRepository,
     private val prefs: com.perenniasystems.lascito.data.local.OnboardingPreferences,
@@ -113,7 +108,7 @@ class UserSettingsViewModel @Inject constructor(
 
     private fun loadUserData() {
         viewModelScope.launch {
-            val user = auth.currentUser
+            val user = session.currentUser
             if (user != null) {
                 var name: String? = user.displayName
                 val userEmail = user.email ?: ""
@@ -122,8 +117,7 @@ class UserSettingsViewModel @Inject constructor(
                 if (name.isNullOrBlank()) {
                     try {
                         withTimeout(15_000L) {
-                            val doc = db.collection("users").document(user.uid).get().await()
-                            name = doc.getString("displayName")
+                            name = userRepository.fetchDisplayName(user.uid).getOrThrow()
                         }
                     } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                         _uiState.value = _uiState.value.copy(displayNameRes = R.string.state_offline, displayNameRaw = null)
@@ -157,7 +151,7 @@ class UserSettingsViewModel @Inject constructor(
 
     fun deleteAccount() {
         viewModelScope.launch {
-            val uid = auth.currentUser?.uid
+            val uid = session.currentUser?.uid
             if (uid == null) {
                 _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Error(R.string.error_generic))
                 return@launch
@@ -183,7 +177,7 @@ class UserSettingsViewModel @Inject constructor(
                         _uiState.value = _uiState.value.copy(deleteState = DeleteAccountState.Success)
                     }
                     .onFailure { t ->
-                        val errorRes = if (t is FirebaseAuthRecentLoginRequiredException) {
+                        val errorRes = if (DataErrors.classify(t) == DataErrorKind.RECENT_LOGIN_REQUIRED) {
                             R.string.error_recent_login_required
                         } else {
                             ErrorHandler.mapExceptionToResId(t as? Exception ?: Exception(t))
@@ -205,7 +199,7 @@ class UserSettingsViewModel @Inject constructor(
     }
 
     fun changePassword(currentPass: String, newPass: String) {
-        val user = auth.currentUser
+        val user = session.currentUser
         if (user == null || user.email == null) {
             _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_not_authenticated))
             return
@@ -225,20 +219,19 @@ class UserSettingsViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val credential = EmailAuthProvider.getCredential(user.email!!, currentPass)
                 withTimeout(15_000L) {
-                    user.reauthenticate(credential).await()
-                    user.updatePassword(newPass).await()
+                    userRepository.changePassword(currentPass, newPass).getOrThrow()
                 }
                 _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Success)
-            } catch (e: FirebaseAuthInvalidCredentialsException) {
-                _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_incorrect_current_password))
-            } catch (e: FirebaseAuthWeakPasswordException) {
-                _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_weak_password))
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(R.string.error_network))
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(ErrorHandler.mapExceptionToResId(e)))
+                val errorRes = when (DataErrors.classify(e)) {
+                    DataErrorKind.INVALID_CREDENTIALS -> R.string.error_incorrect_current_password
+                    DataErrorKind.WEAK_PASSWORD -> R.string.error_weak_password
+                    else -> ErrorHandler.mapExceptionToResId(e)
+                }
+                _uiState.value = _uiState.value.copy(changePwdState = ChangePwdState.Error(errorRes))
             }
         }
     }

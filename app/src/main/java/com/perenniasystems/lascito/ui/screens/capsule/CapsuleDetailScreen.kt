@@ -358,8 +358,7 @@ fun CapsuleDetailScreen(
             actionRes  = if (msgResId == R.string.error_email_not_verified) R.string.action_resend else null,
             onAction   = if (msgResId == R.string.error_email_not_verified) {
                 {
-                    val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
-                    user?.sendEmailVerification()
+                    viewModel.resendVerificationEmail()
                     viewModel.clearError()
                 }
             } else null

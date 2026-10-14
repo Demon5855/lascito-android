@@ -1,10 +1,10 @@
 package com.perenniasystems.lascito.viewmodel
 
+import com.perenniasystems.lascito.data.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.perenniasystems.lascito.data.model.Memory
 import com.perenniasystems.lascito.data.model.MediaType
 import com.perenniasystems.lascito.data.repository.FirebaseStorageRepository
@@ -21,7 +21,6 @@ import com.perenniasystems.lascito.util.ErrorHandler
 import java.io.IOException
 import java.util.UUID
 import android.net.Uri
-import kotlinx.coroutines.tasks.await
 
 sealed interface AddMemoryUiState {
     data object Idle : AddMemoryUiState
@@ -34,7 +33,8 @@ sealed interface AddMemoryUiState {
 @HiltViewModel
 class AddMemoryViewModel @Inject constructor(
     private val repository: MemoryRepository,
-    private val storage: FirebaseStorageRepository
+    private val storage: FirebaseStorageRepository,
+    private val session: SessionRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AddMemoryUiState>(AddMemoryUiState.Idle)
@@ -120,20 +120,17 @@ class AddMemoryViewModel @Inject constructor(
             try {
                 // Extended timeout for large files (videos)
                 withTimeout(120_000L) {
-                    val currentUser = FirebaseAuth.getInstance().currentUser
-                    if (currentUser == null) {
+                    if (session.currentUser == null) {
                         _uiState.value = AddMemoryUiState.Error(R.string.error_not_authenticated)
                         return@withTimeout
                     }
-                    
-                    try {
-                        currentUser.reload().await()
-                    } catch (e: Exception) {
+
+                    val currentUser = session.reloadUser().getOrElse { _ ->
                         _uiState.value = AddMemoryUiState.Error(R.string.error_session_expired)
                         return@withTimeout
                     }
 
-                    if (currentUser.isEmailVerified == false) {
+                    if (!currentUser.isEmailVerified) {
                         _uiState.value = AddMemoryUiState.Error(R.string.error_email_not_verified)
                         return@withTimeout
                     }
@@ -194,6 +191,6 @@ class AddMemoryViewModel @Inject constructor(
     }
 
     fun resendVerificationEmail() {
-        FirebaseAuth.getInstance().currentUser?.sendEmailVerification()
+        viewModelScope.launch { session.resendVerificationEmail() }
     }
 }

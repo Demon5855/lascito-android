@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.data.di
 
+import com.perenniasystems.lascito.data.repository.FirebaseSessionRepository
+import com.perenniasystems.lascito.data.repository.SessionRepository
 import com.perenniasystems.lascito.data.repository.FirebaseAuthRepository
 import com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository
 import com.perenniasystems.lascito.data.repository.FirebaseMemoryRepository
@@ -19,6 +21,9 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+
+    @Binds
+    abstract fun bindSessionRepository(impl: FirebaseSessionRepository): SessionRepository
 
     @Binds
     abstract fun bindUserRepository(impl: FirebaseAuthRepository): UserRepository

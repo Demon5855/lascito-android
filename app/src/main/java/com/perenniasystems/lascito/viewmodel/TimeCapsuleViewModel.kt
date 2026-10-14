@@ -1,5 +1,6 @@
 package com.perenniasystems.lascito.viewmodel
 
+import com.perenniasystems.lascito.data.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import android.net.Uri
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import java.util.UUID
 
@@ -54,7 +54,8 @@ data class CapsuleUiState(
 @HiltViewModel
 class TimeCapsuleViewModel @Inject constructor(
     private val guardianRepository: GuardianRepository,
-    private val storageRepository:  FirebaseStorageRepository
+    private val storageRepository:  FirebaseStorageRepository,
+    private val session:            SessionRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CapsuleUiState())
@@ -130,6 +131,10 @@ class TimeCapsuleViewModel @Inject constructor(
     }
     
     fun clearError() = _uiState.update { it.copy(errorMessageResId = null) }
+
+    fun resendVerificationEmail() {
+        viewModelScope.launch { session.resendVerificationEmail() }
+    }
     fun resetSuccess() = _uiState.update { it.copy(isSuccess = false) }
 
     // ── Validación Centralizada ───────────────────────────────────────────────
@@ -186,20 +191,17 @@ class TimeCapsuleViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessageResId = null, uploadProgress = null) }
             
             // Verificación del usuario y del email
-            val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
-            if (currentUser == null) {
+            if (session.currentUser == null) {
                 _uiState.update { it.copy(isLoading = false, errorMessageResId = com.perenniasystems.lascito.R.string.error_not_authenticated) }
                 return@launch
             }
             
-            try {
-                currentUser.reload().await()
-            } catch (e: Exception) {
+            val currentUser = session.reloadUser().getOrElse { _ ->
                 _uiState.update { it.copy(isLoading = false, errorMessageResId = com.perenniasystems.lascito.R.string.error_session_expired) }
                 return@launch
             }
             
-            if (currentUser.isEmailVerified == false) {
+            if (!currentUser.isEmailVerified) {
                 _uiState.update { it.copy(isLoading = false, errorMessageResId = com.perenniasystems.lascito.R.string.error_email_not_verified) }
                 return@launch
             }
@@ -208,14 +210,11 @@ class TimeCapsuleViewModel @Inject constructor(
                 // 1. Subida de multimedia (opcional)
                 val remoteMediaUrl: String? = if (state.mediaUri != null) {
                     withTimeout(120_000L) {
-                        val contentResolver = com.google.firebase.FirebaseApp.getInstance().applicationContext.contentResolver
-                        val mimeType = contentResolver.getType(state.mediaUri)
-                        var extension = android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                        
-                        // Fallback seguro si MimeTypeMap falla
-                        if (extension == null) {
-                            extension = if (state.mediaType == MediaType.VIDEO) "mp4" else "jpg"
-                        }
+                        // Extensión según el MIME del archivo, con respaldo seguro
+                        val extension = storageRepository.extensionFor(
+                            uri      = state.mediaUri,
+                            fallback = if (state.mediaType == MediaType.VIDEO) "mp4" else "jpg"
+                        )
 
                         storageRepository.uploadCapsuleMedia(
                             uri       = state.mediaUri,

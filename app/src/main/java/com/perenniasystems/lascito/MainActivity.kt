@@ -63,7 +63,6 @@ import kotlinx.coroutines.flow.first
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
-import com.google.firebase.auth.FirebaseAuth
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.perenniasystems.lascito.viewmodel.BiometricLockViewModel
 
@@ -232,7 +231,7 @@ fun BiometricLockScreen(
     viewModel: BiometricLockViewModel = hiltViewModel(),
     content: @Composable () -> Unit
 ) {
-    val currentUser = FirebaseAuth.getInstance().currentUser
+    val currentUser = viewModel.currentUser
     if (currentUser == null) {
         content()
         return
@@ -375,7 +374,7 @@ fun BiometricLockScreen(
                     onClick = { 
                         scope.launch {
                             kotlinx.coroutines.delay(150L)
-                            FirebaseAuth.getInstance().signOut()
+                            viewModel.signOut()
                             val intent = android.content.Intent(activity, MainActivity::class.java).apply {
                                 flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
                             }

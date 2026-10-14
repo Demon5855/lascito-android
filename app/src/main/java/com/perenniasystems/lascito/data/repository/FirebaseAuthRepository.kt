@@ -1,5 +1,6 @@
 package com.perenniasystems.lascito.data.repository
 
+import com.google.firebase.auth.EmailAuthProvider
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.google.firebase.auth.FirebaseAuth
@@ -61,9 +62,21 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
-    override fun currentUserId(): String? = auth.currentUser?.uid
+    override suspend fun sendPasswordReset(email: String): Result<Unit> = runCatching {
+        auth.sendPasswordResetEmail(email.trim()).await()
+    }
 
-    override fun logout() { auth.signOut() }
+    override suspend fun changePassword(currentPassword: String, newPassword: String): Result<Unit> =
+        runCatching {
+            val user = auth.currentUser ?: throw IllegalStateException("No authenticated user")
+            val email = user.email ?: throw IllegalStateException("User email not found")
+            user.reauthenticate(EmailAuthProvider.getCredential(email, currentPassword)).await()
+            user.updatePassword(newPassword).await()
+        }
+
+    override suspend fun fetchDisplayName(uid: String): Result<String?> = runCatching {
+        db.collection("users").document(uid).get().await().getString("displayName")
+    }
 
     override suspend fun deleteUserDocument(userId: String): Result<Unit> = runCatching {
         withTimeout(10_000L) {

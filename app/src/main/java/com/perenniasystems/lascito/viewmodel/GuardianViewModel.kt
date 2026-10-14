@@ -1,11 +1,11 @@
 package com.perenniasystems.lascito.viewmodel
 
+import com.perenniasystems.lascito.data.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.DeadManSwitch
 import com.perenniasystems.lascito.data.model.LegacyGuardian
@@ -59,7 +59,8 @@ data class GuardianUiState(
 
 @HiltViewModel
 class GuardianViewModel @Inject constructor(
-    private val repository: GuardianRepository
+    private val repository: GuardianRepository,
+    private val session: SessionRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GuardianUiState())
@@ -210,7 +211,7 @@ class GuardianViewModel @Inject constructor(
                 _uiState.update { it.copy(lastGuardianUpdatedAt = newTimestamp) }
 
                 // 1. Encriptar pista si hay un nuevo PIN
-                val uid = FirebaseAuth.getInstance().currentUser?.uid ?: throw IllegalStateException("User not logged in")
+                val uid = session.currentUser?.uid ?: throw IllegalStateException("User not logged in")
                 val encryptedHintData = if (state.guardianPin.isNotBlank() && state.guardianPinHint.isNotBlank()) {
                     encryptPinHint(state.guardianPinHint, uid)
                 } else null
@@ -260,7 +261,7 @@ class GuardianViewModel @Inject constructor(
         _uiState.update { it.copy(lastProofOfLife = now) }
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                repository.registerProofOfLife().getOrThrow()
+                session.registerProofOfLife().getOrThrow()
             } catch (e: Exception) {
                 // Fallo silencioso — el timestamp local ya se actualizó en la UI.
                 // El servidor se sincronizará en la próxima sesión.

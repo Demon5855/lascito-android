@@ -1,18 +1,18 @@
 package com.perenniasystems.lascito.viewmodel
 
+import com.perenniasystems.lascito.data.repository.SessionRepository
+import com.perenniasystems.lascito.data.error.DataErrors
+import com.perenniasystems.lascito.data.error.DataErrorKind
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.perenniasystems.lascito.data.repository.GuardianRepository
 import com.perenniasystems.lascito.data.repository.UserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import androidx.annotation.StringRes
 import com.perenniasystems.lascito.R
@@ -27,8 +27,8 @@ import java.io.IOException
  */
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val repo:         UserRepository,
-    private val guardianRepo: GuardianRepository
+    private val repo:    UserRepository,
+    private val session: SessionRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
@@ -38,7 +38,7 @@ class AuthViewModel @Inject constructor(
         // Si el usuario ya tiene una sesión activa al iniciar la app,
         // registramos silenciosamente una Prueba de Vida para retrasar
         // el Dead Man's Switch sin bloquear la navegación.
-        if (FirebaseAuth.getInstance().currentUser != null) {
+        if (session.currentUser != null) {
             sendProofOfLife()
         }
     }
@@ -90,7 +90,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun logout() {
-        repo.logout()
+        session.signOut()
         _uiState.value = AuthUiState.Idle
     }
 
@@ -108,7 +108,7 @@ class AuthViewModel @Inject constructor(
     private fun sendProofOfLife() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                guardianRepo.registerProofOfLife()
+                session.registerProofOfLife()
             } catch (e: Exception) {
                 // Fallo silencioso: sin internet o usuario sin switch configurado.
                 // No mostramos error en la UI; el latido se enviará en la próxima sesión.
@@ -135,13 +135,14 @@ class AuthViewModel @Inject constructor(
             _uiState.value = AuthUiState.Loading
             try {
                 withTimeout(15_000L) {
-                    FirebaseAuth.getInstance().sendPasswordResetEmail(email.trim()).await()
+                    repo.sendPasswordReset(email).getOrThrow()
                 }
                 _uiState.value = AuthUiState.ResetEmailSent
-            } catch (e: com.google.firebase.auth.FirebaseAuthInvalidUserException) {
-                _uiState.value = AuthUiState.Error(R.string.error_login) // Or specific string
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(ErrorHandler.mapExceptionToResId(e))
+                _uiState.value = AuthUiState.Error(
+                    if (DataErrors.classify(e) == DataErrorKind.INVALID_USER) R.string.error_login
+                    else ErrorHandler.mapExceptionToResId(e)
+                )
             }
         }
     }

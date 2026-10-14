@@ -1,5 +1,7 @@
 package com.perenniasystems.lascito.viewmodel
 
+import com.perenniasystems.lascito.data.repository.SessionRepository
+import com.perenniasystems.lascito.data.repository.SessionUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import android.os.SystemClock
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 @HiltViewModel
 class BiometricLockViewModel @Inject constructor(
     private val prefs: OnboardingPreferences,
+    private val session: SessionRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -38,6 +41,12 @@ class BiometricLockViewModel @Inject constructor(
     )
     val lastPauseTime: StateFlow<Long> = _lastPauseTime.asStateFlow()
 
+
+    /** Lectura puntual: el bloqueo solo aplica si hay sesión iniciada. */
+    val currentUser: SessionUser?
+        get() = session.currentUser
+
+    fun signOut() = session.signOut()
 
     fun unlock() {
         _isUnlocked.value = true

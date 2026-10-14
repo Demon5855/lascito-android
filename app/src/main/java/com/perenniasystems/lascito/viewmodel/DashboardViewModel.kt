@@ -1,10 +1,10 @@
 package com.perenniasystems.lascito.viewmodel
 
+import com.perenniasystems.lascito.data.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.LegacyInvitation
 import com.perenniasystems.lascito.data.model.LegacyVault
@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import androidx.annotation.StringRes
 import com.perenniasystems.lascito.util.ErrorHandler
@@ -29,7 +28,8 @@ import java.io.IOException
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val repository: ProfileRepository,
-    private val guardianRepository: com.perenniasystems.lascito.data.repository.GuardianRepository
+    private val guardianRepository: com.perenniasystems.lascito.data.repository.GuardianRepository,
+    private val session: SessionRepository
 ) : ViewModel() {
 
     companion object {
@@ -60,12 +60,14 @@ class DashboardViewModel @Inject constructor(
             _uiState.value = DashboardUiState.Loading
             try {
                 withTimeout(15_000L) {
-                    val user = FirebaseAuth.getInstance().currentUser
+                    val user = session.currentUser
                         ?: throw Exception("Not authenticated")
 
                     // Reload user to get latest email verification status
-                    user.reload().addOnCompleteListener {
-                        _isEmailVerified.value = user.isEmailVerified
+                    viewModelScope.launch {
+                        _isEmailVerified.value = session.reloadUser()
+                            .map { it.isEmailVerified }
+                            .getOrDefault(user.isEmailVerified)
                     }
 
                     val profiles = repository.getProfiles(userId = user.uid)
@@ -118,11 +120,8 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             _isSendingVerification.value = true
             try {
-                val user = FirebaseAuth.getInstance().currentUser
-                    ?: throw Exception("Not authenticated")
-
                 withTimeout(15_000L) {
-                    user.sendEmailVerification().await()
+                    session.resendVerificationEmail().getOrThrow()
                 }
                 _verificationEmailSent.value = true
 

@@ -42,15 +42,6 @@ interface GuardianRepository {
      */
     suspend fun updateDeadManSwitchConfig(config: DeadManSwitch): Result<Unit>
 
-    /**
-     * Registra una Prueba de Vida: escribe el timestamp actual en el campo
-     * `deadManSwitch.lastProofOfLife` sin modificar el resto de la config.
-     *
-     * Debe llamarse cada vez que el usuario abre la app activamente o
-     * confirma manualmente desde la pantalla de Ajustes.
-     */
-    suspend fun registerProofOfLife(): Result<Unit>
-
     // ── Cápsulas del Tiempo ────────────────────────────────────────────────
 
     /**

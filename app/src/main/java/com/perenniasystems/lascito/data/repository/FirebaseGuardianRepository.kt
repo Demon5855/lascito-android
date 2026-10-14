@@ -164,40 +164,6 @@ class FirebaseGuardianRepository @Inject constructor(
             }
         }
 
-    /**
-     * Registra una Prueba de Vida actualizando SOLO el campo
-     * `deadManSwitch.lastProofOfLife` de forma atómica.
-     *
-     * CRÍTICO: usa [update] en lugar de [get] + write para evitar descargar
-     * el documento completo. Si el campo aun no existe (usuario nuevo que
-     * nunca configuró el switch), [update] lanzará una excepción → fallback
-     * con [set] + merge para crear la estructura mínima inicial.
-     */
-    override suspend fun registerProofOfLife(): Result<Unit> =
-        runCatching {
-            val uid = requireUid()
-            val now = System.currentTimeMillis()
-            withTimeout(10_000L) {
-                try {
-                    // Camino óptimo: actualización atómica de campo único (O(1))
-                    userDoc(uid)
-                        .update("deadManSwitch.lastProofOfLife", now)
-                        .await()
-                } catch (e: Exception) {
-                    // Fallback: el mapa deadManSwitch aún no existe en el documento.
-                    // Creamos la estructura mínima vía merge para no pisar otros campos.
-                    userDoc(uid)
-                        .set(
-                            mapOf(
-                                "deadManSwitch" to mapOf("lastProofOfLife" to now)
-                            ),
-                            SetOptions.merge()
-                        )
-                        .await()
-                }
-            }
-        }
-
     // ── Cápsulas del Tiempo ───────────────────────────────────────────────────
 
     /**

@@ -1,10 +1,9 @@
 package com.perenniasystems.lascito.util
 
 import androidx.annotation.StringRes
-import com.google.firebase.FirebaseNetworkException
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.data.error.DataErrorKind
+import com.perenniasystems.lascito.data.error.DataErrors
 import com.perenniasystems.lascito.data.model.MediaTooLargeException
 import java.io.IOException
 
@@ -15,22 +14,18 @@ object ErrorHandler {
 
     @StringRes
     fun mapExceptionToResId(e: Exception): Int {
-        return when (e) {
-            is FirebaseAuthInvalidCredentialsException,
-            is FirebaseAuthInvalidUserException -> {
-                // Email Enumeration Protection: Group login failures under one generic "Invalid Credentials" message
-                R.string.error_auth_invalid
-            }
-            is MediaTooLargeException -> {
-                if (e.isVideo) R.string.error_video_too_large else R.string.error_file_too_large
-            }
-            is FirebaseNetworkException,
-            is IOException -> {
-                R.string.error_network
-            }
-            else -> {
-                R.string.error_generic
-            }
+        if (e is MediaTooLargeException) {
+            return if (e.isVideo) R.string.error_video_too_large else R.string.error_file_too_large
+        }
+        if (e is IOException) return R.string.error_network
+
+        return when (DataErrors.classify(e)) {
+            // Email Enumeration Protection: Group login failures under one generic "Invalid Credentials" message
+            DataErrorKind.INVALID_CREDENTIALS,
+            DataErrorKind.INVALID_USER,
+            DataErrorKind.WEAK_PASSWORD -> R.string.error_auth_invalid
+            DataErrorKind.NETWORK -> R.string.error_network
+            else -> R.string.error_generic
         }
     }
 }

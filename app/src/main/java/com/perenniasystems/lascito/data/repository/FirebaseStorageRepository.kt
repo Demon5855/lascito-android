@@ -36,6 +36,11 @@ interface FirebaseStorageRepository {
 
 
     /**
+     * File extension for [uri] according to its MIME type, or [fallback] if it cannot be resolved.
+     */
+    fun extensionFor(uri: Uri, fallback: String): String
+
+    /**
      * Deletes the image at the given [imageUrl].
      * Tolerates "object-not-found" errors to avoid breaking cascade deletions.
      */
@@ -139,6 +144,9 @@ class FirebaseStorageRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override fun extensionFor(uri: Uri, fallback: String): String =
+        MimeTypeMap.getSingleton().getExtensionFromMimeType(resolveContentType(uri)) ?: fallback
 
     private fun metadataOf(contentType: String): StorageMetadata =
         StorageMetadata.Builder().setContentType(contentType).build()
