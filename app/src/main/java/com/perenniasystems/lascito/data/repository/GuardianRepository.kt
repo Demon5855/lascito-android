@@ -2,7 +2,7 @@ package com.perenniasystems.lascito.data.repository
 
 import com.perenniasystems.lascito.data.model.DeadManSwitch
 import com.perenniasystems.lascito.data.model.GuardianConfig
-import com.perenniasystems.lascito.data.model.LegacyGuardian
+import com.perenniasystems.lascito.data.model.Guardian
 import com.perenniasystems.lascito.data.model.TimeCapsule
 
 /**
@@ -32,7 +32,7 @@ interface GuardianRepository {
      * Persiste (crea o sobreescribe) la configuración del Guardián en el
      * documento del usuario actual mediante un merge parcial.
      */
-    suspend fun updateGuardian(guardian: LegacyGuardian): Result<Unit>
+    suspend fun updateGuardian(guardian: Guardian): Result<Unit>
 
     // ── Dead Man's Switch ──────────────────────────────────────────────────
 
@@ -85,17 +85,17 @@ interface GuardianRepository {
      * Invitaciones pendientes de reclamar dirigidas al correo del usuario actual.
      * Hay una por cada creador que lo designó guardián.
      */
-    suspend fun getPendingInvitations(): Result<List<com.perenniasystems.lascito.data.model.LegacyInvitation>>
+    suspend fun getPendingInvitations(): Result<List<com.perenniasystems.lascito.data.model.InheritanceInvitation>>
 
     /**
      * Una invitación concreta del usuario actual, o null si ya no está pendiente.
      */
-    suspend fun getPendingInvitation(invitationId: String): Result<com.perenniasystems.lascito.data.model.LegacyInvitation?>
+    suspend fun getPendingInvitation(invitationId: String): Result<com.perenniasystems.lascito.data.model.InheritanceInvitation?>
 
     /**
      * Herencias que el usuario actual ya reclamó (invitación CLAIMED con su UID).
      */
-    suspend fun getClaimedInheritances(): Result<List<com.perenniasystems.lascito.data.model.LegacyVault>>
+    suspend fun getClaimedInheritances(): Result<List<com.perenniasystems.lascito.data.model.Inheritance>>
 
     /**
      * Guarda el PIN de herencia del usuario actual como hash bcrypt en un documento
@@ -107,7 +107,7 @@ interface GuardianRepository {
      * Reclama la herencia de la invitación [invitationId]. La verificación del PIN y el
      * conteo de intentos ocurren en la Cloud Function `claimInheritance`.
      * @throws InvalidPinException si el PIN es incorrecto
-     * @throws LegacyBlockedException si excedió el límite de intentos
+     * @throws InheritanceBlockedException si excedió el límite de intentos
      */
-    suspend fun claimInheritance(invitationId: String, pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault>
+    suspend fun claimInheritance(invitationId: String, pin: String): Result<com.perenniasystems.lascito.data.model.Inheritance>
 }

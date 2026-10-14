@@ -6,12 +6,12 @@ import javax.inject.Inject
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.perenniasystems.lascito.data.model.Profile
-import com.perenniasystems.lascito.data.model.ProfileStatus
-import com.perenniasystems.lascito.data.model.ProfileType
-import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
+import com.perenniasystems.lascito.data.model.Legacy
+import com.perenniasystems.lascito.data.model.LegacyStatus
+import com.perenniasystems.lascito.data.model.LegacyType
+import com.perenniasystems.lascito.data.repository.FirebaseLegacyRepository
 import com.perenniasystems.lascito.data.repository.FirebaseStorageRepository
-import com.perenniasystems.lascito.data.repository.ProfileRepository
+import com.perenniasystems.lascito.data.repository.LegacyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,86 +24,86 @@ import com.perenniasystems.lascito.core.common.ErrorHandler
 import java.io.IOException
 import java.util.UUID
 
-sealed interface AddProfileUiState {
-    data object Idle : AddProfileUiState
-    data object Loading : AddProfileUiState
-    data class Loaded(val profile: Profile) : AddProfileUiState
-    data object Success : AddProfileUiState
-    data class Error(@StringRes val messageResId: Int) : AddProfileUiState
+sealed interface AddLegacyUiState {
+    data object Idle : AddLegacyUiState
+    data object Loading : AddLegacyUiState
+    data class Loaded(val legacy: Legacy) : AddLegacyUiState
+    data object Success : AddLegacyUiState
+    data class Error(@StringRes val messageResId: Int) : AddLegacyUiState
 }
 
 @HiltViewModel
-class AddProfileViewModel @Inject constructor(
-    private val repository: ProfileRepository,
+class AddLegacyViewModel @Inject constructor(
+    private val repository: LegacyRepository,
     private val storage: FirebaseStorageRepository,
     private val session: SessionRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<AddProfileUiState>(AddProfileUiState.Idle)
-    val uiState: StateFlow<AddProfileUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<AddLegacyUiState>(AddLegacyUiState.Idle)
+    val uiState: StateFlow<AddLegacyUiState> = _uiState.asStateFlow()
 
-    private var currentProfileId: String? = null
+    private var currentLegacyId: String? = null
     private var currentAvatarUrl: String? = null
 
     private val _uploadProgress = MutableStateFlow(0f)
     val uploadProgress: StateFlow<Float> = _uploadProgress.asStateFlow()
 
     fun resetState() {
-        _uiState.value = AddProfileUiState.Idle
-        currentProfileId = null
+        _uiState.value = AddLegacyUiState.Idle
+        currentLegacyId = null
         currentAvatarUrl = null
     }
 
-    fun loadProfile(profileId: String) {
+    fun loadLegacy(profileId: String) {
         viewModelScope.launch {
-            _uiState.value = AddProfileUiState.Loading
+            _uiState.value = AddLegacyUiState.Loading
             try {
                 withTimeout(15_000L) {
-                    val profile = repository.getProfileById(profileId)
-                    if (profile != null) {
-                        currentProfileId = profile.profileId
-                        currentAvatarUrl = profile.avatarUrl
-                        _uiState.value = AddProfileUiState.Loaded(profile)
+                    val legacy = repository.getLegacyById(profileId)
+                    if (legacy != null) {
+                        currentLegacyId = legacy.profileId
+                        currentAvatarUrl = legacy.avatarUrl
+                        _uiState.value = AddLegacyUiState.Loaded(legacy)
                     } else {
-                        _uiState.value = AddProfileUiState.Error(R.string.error_profile_not_found)
+                        _uiState.value = AddLegacyUiState.Error(R.string.error_legacy_not_found)
                     }
                 }
             } catch (e: Exception) {
-                _uiState.value = AddProfileUiState.Error(ErrorHandler.mapExceptionToResId(e))
+                _uiState.value = AddLegacyUiState.Error(ErrorHandler.mapExceptionToResId(e))
             }
         }
     }
 
-    fun saveProfile(
+    fun saveLegacy(
         fullName: String,
-        profileType: ProfileType,
+        profileType: LegacyType,
         relationship: String,
         birthDate: Long,
         passingDate: Long?,
         imageBytes: ByteArray?
     ) {
         viewModelScope.launch {
-            _uiState.value = AddProfileUiState.Loading
+            _uiState.value = AddLegacyUiState.Loading
             _uploadProgress.value = 0f
             try {
                 withTimeout(15_000L) {
                     if (session.currentUser == null) {
-                        _uiState.value = AddProfileUiState.Error(R.string.error_not_authenticated)
+                        _uiState.value = AddLegacyUiState.Error(R.string.error_not_authenticated)
                         return@withTimeout
                     }
 
                     val currentUser = session.reloadUser().getOrElse { _ ->
-                        _uiState.value = AddProfileUiState.Error(R.string.error_session_expired)
+                        _uiState.value = AddLegacyUiState.Error(R.string.error_session_expired)
                         return@withTimeout
                     }
 
                     if (!currentUser.isEmailVerified) {
-                        _uiState.value = AddProfileUiState.Error(R.string.error_email_not_verified)
+                        _uiState.value = AddLegacyUiState.Error(R.string.error_email_not_verified)
                         return@withTimeout
                     }
 
                     _uploadProgress.value = 0.3f
-                    val profileId = currentProfileId ?: UUID.randomUUID().toString()
+                    val profileId = currentLegacyId ?: UUID.randomUUID().toString()
                     val finalAvatarUrl = if (imageBytes != null) {
                         val path = "profiles/covers/${currentUser.uid}/${profileId}.jpg"
                         val url = storage.uploadImage(imageBytes, path)
@@ -119,8 +119,8 @@ class AddProfileViewModel @Inject constructor(
                     }
 
                     // Generar un ID local provisorio si no esperamos el server-side ID
-                    val newProfile = Profile(
-                        profileId = profileId, // FirebaseProfileRepository upserts this
+                    val newLegacy = Legacy(
+                        profileId = profileId, // FirebaseLegacyRepository upserts this
                         creatorUserId = currentUser.uid,
                         fullName = fullName.trim(),
                         profileType = profileType,
@@ -128,18 +128,18 @@ class AddProfileViewModel @Inject constructor(
                         birthDate = birthDate,
                         passingDate = passingDate,
                         avatarUrl = finalAvatarUrl,
-                        status = ProfileStatus.ACTIVE
+                        status = LegacyStatus.ACTIVE
                     )
 
-                    repository.save(newProfile)
+                    repository.save(newLegacy)
                     _uploadProgress.value = 1f
                     delay(400)
-                    _uiState.value = AddProfileUiState.Success
+                    _uiState.value = AddLegacyUiState.Success
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                _uiState.value = AddProfileUiState.Error(R.string.error_network)
+                _uiState.value = AddLegacyUiState.Error(R.string.error_network)
             } catch (e: Exception) {
-                _uiState.value = AddProfileUiState.Error(ErrorHandler.mapExceptionToResId(e))
+                _uiState.value = AddLegacyUiState.Error(ErrorHandler.mapExceptionToResId(e))
             }
         }
     }

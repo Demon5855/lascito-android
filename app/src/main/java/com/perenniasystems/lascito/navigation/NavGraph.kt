@@ -8,7 +8,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.perenniasystems.lascito.feature.legacy.AltarScreen
+import com.perenniasystems.lascito.feature.legacy.LegacyScreen
 import com.perenniasystems.lascito.feature.auth.LoginScreen
 import com.perenniasystems.lascito.feature.auth.RegisterScreen
 import com.perenniasystems.lascito.feature.custody.CapsuleVaultScreen
@@ -17,10 +17,10 @@ import com.perenniasystems.lascito.feature.legacy.DashboardScreen
 import com.perenniasystems.lascito.feature.custody.GuardianScreen
 import com.perenniasystems.lascito.feature.custody.InheritanceRoute
 import com.perenniasystems.lascito.feature.memory.AddMemoryScreen
-import com.perenniasystems.lascito.feature.legacy.AddProfileScreen
+import com.perenniasystems.lascito.feature.legacy.AddLegacyScreen
 import com.perenniasystems.lascito.feature.settings.UserSettingsScreen
 import com.perenniasystems.lascito.feature.memory.AddMemoryViewModel
-import com.perenniasystems.lascito.feature.legacy.AddProfileViewModel
+import com.perenniasystems.lascito.feature.legacy.AddLegacyViewModel
 import com.perenniasystems.lascito.feature.auth.AuthViewModel
 
 import com.perenniasystems.lascito.feature.auth.OnboardingScreen
@@ -29,8 +29,8 @@ import com.perenniasystems.lascito.feature.auth.OnboardingScreen
  * NavGraph wires up all application destinations.
  *
  * Phase 1 flow:
- *   Login → Dashboard → AddProfile    (new altar)
- *                      → Altar         → AddMemory
+ *   Login → Dashboard → AddLegacy    (new altar)
+ *                      → Legacy         → AddMemory
  *                      → UserSettings  (Mi Cuenta)
  * Phase 2: Replace mocks with Firebase/Firestore.
  */
@@ -83,17 +83,17 @@ fun LascitoNavGraph(
 
         composable(Screen.Dashboard.route) {
             DashboardScreen(
-                onNavigateToAltar        = { profileId ->
-                    navController.navigate(Screen.Altar.createRoute(profileId))
+                onNavigateToLegacy        = { profileId ->
+                    navController.navigate(Screen.Legacy.createRoute(profileId))
                 },
-                onNavigateToAddProfile   = { profileId ->
-                    navController.navigate(Screen.AddProfile.createRoute(profileId))
+                onNavigateToAddLegacy   = { profileId ->
+                    navController.navigate(Screen.AddLegacy.createRoute(profileId))
                 },
                 onNavigateToUserSettings = {
                     navController.navigate(Screen.UserSettings.route)
                 },
-                onNavigateToClaimLegacy = { invitationId ->
-                    navController.navigate(Screen.ClaimLegacy.createRoute(invitationId))
+                onNavigateToClaimInheritance = { invitationId ->
+                    navController.navigate(Screen.ClaimInheritance.createRoute(invitationId))
                 },
                 onNavigateToInheritance = { creatorUid ->
                     navController.navigate(Screen.Inheritance.createRoute(creatorUid))
@@ -102,7 +102,7 @@ fun LascitoNavGraph(
         }
 
         composable(
-            route = Screen.AddProfile.route,
+            route = Screen.AddLegacy.route,
             arguments = listOf(navArgument("profileId") {
                 type = NavType.StringType
                 nullable = true
@@ -110,23 +110,23 @@ fun LascitoNavGraph(
             })
         ) { backStackEntry ->
             val profileId = backStackEntry.arguments?.getString("profileId")
-            val addProfileViewModel: AddProfileViewModel = hiltViewModel()
+            val addLegacyViewModel: AddLegacyViewModel = hiltViewModel()
 
             LaunchedEffect(profileId) {
                 if (profileId != null) {
-                    addProfileViewModel.loadProfile(profileId)
+                    addLegacyViewModel.loadLegacy(profileId)
                 }
             }
 
-            AddProfileScreen(
-                viewModel      = addProfileViewModel,
+            AddLegacyScreen(
+                viewModel      = addLegacyViewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onShowSnackbar = onShowSnackbar
             )
         }
 
         composable(
-            route     = Screen.Altar.route,
+            route     = Screen.Legacy.route,
             arguments = listOf(
                 navArgument("profileId") { type = NavType.StringType },
                 navArgument("readOnly") {
@@ -136,14 +136,14 @@ fun LascitoNavGraph(
             )
         ) { backStackEntry ->
             val profileId = backStackEntry.arguments?.getString("profileId") ?: return@composable
-            AltarScreen(
+            LegacyScreen(
                 profileId      = profileId,
                 readOnly       = backStackEntry.arguments?.getBoolean("readOnly") ?: false,
                 onNavigateBack = { navController.popBackStack() },
                 onAddMemory    = { navController.navigate(Screen.AddMemory.createRoute(profileId)) },
                 onEditMemory   = { memoryId -> navController.navigate(Screen.AddMemory.createRoute(profileId, memoryId)) },
-                onEditProfileClick = { navController.navigate(Screen.AddProfile.createRoute(profileId)) },
-                onDeleteProfileClick = { navController.popBackStack() }
+                onEditLegacyClick = { navController.navigate(Screen.AddLegacy.createRoute(profileId)) },
+                onDeleteLegacyClick = { navController.popBackStack() }
             )
         }
 
@@ -201,16 +201,16 @@ fun LascitoNavGraph(
         }
 
         composable(
-            route     = Screen.ClaimLegacy.route,
+            route     = Screen.ClaimInheritance.route,
             arguments = listOf(navArgument("invitationId") { type = NavType.StringType })
         ) { backStackEntry ->
             val invitationId = backStackEntry.arguments?.getString("invitationId") ?: return@composable
-            com.perenniasystems.lascito.feature.custody.ClaimLegacyScreen(
+            com.perenniasystems.lascito.feature.custody.ClaimInheritanceScreen(
                 invitationId   = invitationId,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToVault = { creatorUid ->
                     navController.navigate(Screen.Inheritance.createRoute(creatorUid)) {
-                        popUpTo(Screen.ClaimLegacy.route) { inclusive = true }
+                        popUpTo(Screen.ClaimInheritance.route) { inclusive = true }
                     }
                 }
             )
@@ -225,7 +225,7 @@ fun LascitoNavGraph(
                 creatorUid     = creatorUid,
                 onNavigateBack = { navController.popBackStack() },
                 onOpenLegacy   = { profileId ->
-                    navController.navigate(Screen.Altar.createRoute(profileId, readOnly = true))
+                    navController.navigate(Screen.Legacy.createRoute(profileId, readOnly = true))
                 }
             )
         }

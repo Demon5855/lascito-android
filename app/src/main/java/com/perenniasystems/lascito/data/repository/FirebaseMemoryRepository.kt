@@ -11,7 +11,7 @@ import kotlinx.coroutines.withTimeout
 /**
  * Firestore implementation of [MemoryRepository].
  *
- * Subcollection: `profiles/{profileId}/memories`
+ * Subcollection: `legacies/{profileId}/memories`
  * Document ID = [Memory.memoryId]
  */
 @Singleton
@@ -23,7 +23,7 @@ class FirebaseMemoryRepository @Inject constructor(
     private fun memoriesCol(profileId: String) =
         db.collection("profiles").document(profileId).collection("memories")
 
-    override suspend fun getMemoriesByProfile(profileId: String): List<Memory> =
+    override suspend fun getMemoriesByLegacy(profileId: String): List<Memory> =
         withTimeout(10_000L) {
             memoriesCol(profileId)
                 .orderBy("capturedDate", Query.Direction.DESCENDING)

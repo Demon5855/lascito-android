@@ -12,15 +12,15 @@ import com.google.firebase.functions.FirebaseFunctionsException
 import com.google.firebase.storage.FirebaseStorage
 import com.perenniasystems.lascito.data.model.DeadManSwitch
 import com.perenniasystems.lascito.data.model.GuardianConfig
-import com.perenniasystems.lascito.data.model.LegacyGuardian
-import com.perenniasystems.lascito.data.model.LegacyInvitation
+import com.perenniasystems.lascito.data.model.Guardian
+import com.perenniasystems.lascito.data.model.InheritanceInvitation
 import com.perenniasystems.lascito.data.model.InvitationStatus
 import com.perenniasystems.lascito.data.model.InvalidPinException
-import com.perenniasystems.lascito.data.model.LegacyAlreadyClaimedException
-import com.perenniasystems.lascito.data.model.LegacyBlockedException
-import com.perenniasystems.lascito.data.model.LegacyExpiredException
-import com.perenniasystems.lascito.data.model.LegacyNotConfiguredException
-import com.perenniasystems.lascito.data.model.LegacyNotFoundException
+import com.perenniasystems.lascito.data.model.InheritanceAlreadyClaimedException
+import com.perenniasystems.lascito.data.model.InheritanceBlockedException
+import com.perenniasystems.lascito.data.model.InheritanceExpiredException
+import com.perenniasystems.lascito.data.model.InheritanceNotConfiguredException
+import com.perenniasystems.lascito.data.model.InheritanceNotFoundException
 import com.perenniasystems.lascito.data.model.TimeCapsule
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
@@ -73,7 +73,7 @@ class FirebaseGuardianRepository @Inject constructor(
 
     /**
      * Lee en una única operación el documento `users/{uid}` y extrae los
-     * objetos embebidos [LegacyGuardian] y [DeadManSwitch].
+     * objetos embebidos [Guardian] y [DeadManSwitch].
      *
      * Usa [DocumentSnapshot.get] con nombre de campo en lugar de [toObject]
      * para evitar problemas si el esquema del documento User cambia.
@@ -89,7 +89,7 @@ class FirebaseGuardianRepository @Inject constructor(
                 snapshot.get("legacyGuardian")?.let { raw ->
                     @Suppress("UNCHECKED_CAST")
                     val map = raw as? Map<String, Any?> ?: return@let null
-                    LegacyGuardian(
+                    Guardian(
                         email         = map["email"] as? String,
                         name          = map["name"] as? String,
                         status        = runCatching {
@@ -121,14 +121,14 @@ class FirebaseGuardianRepository @Inject constructor(
         }
 
     /**
-     * Persiste el [LegacyGuardian] del usuario mediante un merge parcial.
+     * Persiste el [Guardian] del usuario mediante un merge parcial.
      * Solo sobreescribe el campo `legacyGuardian`; el resto del documento
      * permanece intacto.
      *
      * La pista del PIN solo se escribe cuando llega una nueva: guardar el
      * guardián sin cambiar el PIN conserva la pista existente.
      */
-    override suspend fun updateGuardian(guardian: LegacyGuardian): Result<Unit> =
+    override suspend fun updateGuardian(guardian: Guardian): Result<Unit> =
         runCatching {
             val uid = requireUid()
             val fields = buildMap<String, Any?> {
@@ -241,7 +241,7 @@ class FirebaseGuardianRepository @Inject constructor(
 
     // ── Reclamación de Legados (Phase 4) ───────────────────────────────────
 
-    override suspend fun getPendingInvitations(): Result<List<LegacyInvitation>> = runCatching {
+    override suspend fun getPendingInvitations(): Result<List<InheritanceInvitation>> = runCatching {
         val email = auth.currentUser?.email ?: throw IllegalStateException("User email not found")
         withTimeout(10_000L) {
             invitationsCollection
@@ -255,7 +255,7 @@ class FirebaseGuardianRepository @Inject constructor(
         }
     }
 
-    override suspend fun getPendingInvitation(invitationId: String): Result<LegacyInvitation?> = runCatching {
+    override suspend fun getPendingInvitation(invitationId: String): Result<InheritanceInvitation?> = runCatching {
         withTimeout(10_000L) {
             val doc = invitationsCollection.document(invitationId).get().await()
             if (!doc.exists()) return@withTimeout null
@@ -263,7 +263,7 @@ class FirebaseGuardianRepository @Inject constructor(
         }
     }
 
-    override suspend fun getClaimedInheritances(): Result<List<com.perenniasystems.lascito.data.model.LegacyVault>> = runCatching {
+    override suspend fun getClaimedInheritances(): Result<List<com.perenniasystems.lascito.data.model.Inheritance>> = runCatching {
         val currentUser = auth.currentUser ?: throw IllegalStateException("User not authenticated")
         val email = currentUser.email ?: throw IllegalStateException("User email not found")
         withTimeout(10_000L) {
@@ -275,7 +275,7 @@ class FirebaseGuardianRepository @Inject constructor(
                 .documents
                 .filter { it.getString("claimedByUid") == currentUser.uid }
                 .map { doc ->
-                    com.perenniasystems.lascito.data.model.LegacyVault(
+                    com.perenniasystems.lascito.data.model.Inheritance(
                         id = doc.id,
                         creatorUid = doc.getString("creatorUid") ?: "",
                         creatorName = doc.getString("creatorName") ?: "",
@@ -286,7 +286,7 @@ class FirebaseGuardianRepository @Inject constructor(
         }
     }
 
-    private fun DocumentSnapshot.toInvitation() = LegacyInvitation(
+    private fun DocumentSnapshot.toInvitation() = InheritanceInvitation(
         id = id,
         creatorUid = getString("creatorUid") ?: "",
         creatorName = getString("creatorName") ?: "",
@@ -314,7 +314,7 @@ class FirebaseGuardianRepository @Inject constructor(
         }
     }
 
-    override suspend fun claimInheritance(invitationId: String, pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault> = runCatching {
+    override suspend fun claimInheritance(invitationId: String, pin: String): Result<com.perenniasystems.lascito.data.model.Inheritance> = runCatching {
         auth.currentUser ?: throw IllegalStateException("User not authenticated")
 
         val response = try {
@@ -328,7 +328,7 @@ class FirebaseGuardianRepository @Inject constructor(
         }
 
         val data = response.getData() as? Map<*, *>
-        com.perenniasystems.lascito.data.model.LegacyVault(
+        com.perenniasystems.lascito.data.model.Inheritance(
             id = data?.get("invitationId") as? String ?: invitationId,
             creatorUid = data?.get("creatorUid") as? String ?: "",
             creatorName = data?.get("creatorName") as? String ?: "",
@@ -342,11 +342,11 @@ class FirebaseGuardianRepository @Inject constructor(
         val details = details as? Map<*, *>
         return when (details?.get("reason") as? String) {
             "INVALID_PIN" -> InvalidPinException((details["attemptsRemaining"] as? Number)?.toInt() ?: 0)
-            "BLOCKED" -> LegacyBlockedException()
-            "EXPIRED" -> LegacyExpiredException()
-            "NOT_FOUND" -> LegacyNotFoundException()
-            "ALREADY_CLAIMED" -> LegacyAlreadyClaimedException()
-            "NOT_CONFIGURED" -> LegacyNotConfiguredException()
+            "BLOCKED" -> InheritanceBlockedException()
+            "EXPIRED" -> InheritanceExpiredException()
+            "NOT_FOUND" -> InheritanceNotFoundException()
+            "ALREADY_CLAIMED" -> InheritanceAlreadyClaimedException()
+            "NOT_CONFIGURED" -> InheritanceNotConfiguredException()
             else -> this
         }
     }

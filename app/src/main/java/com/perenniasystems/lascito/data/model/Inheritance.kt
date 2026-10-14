@@ -1,6 +1,6 @@
 package com.perenniasystems.lascito.data.model
 
-data class LegacyInvitation(
+data class InheritanceInvitation(
     val id: String = "",
     val creatorUid: String = "",
     val creatorName: String = "",
@@ -18,7 +18,7 @@ enum class InvitationStatus {
     BLOCKED
 }
 
-data class LegacyVault(
+data class Inheritance(
     val id: String = "",
     val creatorUid: String = "",
     val creatorName: String = "",
@@ -30,8 +30,8 @@ data class LegacyVault(
 )
 
 class InvalidPinException(val attemptsRemaining: Int) : Exception("Invalid PIN. Attempts remaining: $attemptsRemaining")
-class LegacyNotFoundException(message: String = "Legacy not found") : Exception(message)
-class LegacyExpiredException(message: String = "Legacy expired") : Exception(message)
-class LegacyBlockedException(message: String = "Legacy blocked due to too many failed attempts") : Exception(message)
-class LegacyNotConfiguredException(message: String = "Legacy PIN not configured by its creator") : Exception(message)
-class LegacyAlreadyClaimedException(message: String = "Legacy already claimed") : Exception(message)
+class InheritanceNotFoundException(message: String = "Inheritance not found") : Exception(message)
+class InheritanceExpiredException(message: String = "Inheritance expired") : Exception(message)
+class InheritanceBlockedException(message: String = "Inheritance blocked due to too many failed attempts") : Exception(message)
+class InheritanceNotConfiguredException(message: String = "Inheritance PIN not configured by its creator") : Exception(message)
+class InheritanceAlreadyClaimedException(message: String = "Inheritance already claimed") : Exception(message)

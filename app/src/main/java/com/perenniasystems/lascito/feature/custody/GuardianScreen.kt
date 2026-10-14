@@ -49,7 +49,7 @@ fun GuardianScreen(
     onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val toastLegacySaved = stringResource(R.string.toast_legacy_saved)
+    val toastGuardianConfigSaved = stringResource(R.string.toast_guardian_config_saved)
 
     val isGuardianSectionValid = ValidationRules.validateName(uiState.guardianName) == null &&
             ValidationRules.validateEmail(uiState.guardianEmail) == null &&
@@ -58,7 +58,7 @@ fun GuardianScreen(
     // Feedback de guardado exitoso → snackbar
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
-            onShowSnackbar(toastLegacySaved, null) {}
+            onShowSnackbar(toastGuardianConfigSaved, null) {}
             viewModel.clearSaved()
         }
     }
@@ -147,7 +147,7 @@ fun GuardianScreen(
                 }
                 Text(
                     text = stringResource(
-                        if (uiState.isLoading) R.string.btn_saving else R.string.btn_save_legacy_config
+                        if (uiState.isLoading) R.string.btn_saving else R.string.btn_save_guardian_config
                     ),
                     fontWeight = FontWeight.Bold,
                     fontSize   = 15.sp
@@ -236,7 +236,7 @@ private fun BeneficiaryCard(
 ) {
     var showHintHelpDialog by remember { mutableStateOf(false) }
 
-    LegacyCard {
+    GuardianCard {
         // Encabezado
         Row(
             verticalAlignment     = Alignment.CenterVertically,
@@ -278,7 +278,7 @@ private fun BeneficiaryCard(
 
         // Campos
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            LegacyTextField(
+            GuardianTextField(
                 value       = name,
                 onChange    = onName,
                 label       = stringResource(R.string.label_heir_name),
@@ -287,7 +287,7 @@ private fun BeneficiaryCard(
                 keyType     = KeyboardType.Text
             )
 
-            LegacyTextField(
+            GuardianTextField(
                 value       = email,
                 onChange    = onEmail,
                 label       = stringResource(R.string.label_heir_email),
@@ -314,7 +314,7 @@ private fun BeneficiaryCard(
                 },
                 singleLine    = true,
                 modifier      = Modifier.fillMaxWidth(),
-                colors        = legacyTextFieldColors(),
+                colors        = guardianTextFieldColors(),
                 shape         = RoundedCornerShape(10.dp),
                 textStyle     = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary)
             )
@@ -413,7 +413,7 @@ private fun BeneficiaryCard(
                         },
                         maxLines = 3,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = legacyTextFieldColors(),
+                        colors = guardianTextFieldColors(),
                         shape = RoundedCornerShape(10.dp),
                         textStyle     = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary)
                     )
@@ -512,7 +512,7 @@ private fun DeadManSwitchCard(
 ) {
     val dayOptions = listOf(30, 90, 180, 365)
 
-    LegacyCard {
+    GuardianCard {
         // Encabezado
         Row(
             verticalAlignment     = Alignment.CenterVertically,
@@ -791,7 +791,7 @@ private fun SystemStatusFooter(
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun LegacyCard(content: @Composable ColumnScope.() -> Unit) {
+private fun GuardianCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
         shape    = RoundedCornerShape(16.dp),
         colors   = CardDefaults.cardColors(containerColor = SurfaceDark),
@@ -808,7 +808,7 @@ private fun LegacyCard(content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-private fun LegacyTextField(
+private fun GuardianTextField(
     value:       String,
     onChange:    (String) -> Unit,
     label:       String,
@@ -832,14 +832,14 @@ private fun LegacyTextField(
         keyboardOptions = KeyboardOptions(keyboardType = keyType),
         singleLine      = true,
         modifier        = Modifier.fillMaxWidth(),
-        colors          = legacyTextFieldColors(),
+        colors          = guardianTextFieldColors(),
         shape           = RoundedCornerShape(10.dp),
         textStyle       = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary)
     )
 }
 
 @Composable
-private fun legacyTextFieldColors() = OutlinedTextFieldDefaults.colors(
+private fun guardianTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor      = MaterialTheme.colorScheme.primaryContainer,
     unfocusedBorderColor    = CardBorder,
     cursorColor             = MaterialTheme.colorScheme.primary,

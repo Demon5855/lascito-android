@@ -19,7 +19,7 @@ import java.io.IOException
 
 import androidx.annotation.StringRes
 import com.perenniasystems.lascito.R
-import com.perenniasystems.lascito.data.repository.ProfileRepository
+import com.perenniasystems.lascito.data.repository.LegacyRepository
 import com.perenniasystems.lascito.core.common.ErrorHandler
 import com.perenniasystems.lascito.data.repository.UserRepository
 
@@ -55,7 +55,7 @@ data class UserSettingsUiState(
 class UserSettingsViewModel @Inject constructor(
     private val session: SessionRepository,
     private val userRepository: UserRepository,
-    private val profileRepository: ProfileRepository,
+    private val legacyRepository: LegacyRepository,
     private val preferences: PreferencesRepository
 ) : ViewModel() {
 
@@ -85,7 +85,7 @@ class UserSettingsViewModel @Inject constructor(
                 var name: String? = user.displayName
                 val userEmail = user.email ?: ""
 
-                // Fetch from Firestore if Auth Profile doesn't have the displayName
+                // Fetch from Firestore if Auth Legacy doesn't have the displayName
                 if (name.isNullOrBlank()) {
                     try {
                         withTimeout(15_000L) {
@@ -133,11 +133,11 @@ class UserSettingsViewModel @Inject constructor(
             
             try {
                 // 1. Obtener todos los perfiles
-                val profiles = profileRepository.getProfiles(uid)
+                val legacies = legacyRepository.getLegacies(uid)
                 
                 // 2. Ejecutar la cascada profunda para cada perfil
-                for (profile in profiles) {
-                    profileRepository.deleteProfile(profile.profileId, profile.avatarUrl)
+                for (legacy in legacies) {
+                    legacyRepository.deleteLegacy(legacy.profileId, legacy.avatarUrl)
                 }
                 
                 // 3. Borrar el registro del usuario (documento Firestore)

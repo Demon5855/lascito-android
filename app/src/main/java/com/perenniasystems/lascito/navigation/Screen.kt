@@ -9,13 +9,13 @@ sealed class Screen(val route: String) {
     data object Login       : Screen("login")
     data object Register    : Screen("register")
     data object Dashboard   : Screen("dashboard")
-    data object AddProfile  : Screen("add_profile?profileId={profileId}") {
+    data object AddLegacy  : Screen("add_legacy?profileId={profileId}") {
         fun createRoute(profileId: String? = null): String {
-            return if (profileId != null) "add_profile?profileId=$profileId" else "add_profile"
+            return if (profileId != null) "add_legacy?profileId=$profileId" else "add_legacy"
         }
     }
-    data object Altar       : Screen("altar/{profileId}?readOnly={readOnly}") {
-        fun createRoute(profileId: String, readOnly: Boolean = false) = "altar/$profileId?readOnly=$readOnly"
+    data object Legacy       : Screen("legacy/{profileId}?readOnly={readOnly}") {
+        fun createRoute(profileId: String, readOnly: Boolean = false) = "legacy/$profileId?readOnly=$readOnly"
     }
     data object AddMemory   : Screen("add_memory/{profileId}?memoryId={memoryId}") {
         fun createRoute(profileId: String, memoryId: String? = null): String {
@@ -24,8 +24,8 @@ sealed class Screen(val route: String) {
     }
     data object UserSettings    : Screen("user_settings")
     data object Guardian         : Screen("guardian")
-    data object ClaimLegacy      : Screen("claim_legacy/{invitationId}") {
-        fun createRoute(invitationId: String) = "claim_legacy/$invitationId"
+    data object ClaimInheritance      : Screen("claim_inheritance/{invitationId}") {
+        fun createRoute(invitationId: String) = "claim_inheritance/$invitationId"
     }
     data object Inheritance      : Screen("inheritance/{creatorUid}") {
         fun createRoute(creatorUid: String) = "inheritance/$creatorUid"

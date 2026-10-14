@@ -20,7 +20,7 @@
     <string name="desc_select_date">Seleccionar fecha</string>
     <string name="hint_date_format">DD/MM/AAAA</string>
     <string name="label_photo">Foto</string>
-    <string name="error_profile_not_found">Perfil no encontrado</string>
+    <string name="error_legacy_not_found">Perfil no encontrado</string>
     <string name="desc_back">Volver</string>
     <string name="desc_options">Opciones</string>
 
@@ -84,10 +84,10 @@
     <string name="btn_sign_out_safe">Iniciar sesión con otra cuenta</string>
 
     <!-- ── Dashboard ────────────────────────────────────────────────────────── -->
-    <string name="screen_my_altars">Tus Legados</string>
-    <string name="desc_create_altar">Crear legado</string>
-    <string name="empty_altars">Aún no hay legados.\nPresiona + para crear el primero.</string>
-    <string name="error_load_altars">No se pudieron cargar los legados.</string>
+    <string name="screen_my_legacies">Tus Legados</string>
+    <string name="desc_create_legacy">Crear legado</string>
+    <string name="empty_legacies">Aún no hay legados.\nPresiona + para crear el primero.</string>
+    <string name="error_load_legacies">No se pudieron cargar los legados.</string>
 
     <!-- ── Altar ─────────────────────────────────────────────────────────────── -->
     <string name="screen_memories">Recuerdos</string>
@@ -107,8 +107,8 @@
     <string name="btn_preserve_memory">Preservar Recuerdo</string>
 
     <!-- ── AddProfile ────────────────────────────────────────────────────────── -->
-    <string name="screen_new_altar">Nuevo Legado</string>
-    <string name="screen_edit_altar">Enriquecer Legado</string>
+    <string name="screen_new_legacy">Nuevo Legado</string>
+    <string name="screen_edit_legacy">Enriquecer Legado</string>
     <string name="label_type">Tipo</string>
     <string name="type_human">Humano</string>
     <string name="type_pet">Mascota</string>
@@ -123,7 +123,7 @@
     <string name="label_departed">Ha partido</string>
     <string name="label_passing_date_hint">Ingresa la fecha de partida</string>
     <string name="label_passing_date">Fecha de Partida</string>
-    <string name="btn_create_altar">Inmortalizar Legado</string>
+    <string name="btn_create_legacy">Inmortalizar Legado</string>
     <string name="desc_upload_photo">Subir foto</string>
     <!-- Validation -->
     <string name="error_day">Día inválido (01–31)</string>
@@ -196,7 +196,7 @@
 
 
     <!-- Upload Progress & Banners -->
-    <string name="msg_uploading_profile">Subiendo al Santuario…</string>
+    <string name="msg_uploading_legacy">Subiendo al Santuario…</string>
     <string name="msg_uploading_memory">Inmortalizando Recuerdo…</string>
     <string name="banner_verify_email">Verifica tu correo (quizás en spam) para asegurar tu bóveda y desbloquear funciones.</string>
     <string name="action_resend">Reenviar</string>
@@ -222,8 +222,8 @@
     <!-- ── Context Menus & Dialogs ─────────────────────────────────────────── -->
     <string name="action_edit">Modificar</string>
     <string name="action_delete">Eliminar</string>
-    <string name="confirm_delete_profile_title">Eliminar Legado</string>
-    <string name="confirm_delete_profile_text">¿Estás seguro de que deseas eliminar el legado de %1$s? \nEsta acción es irreversible y borrará todos sus recuerdos para siempre.</string>
+    <string name="confirm_delete_legacy_title">Eliminar Legado</string>
+    <string name="confirm_delete_legacy_text">¿Estás seguro de que deseas eliminar el legado de %1$s? \nEsta acción es irreversible y borrará todos sus recuerdos para siempre.</string>
     <string name="confirm_delete_memory_title">Eliminar Recuerdo</string>
     <string name="confirm_delete_memory_text">¿Estás seguro de que deseas eliminar este recuerdo? \nEsta acción no se puede deshacer y el archivo multimedia se perderá de tu bóveda.</string>
     <string name="dialog_delete_audio_title">Eliminar Audio</string>
@@ -282,9 +282,9 @@
     <string name="heartbeat_days_plural">Hace %1$d días</string>
 
     <!-- Botones y Feedback -->
-    <string name="btn_save_legacy_config">Guardar Configuración</string>
+    <string name="btn_save_guardian_config">Guardar Configuración</string>
     <string name="btn_saving">Guardando…</string>
-    <string name="toast_legacy_saved">Configuración del legado guardada</string>
+    <string name="toast_guardian_config_saved">Configuración del legado guardada</string>
 
     <!-- Tarjeta de navegación en Mi Cuenta -->
     <string name="nav_card_guardian_title">Plan de Legado</string>
@@ -318,12 +318,12 @@
 
     <!-- ── Reclamación de Legados ─────────────────────────────────── -->
     <!-- Claim Legacy - Banner -->
-    <string name="banner_pending_legacy">Alguien te ha dejado un legado. Tienes una bóveda esperando por ti.</string>
-    <string name="action_claim_legacy">Reclamar Bóveda</string>
+    <string name="banner_pending_inheritance">Alguien te ha dejado un legado. Tienes una bóveda esperando por ti.</string>
+    <string name="action_claim_inheritance">Reclamar Bóveda</string>
 
     <!-- Claim Legacy - Screen -->
-    <string name="screen_claim_legacy">Reclamar Legado</string>
-    <string name="desc_claim_legacy">Ingresa el PIN de 4 dígitos que el creador del legado te compartió para desbloquearlo.</string>
+    <string name="screen_claim_inheritance">Reclamar Legado</string>
+    <string name="desc_claim_inheritance">Ingresa el PIN de 4 dígitos que el creador del legado te compartió para desbloquearlo.</string>
     <string name="label_pin">PIN de Acceso</string>
     <string name="action_unlock_vault">Desbloquear Bóveda</string>
 
@@ -337,7 +337,7 @@
     <!-- Claim Legacy - Success -->
     <string name="title_unlock_success">¡Bóveda Desbloqueada!</string>
     <string name="message_unlock_success">Has desbloqueado exitosamente el legado. Ahora puedes acceder a su contenido.</string>
-    <string name="action_view_legacy">Ver Legado</string>
+    <string name="action_open_inheritance">Ver Legado</string>
     <!-- ── Bóveda de Cápsulas (CapsuleVaultScreen) ───────────────────────── -->
     <string name="screen_capsule_vault">Mis Cápsulas</string>
     <string name="vault_empty_title">Ningún mensaje sellado aún</string>
@@ -361,11 +361,11 @@
     <string name="error_load_inheritance">No se pudo cargar la herencia. Intenta nuevamente más tarde.</string>
     <string name="banner_claimed_inheritance">Tienes acceso a la herencia de %1$s.</string>
     <string name="action_view_inheritance">Ver</string>
-    <string name="error_legacy_not_configured">Este legado aún no está listo para reclamarse: su creador debe volver a guardar el PIN de acceso.</string>
-    <string name="error_legacy_expired">Esta invitación de legado ha expirado.</string>
-    <string name="banner_pending_legacy_from">%1$s te ha dejado un legado. Tienes una bóveda esperando por ti.</string>
-    <string name="desc_claim_legacy_from">Ingresa el PIN de 4 dígitos que %1$s te compartió para desbloquear su legado.</string>
-    <string name="error_legacy_not_available">Esta invitación ya no está disponible.</string>
+    <string name="error_inheritance_not_configured">Este legado aún no está listo para reclamarse: su creador debe volver a guardar el PIN de acceso.</string>
+    <string name="error_inheritance_expired">Esta invitación de legado ha expirado.</string>
+    <string name="banner_pending_inheritance_from">%1$s te ha dejado un legado. Tienes una bóveda esperando por ti.</string>
+    <string name="desc_claim_inheritance_from">Ingresa el PIN de 4 dígitos que %1$s te compartió para desbloquear su legado.</string>
+    <string name="error_inheritance_not_available">Esta invitación ya no está disponible.</string>
     <string name="biometric_default_name">Guardián</string>
     <string name="desc_attachment">Adjunto</string>
     <string name="desc_trigger_type">Condición de apertura</string>

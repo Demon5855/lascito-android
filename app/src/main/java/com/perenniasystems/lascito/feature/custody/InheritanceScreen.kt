@@ -33,9 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.perenniasystems.lascito.R
-import com.perenniasystems.lascito.data.model.Profile
+import com.perenniasystems.lascito.data.model.Legacy
 import com.perenniasystems.lascito.core.designsystem.component.LascitoAlertDialog
-import com.perenniasystems.lascito.feature.legacy.ProfileCard
+import com.perenniasystems.lascito.feature.legacy.LegacyCard
 import com.perenniasystems.lascito.core.designsystem.theme.AmoledBlack
 import com.perenniasystems.lascito.core.designsystem.theme.LascitoTheme
 import com.perenniasystems.lascito.core.designsystem.theme.TextPrimary
@@ -143,8 +143,8 @@ fun InheritanceContent(
                                     items = uiState.legacies,
                                     key = { it.profileId }
                                 ) { legacy ->
-                                    ProfileCard(
-                                        profile = legacy,
+                                    LegacyCard(
+                                        legacy = legacy,
                                         readOnly = true,
                                         onClick = { onOpenLegacy(legacy.profileId) }
                                     )
@@ -166,8 +166,8 @@ private fun InheritanceContentPreview() {
             uiState = InheritanceUiState.Success(
                 creatorName = "Elena Ríos",
                 legacies = listOf(
-                    Profile(profileId = "1", fullName = "Abuelo Tomás", relationship = "Abuelo"),
-                    Profile(profileId = "2", fullName = "Luna", relationship = "Mascota")
+                    Legacy(profileId = "1", fullName = "Abuelo Tomás", relationship = "Abuelo"),
+                    Legacy(profileId = "2", fullName = "Luna", relationship = "Mascota")
                 )
             ),
             onNavigateBack = {},

@@ -33,17 +33,17 @@ import com.perenniasystems.lascito.feature.legacy.DashboardViewModel
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
-    onNavigateToAltar:        (String) -> Unit = {},
-    onNavigateToAddProfile:   (String?) -> Unit = {},
+    onNavigateToLegacy:        (String) -> Unit = {},
+    onNavigateToAddLegacy:   (String?) -> Unit = {},
     onNavigateToUserSettings: () -> Unit = {},
-    onNavigateToClaimLegacy:  (String) -> Unit = {},
+    onNavigateToClaimInheritance:  (String) -> Unit = {},
     onNavigateToInheritance:  (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isEmailVerified by viewModel.isEmailVerified.collectAsStateWithLifecycle()
     val isSendingVerification by viewModel.isSendingVerification.collectAsStateWithLifecycle()
     val verificationEmailSent by viewModel.verificationEmailSent.collectAsStateWithLifecycle()
-    var profileToDelete by remember { mutableStateOf<com.perenniasystems.lascito.data.model.Profile?>(null) }
+    var legacyToDelete by remember { mutableStateOf<com.perenniasystems.lascito.data.model.Legacy?>(null) }
 
     // Trigger re-fetch every time this screen becomes active
     LaunchedEffect(Unit) {
@@ -66,7 +66,7 @@ fun DashboardScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text  = stringResource(R.string.screen_my_altars),
+                            text  = stringResource(R.string.screen_my_legacies),
                             style = MaterialTheme.typography.headlineLarge
                         )
                     }
@@ -91,7 +91,7 @@ fun DashboardScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick        = { onNavigateToAddProfile(null) },
+                onClick        = { onNavigateToAddLegacy(null) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor   = AmoledBlack,
                 shape          = CircleShape,
@@ -101,7 +101,7 @@ fun DashboardScreen(
             ) {
                 Icon(
                     imageVector        = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.desc_create_altar)
+                    contentDescription = stringResource(R.string.desc_create_legacy)
                 )
             }
         },
@@ -135,12 +135,12 @@ fun DashboardScreen(
                     state.pendingInvitations.forEach { invitation ->
                         InfoBanner(
                             message = if (invitation.creatorName.isNotBlank()) {
-                                stringResource(R.string.banner_pending_legacy_from, invitation.creatorName)
+                                stringResource(R.string.banner_pending_inheritance_from, invitation.creatorName)
                             } else {
-                                stringResource(R.string.banner_pending_legacy)
+                                stringResource(R.string.banner_pending_inheritance)
                             },
-                            actionText = stringResource(R.string.action_claim_legacy),
-                            onActionClick = { onNavigateToClaimLegacy(invitation.id) }
+                            actionText = stringResource(R.string.action_claim_inheritance),
+                            onActionClick = { onNavigateToClaimInheritance(invitation.id) }
                         )
                     }
                     state.claimedInheritances.forEach { inheritance ->
@@ -168,7 +168,7 @@ fun DashboardScreen(
                 }
 
                 is DashboardUiState.Success -> {
-                    if (state.profiles.isEmpty()) {
+                    if (state.legacies.isEmpty()) {
                         EmptyState(modifier = Modifier.align(Alignment.Center))
                     } else {
                         LazyVerticalGrid(
@@ -184,16 +184,16 @@ fun DashboardScreen(
                             modifier              = Modifier.fillMaxSize()
                         ) {
                             items(
-                                items = state.profiles,
+                                items = state.legacies,
                                 key   = { it.profileId }
-                            ) { profile ->
-                                ProfileCard(
-                                    profile = profile,
-                                    onClick = { onNavigateToAltar(profile.profileId) },
+                            ) { legacy ->
+                                LegacyCard(
+                                    legacy = legacy,
+                                    onClick = { onNavigateToLegacy(legacy.profileId) },
                                     onEdit = { 
-                                        onNavigateToAddProfile(profile.profileId)
+                                        onNavigateToAddLegacy(legacy.profileId)
                                     },
-                                    onDelete = { profileToDelete = profile }
+                                    onDelete = { legacyToDelete = legacy }
                                 )
                             }
                         }
@@ -209,28 +209,28 @@ fun DashboardScreen(
             }
         } // Closure for the Box holding the `when(state)`
 
-            if (profileToDelete != null) {
+            if (legacyToDelete != null) {
                 AlertDialog(
-                    onDismissRequest = { profileToDelete = null },
+                    onDismissRequest = { legacyToDelete = null },
                     containerColor = SurfaceDark,
                     titleContentColor = ErrorRed,
                     textContentColor = TextPrimary,
-                    title = { Text(stringResource(R.string.confirm_delete_profile_title)) },
-                    text = { Text(stringResource(R.string.confirm_delete_profile_text, profileToDelete?.fullName ?: "")) },
+                    title = { Text(stringResource(R.string.confirm_delete_legacy_title)) },
+                    text = { Text(stringResource(R.string.confirm_delete_legacy_text, legacyToDelete?.fullName ?: "")) },
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                profileToDelete?.let {
-                                    viewModel.deleteProfile(it.profileId, it.avatarUrl)
+                                legacyToDelete?.let {
+                                    viewModel.deleteLegacy(it.profileId, it.avatarUrl)
                                 }
-                                profileToDelete = null
+                                legacyToDelete = null
                             }
                         ) {
                             Text(stringResource(R.string.action_delete), color = ErrorRed)
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { profileToDelete = null }) {
+                        TextButton(onClick = { legacyToDelete = null }) {
                             Text(stringResource(R.string.btn_cancel), color = TextSecondary)
                         }
                     }
@@ -295,7 +295,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text      = stringResource(R.string.empty_altars),
+            text      = stringResource(R.string.empty_legacies),
             style     = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center
         )

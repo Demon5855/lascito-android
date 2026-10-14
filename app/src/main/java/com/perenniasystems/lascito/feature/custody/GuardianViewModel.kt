@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.DeadManSwitch
-import com.perenniasystems.lascito.data.model.LegacyGuardian
+import com.perenniasystems.lascito.data.model.Guardian
 import com.perenniasystems.lascito.data.model.UnlockStatus
 import com.perenniasystems.lascito.data.repository.GuardianRepository
 import com.perenniasystems.lascito.core.common.ErrorHandler
@@ -82,7 +82,7 @@ class GuardianViewModel @Inject constructor(
      * Firestore en una única consulta al documento `users/{uid}`.
      *
      * Reglas de mapeo:
-     *  - [LegacyGuardian] existe  → rellena nombre y email. El PIN no se
+     *  - [Guardian] existe  → rellena nombre y email. El PIN no se
      *    restaura por seguridad (el hash no es reversible); la UI lo deja vacío.
      *  - [DeadManSwitch] existe   → actualiza isSwitchActive, inactivityDays y
      *    lastProofOfLife.
@@ -222,7 +222,7 @@ class GuardianViewModel @Inject constructor(
                 }
 
                 // 3. Guardar configuración del Heredero
-                val guardian = LegacyGuardian(
+                val guardian = Guardian(
                     name          = state.guardianName.trim().ifBlank { null },
                     email         = state.guardianEmail.trim().ifBlank { null },
                     encryptedPinHint = encryptedHintData?.data,

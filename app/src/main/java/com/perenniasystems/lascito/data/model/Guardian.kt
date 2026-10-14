@@ -46,7 +46,7 @@ enum class UnlockStatus {
  */
 @Keep
 @IgnoreExtraProperties
-data class LegacyGuardian(
+data class Guardian(
     /** Correo electrónico del guardián para enviar la invitación. */
     val email: String? = null,
     /** Nombre para mostrar en las comunicaciones y en la UI del guardián. */

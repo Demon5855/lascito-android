@@ -6,9 +6,9 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.R
-import com.perenniasystems.lascito.data.model.Profile
+import com.perenniasystems.lascito.data.model.Legacy
 import com.perenniasystems.lascito.data.repository.GuardianRepository
-import com.perenniasystems.lascito.data.repository.ProfileRepository
+import com.perenniasystems.lascito.data.repository.LegacyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +17,7 @@ import kotlinx.coroutines.withTimeout
 
 sealed interface InheritanceUiState {
     data object Loading : InheritanceUiState
-    data class Success(val creatorName: String, val legacies: List<Profile>) : InheritanceUiState
+    data class Success(val creatorName: String, val legacies: List<Legacy>) : InheritanceUiState
     data class Error(@StringRes val messageResId: Int) : InheritanceUiState
 }
 
@@ -28,7 +28,7 @@ sealed interface InheritanceUiState {
  */
 @HiltViewModel
 class InheritanceViewModel @Inject constructor(
-    private val profileRepo: ProfileRepository,
+    private val legacyRepo: LegacyRepository,
     private val guardianRepo: GuardianRepository
 ) : ViewModel() {
 
@@ -43,7 +43,7 @@ class InheritanceViewModel @Inject constructor(
                     val inheritance = guardianRepo.getClaimedInheritances().getOrThrow()
                         .firstOrNull { it.creatorUid == creatorUid }
                         ?: throw NoSuchElementException("Inheritance not claimed")
-                    val legacies = profileRepo.getProfiles(userId = creatorUid)
+                    val legacies = legacyRepo.getLegacies(userId = creatorUid)
                     _uiState.value = InheritanceUiState.Success(inheritance.creatorName, legacies)
                 }
             } catch (e: Exception) {

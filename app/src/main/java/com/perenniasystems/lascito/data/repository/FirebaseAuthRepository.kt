@@ -40,7 +40,7 @@ class FirebaseAuthRepository @Inject constructor(
             val result = auth.createUserWithEmailAndPassword(email.trim(), password).await()
             val uid = result.user?.uid ?: throw Exception("Register failed — no UID returned")
 
-            // 2. Set display name on the auth profile
+            // 2. Set display name on the auth legacy
             result.user!!.updateProfile(
                 userProfileChangeRequest { displayName = name.trim() }
             ).await()

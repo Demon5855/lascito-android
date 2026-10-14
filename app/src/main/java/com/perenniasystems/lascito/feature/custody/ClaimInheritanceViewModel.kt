@@ -6,10 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.InvalidPinException
-import com.perenniasystems.lascito.data.model.LegacyBlockedException
-import com.perenniasystems.lascito.data.model.LegacyExpiredException
-import com.perenniasystems.lascito.data.model.LegacyNotConfiguredException
-import com.perenniasystems.lascito.data.model.LegacyVault
+import com.perenniasystems.lascito.data.model.InheritanceBlockedException
+import com.perenniasystems.lascito.data.model.InheritanceExpiredException
+import com.perenniasystems.lascito.data.model.InheritanceNotConfiguredException
+import com.perenniasystems.lascito.data.model.Inheritance
 import com.perenniasystems.lascito.data.repository.GuardianRepository
 import com.perenniasystems.lascito.core.common.ValidationRules
 import kotlinx.coroutines.delay
@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class ClaimLegacyUiState(
+data class ClaimInheritanceUiState(
     val pin: String = "",
     val pinError: Int? = null,
     val isLoading: Boolean = false,
@@ -28,19 +28,19 @@ data class ClaimLegacyUiState(
     val unlockSuccess: Boolean = false,
     val attemptsRemaining: Int = 3,
     val isLocked: Boolean = false,
-    val legacyVault: LegacyVault? = null,
+    val inheritance: Inheritance? = null,
     /** Creador de la invitación: indica al guardián de quién es el PIN que debe escribir. */
     val creatorName: String = "",
     val isInvitationLoaded: Boolean = false
 )
 
 @HiltViewModel
-class ClaimLegacyViewModel @Inject constructor(
+class ClaimInheritanceViewModel @Inject constructor(
     private val guardianRepository: GuardianRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ClaimLegacyUiState())
-    val uiState: StateFlow<ClaimLegacyUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(ClaimInheritanceUiState())
+    val uiState: StateFlow<ClaimInheritanceUiState> = _uiState.asStateFlow()
 
     private var invitationId: String? = null
 
@@ -53,7 +53,7 @@ class ClaimLegacyViewModel @Inject constructor(
             guardianRepository.getPendingInvitation(invitationId)
                 .onSuccess { invitation ->
                     if (invitation == null) {
-                        _uiState.update { it.copy(unlockError = R.string.error_legacy_not_available) }
+                        _uiState.update { it.copy(unlockError = R.string.error_inheritance_not_available) }
                     } else {
                         _uiState.update {
                             it.copy(creatorName = invitation.creatorName, isInvitationLoaded = true)
@@ -103,7 +103,7 @@ class ClaimLegacyViewModel @Inject constructor(
             }
 
             try {
-                val legacyVault = guardianRepository.claimInheritance(
+                val inheritance = guardianRepository.claimInheritance(
                     invitationId = invitationId,
                     pin = state.pin
                 ).getOrThrow()
@@ -112,7 +112,7 @@ class ClaimLegacyViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         unlockSuccess = true,
-                        legacyVault = legacyVault
+                        inheritance = inheritance
                     )
                 }
 
@@ -125,7 +125,7 @@ class ClaimLegacyViewModel @Inject constructor(
                         attemptsRemaining = e.attemptsRemaining
                     )
                 }
-            } catch (e: LegacyBlockedException) {
+            } catch (e: InheritanceBlockedException) {
                 // Backend dictamina que se acabaron los intentos
                 _uiState.update {
                     it.copy(
@@ -135,13 +135,13 @@ class ClaimLegacyViewModel @Inject constructor(
                         unlockError = R.string.error_too_many_attempts
                     )
                 }
-            } catch (e: LegacyNotConfiguredException) {
+            } catch (e: InheritanceNotConfiguredException) {
                 _uiState.update {
-                    it.copy(isLoading = false, unlockError = R.string.error_legacy_not_configured)
+                    it.copy(isLoading = false, unlockError = R.string.error_inheritance_not_configured)
                 }
-            } catch (e: LegacyExpiredException) {
+            } catch (e: InheritanceExpiredException) {
                 _uiState.update {
-                    it.copy(isLoading = false, unlockError = R.string.error_legacy_expired)
+                    it.copy(isLoading = false, unlockError = R.string.error_inheritance_expired)
                 }
             } catch (e: Exception) {
                 _uiState.update {

@@ -6,10 +6,10 @@ import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.R
-import com.perenniasystems.lascito.data.model.LegacyInvitation
-import com.perenniasystems.lascito.data.model.LegacyVault
-import com.perenniasystems.lascito.data.model.Profile
-import com.perenniasystems.lascito.data.repository.ProfileRepository
+import com.perenniasystems.lascito.data.model.InheritanceInvitation
+import com.perenniasystems.lascito.data.model.Inheritance
+import com.perenniasystems.lascito.data.model.Legacy
+import com.perenniasystems.lascito.data.repository.LegacyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,19 +22,19 @@ import java.io.IOException
 /**
  * ViewModel for the Dashboard screen.
  *
- * Owns the UI state for the profile list. The [ProfileRepository] is injected
+ * Owns the UI state for the legacy list. The [LegacyRepository] is injected
  * to follow Dependency Inversion — swap implementation without touching this class.
  */
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val repository: ProfileRepository,
+    private val repository: LegacyRepository,
     private val guardianRepository: com.perenniasystems.lascito.data.repository.GuardianRepository,
     private val session: SessionRepository
 ) : ViewModel() {
 
     companion object {
         // Feature flag para desarrollo (VISIBLE Y EXPLÍCITO)
-        private const val FEATURE_CLAIM_LEGACY_ENABLED = true
+        private const val FEATURE_CLAIM_INHERITANCE_ENABLED = true
     }
 
     // ── UI State ──────────────────────────────────────────────────────────────
@@ -70,14 +70,14 @@ class DashboardViewModel @Inject constructor(
                             .getOrDefault(user.isEmailVerified)
                     }
 
-                    val profiles = repository.getProfiles(userId = user.uid)
+                    val legacies = repository.getLegacies(userId = user.uid)
                     _isEmailVerified.value = user.isEmailVerified
 
                     val pendingInvitations = loadPendingInvitations()
                     val claimedInheritances = guardianRepository.getClaimedInheritances()
                         .getOrDefault(emptyList())
 
-                    _uiState.value = DashboardUiState.Success(profiles, pendingInvitations, claimedInheritances)
+                    _uiState.value = DashboardUiState.Success(legacies, pendingInvitations, claimedInheritances)
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 _uiState.value = DashboardUiState.Error(R.string.error_network)
@@ -89,16 +89,16 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadPendingInvitations(): List<LegacyInvitation> {
-        if (!FEATURE_CLAIM_LEGACY_ENABLED) return emptyList()
+    private suspend fun loadPendingInvitations(): List<InheritanceInvitation> {
+        if (!FEATURE_CLAIM_INHERITANCE_ENABLED) return emptyList()
         return guardianRepository.getPendingInvitations().getOrDefault(emptyList())
     }
 
-    fun deleteProfile(profileId: String, imageUrl: String?) {
+    fun deleteLegacy(profileId: String, imageUrl: String?) {
         viewModelScope.launch {
             _uiState.value = DashboardUiState.Loading
             try {
-                repository.deleteProfile(profileId, imageUrl)
+                repository.deleteLegacy(profileId, imageUrl)
                 refresh() // Reload list after successful deletion
             } catch (e: Exception) {
                 _uiState.value = DashboardUiState.Error(
@@ -142,9 +142,9 @@ class DashboardViewModel @Inject constructor(
 sealed interface DashboardUiState {
     data object Loading : DashboardUiState
     data class Success(
-        val profiles: List<Profile>,
-        val pendingInvitations: List<LegacyInvitation> = emptyList(),
-        val claimedInheritances: List<LegacyVault> = emptyList()
+        val legacies: List<Legacy>,
+        val pendingInvitations: List<InheritanceInvitation> = emptyList(),
+        val claimedInheritances: List<Inheritance> = emptyList()
     ) : DashboardUiState
     data class Error(@StringRes val messageResId: Int) : DashboardUiState
 }

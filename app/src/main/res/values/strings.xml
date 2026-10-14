@@ -20,7 +20,7 @@
     <string name="desc_select_date">Select date</string>
     <string name="hint_date_format">DD/MM/YYYY</string>
     <string name="label_photo">Photo</string>
-    <string name="error_profile_not_found">Profile not found</string>
+    <string name="error_legacy_not_found">Profile not found</string>
     <string name="desc_back">Back</string>
     <string name="desc_options">Options</string>
 
@@ -85,10 +85,10 @@
     <string name="btn_sign_out_safe">Sign in with another account</string>
 
     <!-- ── Dashboard ─────────────────────────────────────────────────────── -->
-    <string name="screen_my_altars">Your Legacies</string>
-    <string name="desc_create_altar">Create legacy</string>
-    <string name="empty_altars">Your vault is empty.\nPress + to immortalize your first legacy.</string>
-    <string name="error_load_altars">Could not load legacies.</string>
+    <string name="screen_my_legacies">Your Legacies</string>
+    <string name="desc_create_legacy">Create legacy</string>
+    <string name="empty_legacies">Your vault is empty.\nPress + to immortalize your first legacy.</string>
+    <string name="error_load_legacies">Could not load legacies.</string>
 
     <!-- ── Altar ─────────────────────────────────────────────────────────── -->
     <string name="screen_memories">Memories</string>
@@ -108,8 +108,8 @@
     <string name="btn_preserve_memory">Preserve Memory</string>
 
     <!-- ── AddProfile ─────────────────────────────────────────────────────── -->
-    <string name="screen_new_altar">New Legacy</string>
-    <string name="screen_edit_altar">Enrich Legacy</string>
+    <string name="screen_new_legacy">New Legacy</string>
+    <string name="screen_edit_legacy">Enrich Legacy</string>
     <string name="label_type">Type</string>
     <string name="type_human">Human</string>
     <string name="type_pet">Pet</string>
@@ -124,7 +124,7 @@
     <string name="label_departed">Passed away</string>
     <string name="label_passing_date_hint">Enter the date of passing</string>
     <string name="label_passing_date">Date of Passing</string>
-    <string name="btn_create_altar">Immortalize Legacy</string>
+    <string name="btn_create_legacy">Immortalize Legacy</string>
     <string name="desc_upload_photo">Upload photo</string>
     <!-- Validation -->
     <string name="error_day">Invalid day (01–31)</string>
@@ -196,7 +196,7 @@
 
 
     <!-- Upload Progress & Banners -->
-    <string name="msg_uploading_profile">Ascending to Sanctuary…</string>
+    <string name="msg_uploading_legacy">Ascending to Sanctuary…</string>
     <string name="msg_uploading_memory">Immortalizing Memory…</string>
     <string name="banner_verify_email">Verify your email (maybe in spam) to secure your vault and unlock features.</string>
     <string name="action_resend">Resend</string>
@@ -222,8 +222,8 @@
     <!-- ── Context Menus & Dialogs ─────────────────────────────────────────── -->
     <string name="action_edit">Modify</string>
     <string name="action_delete">Delete</string>
-    <string name="confirm_delete_profile_title">Delete Legacy</string>
-    <string name="confirm_delete_profile_text">Are you sure you want to delete the legacy of %1$s? \nThis action is irreversible and will erase all their memories forever.</string>
+    <string name="confirm_delete_legacy_title">Delete Legacy</string>
+    <string name="confirm_delete_legacy_text">Are you sure you want to delete the legacy of %1$s? \nThis action is irreversible and will erase all their memories forever.</string>
     <string name="confirm_delete_memory_title">Delete Memory</string>
     <string name="confirm_delete_memory_text">Are you sure you want to delete this memory? \nThis action cannot be undone and the media file will be permanently lost from your vault.</string>
     <string name="dialog_delete_audio_title">Delete Audio</string>
@@ -268,12 +268,12 @@
 
     <!-- ── Reclamación de Legados ─────────────────────────────────── -->
     <!-- Claim Legacy - Banner -->
-    <string name="banner_pending_legacy">Someone left you a legacy. A vault is waiting for you.</string>
-    <string name="action_claim_legacy">Claim Vault</string>
+    <string name="banner_pending_inheritance">Someone left you a legacy. A vault is waiting for you.</string>
+    <string name="action_claim_inheritance">Claim Vault</string>
 
     <!-- Claim Legacy - Screen -->
-    <string name="screen_claim_legacy">Claim Legacy</string>
-    <string name="desc_claim_legacy">Enter the 4-digit PIN the creator of the legacy shared with you to unlock it.</string>
+    <string name="screen_claim_inheritance">Claim Legacy</string>
+    <string name="desc_claim_inheritance">Enter the 4-digit PIN the creator of the legacy shared with you to unlock it.</string>
     <string name="label_pin">Access PIN</string>
     <string name="action_unlock_vault">Unlock Vault</string>
 
@@ -287,7 +287,7 @@
     <!-- Claim Legacy - Success -->
     <string name="title_unlock_success">Vault Unlocked!</string>
     <string name="message_unlock_success">You have successfully unlocked the legacy. You can now access its content.</string>
-    <string name="action_view_legacy">View Legacy</string>
+    <string name="action_open_inheritance">View Legacy</string>
 
     <!-- Footer: System Status -->
     <string name="label_system_operative">System Operative</string>
@@ -304,9 +304,9 @@
     <string name="heartbeat_days_plural">%1$d days ago</string>
 
     <!-- Buttons & Feedback -->
-    <string name="btn_save_legacy_config">Save Configuration</string>
+    <string name="btn_save_guardian_config">Save Configuration</string>
     <string name="btn_saving">Saving…</string>
-    <string name="toast_legacy_saved">Legacy configuration saved</string>
+    <string name="toast_guardian_config_saved">Legacy configuration saved</string>
 
     <!-- Navigation card in My Account -->
     <string name="nav_card_guardian_title">Legacy Plan</string>
@@ -361,11 +361,11 @@
     <string name="error_load_inheritance">The inheritance could not be loaded. Please try again later.</string>
     <string name="banner_claimed_inheritance">You have access to the inheritance from %1$s.</string>
     <string name="action_view_inheritance">View</string>
-    <string name="error_legacy_not_configured">This legacy is not ready to be claimed yet: its creator needs to save the access PIN again.</string>
-    <string name="error_legacy_expired">This legacy invitation has expired.</string>
-    <string name="banner_pending_legacy_from">%1$s left you a legacy. A vault is waiting for you.</string>
-    <string name="desc_claim_legacy_from">Enter the 4-digit PIN that %1$s shared with you to unlock their legacy.</string>
-    <string name="error_legacy_not_available">This invitation is no longer available.</string>
+    <string name="error_inheritance_not_configured">This legacy is not ready to be claimed yet: its creator needs to save the access PIN again.</string>
+    <string name="error_inheritance_expired">This legacy invitation has expired.</string>
+    <string name="banner_pending_inheritance_from">%1$s left you a legacy. A vault is waiting for you.</string>
+    <string name="desc_claim_inheritance_from">Enter the 4-digit PIN that %1$s shared with you to unlock their legacy.</string>
+    <string name="error_inheritance_not_available">This invitation is no longer available.</string>
     <string name="biometric_default_name">Guardian</string>
     <string name="desc_attachment">Attachment</string>
     <string name="desc_trigger_type">Opening condition</string>

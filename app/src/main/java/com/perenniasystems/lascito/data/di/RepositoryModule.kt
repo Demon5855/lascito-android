@@ -7,12 +7,12 @@ import com.perenniasystems.lascito.data.repository.SessionRepository
 import com.perenniasystems.lascito.data.repository.FirebaseAuthRepository
 import com.perenniasystems.lascito.data.repository.FirebaseGuardianRepository
 import com.perenniasystems.lascito.data.repository.FirebaseMemoryRepository
-import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
+import com.perenniasystems.lascito.data.repository.FirebaseLegacyRepository
 import com.perenniasystems.lascito.data.repository.FirebaseStorageRepository
 import com.perenniasystems.lascito.data.repository.FirebaseStorageRepositoryImpl
 import com.perenniasystems.lascito.data.repository.GuardianRepository
 import com.perenniasystems.lascito.data.repository.MemoryRepository
-import com.perenniasystems.lascito.data.repository.ProfileRepository
+import com.perenniasystems.lascito.data.repository.LegacyRepository
 import com.perenniasystems.lascito.data.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -37,7 +37,7 @@ abstract class RepositoryModule {
     abstract fun bindGuardianRepository(impl: FirebaseGuardianRepository): GuardianRepository
 
     @Binds
-    abstract fun bindProfileRepository(impl: FirebaseProfileRepository): ProfileRepository
+    abstract fun bindLegacyRepository(impl: FirebaseLegacyRepository): LegacyRepository
 
     @Binds
     abstract fun bindMemoryRepository(impl: FirebaseMemoryRepository): MemoryRepository

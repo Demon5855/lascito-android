@@ -26,9 +26,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.perenniasystems.lascito.R
-import com.perenniasystems.lascito.data.model.Profile
-import com.perenniasystems.lascito.data.model.ProfileStatus
-import com.perenniasystems.lascito.data.model.ProfileType
+import com.perenniasystems.lascito.data.model.Legacy
+import com.perenniasystems.lascito.data.model.LegacyStatus
+import com.perenniasystems.lascito.data.model.LegacyType
 import com.perenniasystems.lascito.core.designsystem.theme.*
 import com.perenniasystems.lascito.core.designsystem.component.shimmerEffect
 import androidx.compose.ui.res.stringResource
@@ -48,8 +48,8 @@ import java.util.Locale
  *   6. Badge READ_ONLY (esquina superior derecha)
  */
 @Composable
-fun ProfileCard(
-    profile:  Profile,
+fun LegacyCard(
+    legacy:  Legacy,
     modifier: Modifier = Modifier,
     onClick:  () -> Unit = {},
     onEdit:   () -> Unit = {},
@@ -60,8 +60,8 @@ fun ProfileCard(
     val cardShape = RoundedCornerShape(16.dp)
     val yearFmt   = SimpleDateFormat("yyyy", Locale.getDefault())
 
-    val birthYear    = yearFmt.format(Date(profile.birthDate))
-    val passingLabel = profile.passingDate?.let { yearFmt.format(Date(it)) } ?: stringResource(R.string.label_present)
+    val birthYear    = yearFmt.format(Date(legacy.birthDate))
+    val passingLabel = legacy.passingDate?.let { yearFmt.format(Date(it)) } ?: stringResource(R.string.label_present)
     val dateRange    = "$birthYear — $passingLabel"
 
     Card(
@@ -78,10 +78,10 @@ fun ProfileCard(
             // ── Foto del perfil (con Loading Shimmer y Error state combinados) ────
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(profile.avatarUrl.takeIf { it.isNotBlank() })
+                    .data(legacy.avatarUrl.takeIf { it.isNotBlank() })
                     .crossfade(true)
                     .build(),
-                contentDescription = profile.fullName,
+                contentDescription = legacy.fullName,
                 contentScale       = ContentScale.Crop,
                 modifier           = Modifier
                     .fillMaxWidth()
@@ -97,7 +97,7 @@ fun ProfileCard(
                             .background(SurfaceVariant),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (profile.profileType == ProfileType.PET) {
+                        if (legacy.profileType == LegacyType.PET) {
                             Text(
                                 text  = "🐾",
                                 style = MaterialTheme.typography.displayMedium.copy(color = MaterialTheme.colorScheme.primaryContainer)
@@ -140,7 +140,7 @@ fun ProfileCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text      = profile.fullName,
+                    text      = legacy.fullName,
                     style     = MaterialTheme.typography.titleMedium.copy(
                         fontFamily = PlayfairDisplay,
                         color      = TextPrimary
@@ -151,7 +151,7 @@ fun ProfileCard(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text  = profile.relationship,
+                    text  = legacy.relationship,
                     style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
                     textAlign = TextAlign.Center,
                     maxLines  = 1
@@ -174,7 +174,7 @@ fun ProfileCard(
                     .border(0.8.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                if (profile.profileType == ProfileType.PET) {
+                if (legacy.profileType == LegacyType.PET) {
                     Text(
                         text  = "🐾",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp)
@@ -197,7 +197,7 @@ fun ProfileCard(
                     .align(Alignment.TopEnd)
                     .padding(end = 8.dp, top = 8.dp)
             ) {
-                if (!readOnly && profile.status == ProfileStatus.ACTIVE) {
+                if (!readOnly && legacy.status == LegacyStatus.ACTIVE) {
                     Box(
                         modifier = Modifier
                             .size(28.dp)
@@ -234,7 +234,7 @@ fun ProfileCard(
                             )
                         }
                     }
-                } else if (profile.status == ProfileStatus.READ_ONLY) {
+                } else if (legacy.status == LegacyStatus.READ_ONLY) {
                     Text(
                         text     = "⚯",
                         style    = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primaryContainer),
@@ -249,37 +249,37 @@ fun ProfileCard(
 // ── Preview ───────────────────────────────────────────────────────────────────
 @Preview(showBackground = true, backgroundColor = 0xFF0D0D0D)
 @Composable
-private fun ProfileCardPreview() {
+private fun LegacyCardPreview() {
     LascitoTheme {
         Row(
             modifier = Modifier.padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            ProfileCard(
-                profile  = Profile(
+            LegacyCard(
+                legacy  = Legacy(
                     profileId     = "1",
                     creatorUserId = "u1",
                     fullName      = "Elena Ríos Marchetti",
-                    profileType   = ProfileType.HUMAN,
+                    profileType   = LegacyType.HUMAN,
                     relationship  = "Abuela",
                     birthDate     = 599616000000L,
                     passingDate   = 1672531200000L,
                     avatarUrl     = "",
-                    status        = ProfileStatus.ACTIVE
+                    status        = LegacyStatus.ACTIVE
                 ),
                 modifier = Modifier.weight(1f)
             )
-            ProfileCard(
-                profile  = Profile(
+            LegacyCard(
+                legacy  = Legacy(
                     profileId     = "2",
                     creatorUserId = "u1",
                     fullName      = "Simba",
-                    profileType   = ProfileType.PET,
+                    profileType   = LegacyType.PET,
                     relationship  = "Mi perro",
                     birthDate     = 1483228800000L,
                     passingDate   = null,
                     avatarUrl     = "",
-                    status        = ProfileStatus.ACTIVE
+                    status        = LegacyStatus.ACTIVE
                 ),
                 modifier = Modifier.weight(1f)
             )

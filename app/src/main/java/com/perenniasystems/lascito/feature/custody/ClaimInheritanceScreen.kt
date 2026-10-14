@@ -27,13 +27,13 @@ import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.core.designsystem.component.LascitoAlertDialog
 import com.perenniasystems.lascito.core.designsystem.theme.AmoledBlack
 import com.perenniasystems.lascito.core.designsystem.theme.TextPrimary
-import com.perenniasystems.lascito.feature.custody.ClaimLegacyViewModel
+import com.perenniasystems.lascito.feature.custody.ClaimInheritanceViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ClaimLegacyScreen(
+fun ClaimInheritanceScreen(
     invitationId: String,
-    viewModel: ClaimLegacyViewModel = hiltViewModel(),
+    viewModel: ClaimInheritanceViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit,
     onNavigateToVault: (String) -> Unit
 ) {
@@ -43,7 +43,7 @@ fun ClaimLegacyScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.screen_claim_legacy)) },
+                title = { Text(stringResource(R.string.screen_claim_inheritance)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -78,9 +78,9 @@ fun ClaimLegacyScreen(
 
             Text(
                 text = if (uiState.creatorName.isNotBlank()) {
-                    stringResource(R.string.desc_claim_legacy_from, uiState.creatorName)
+                    stringResource(R.string.desc_claim_inheritance_from, uiState.creatorName)
                 } else {
-                    stringResource(R.string.desc_claim_legacy)
+                    stringResource(R.string.desc_claim_inheritance)
                 },
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
@@ -179,9 +179,9 @@ fun ClaimLegacyScreen(
     if (uiState.unlockSuccess) {
         LascitoAlertDialog(
             messageRes = R.string.message_unlock_success,
-            actionRes = R.string.action_view_legacy,
+            actionRes = R.string.action_open_inheritance,
             onAction = {
-                val creatorUid = uiState.legacyVault?.creatorUid
+                val creatorUid = uiState.inheritance?.creatorUid
                 viewModel.dismissSuccessDialog()
                 if (creatorUid.isNullOrBlank()) onNavigateBack() else onNavigateToVault(creatorUid)
             },

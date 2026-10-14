@@ -20,7 +20,7 @@
     <string name="desc_select_date">Selecionar data</string>
     <string name="hint_date_format">DD/MM/AAAA</string>
     <string name="label_photo">Foto</string>
-    <string name="error_profile_not_found">Perfil não encontrado</string>
+    <string name="error_legacy_not_found">Perfil não encontrado</string>
     <string name="desc_back">Voltar</string>
     <string name="desc_options">Opções</string>
 
@@ -84,10 +84,10 @@
     <string name="btn_sign_out_safe">Entrar com outra conta</string>
 
     <!-- ── Dashboard ───────────────────────────────────────────────────────── -->
-    <string name="screen_my_altars">Seus Legados</string>
-    <string name="desc_create_altar">Criar legado</string>
-    <string name="empty_altars">Seu cofre está vazio.\nPressione + para imortalizar seu primeiro legado.</string>
-    <string name="error_load_altars">Não foi possível carregar os legados.</string>
+    <string name="screen_my_legacies">Seus Legados</string>
+    <string name="desc_create_legacy">Criar legado</string>
+    <string name="empty_legacies">Seu cofre está vazio.\nPressione + para imortalizar seu primeiro legado.</string>
+    <string name="error_load_legacies">Não foi possível carregar os legados.</string>
 
     <!-- ── Altar ───────────────────────────────────────────────────────────── -->
     <string name="screen_memories">Memórias</string>
@@ -107,8 +107,8 @@
     <string name="btn_preserve_memory">Preservar Memória</string>
 
     <!-- ── AddProfile ──────────────────────────────────────────────────────── -->
-    <string name="screen_new_altar">Novo Legado</string>
-    <string name="screen_edit_altar">Enriquecer Legado</string>
+    <string name="screen_new_legacy">Novo Legado</string>
+    <string name="screen_edit_legacy">Enriquecer Legado</string>
     <string name="label_type">Tipo</string>
     <string name="type_human">Humano</string>
     <string name="type_pet">Pet</string>
@@ -123,7 +123,7 @@
     <string name="label_departed">Já partiu</string>
     <string name="label_passing_date_hint">Insira a data de partida</string>
     <string name="label_passing_date">Data de Partida</string>
-    <string name="btn_create_altar">Imortalizar Legado</string>
+    <string name="btn_create_legacy">Imortalizar Legado</string>
     <string name="desc_upload_photo">Enviar foto</string>
     <!-- Validation -->
     <string name="error_day">Dia inválido (01–31)</string>
@@ -193,7 +193,7 @@
     <string name="promo_biometric_later">Talvez mais tarde</string>
 
     <!-- Upload Progress & Banners -->
-    <string name="msg_uploading_profile">Ascendendo ao Santuário…</string>
+    <string name="msg_uploading_legacy">Ascendendo ao Santuário…</string>
     <string name="msg_uploading_memory">Imortalizando Memória…</string>
     <string name="banner_verify_email">Verifique seu e-mail (talvez em spam) para garantir seu cofre e desbloquear recursos.</string>
     <string name="action_resend">Reenviar</string>
@@ -219,8 +219,8 @@
     <!-- ── Context Menus & Dialogs ─────────────────────────────────────────── -->
     <string name="action_edit">Modificar</string>
     <string name="action_delete">Excluir</string>
-    <string name="confirm_delete_profile_title">Excluir Legado</string>
-    <string name="confirm_delete_profile_text">Tem certeza de que deseja excluir o legado de %1$s? \nEsta ação é irreversível e apagará todas as suas memórias para sempre.</string>
+    <string name="confirm_delete_legacy_title">Excluir Legado</string>
+    <string name="confirm_delete_legacy_text">Tem certeza de que deseja excluir o legado de %1$s? \nEsta ação é irreversível e apagará todas as suas memórias para sempre.</string>
     <string name="confirm_delete_memory_title">Excluir Memória</string>
     <string name="confirm_delete_memory_text">Tem certeza de que deseja excluir esta memória? \nEsta ação não pode ser desfeita e o arquivo de mídia será perdido permanentemente.</string>
     <string name="dialog_delete_audio_title">Excluir Áudio</string>
@@ -278,9 +278,9 @@
     <string name="heartbeat_days_plural">Há %1$d dias</string>
 
     <!-- Buttons & Feedback -->
-    <string name="btn_save_legacy_config">Salvar Configuração</string>
+    <string name="btn_save_guardian_config">Salvar Configuração</string>
     <string name="btn_saving">Salvando…</string>
-    <string name="toast_legacy_saved">Configuração de legado salva</string>
+    <string name="toast_guardian_config_saved">Configuração de legado salva</string>
 
     <!-- Navigation card in My Account -->
     <string name="nav_card_guardian_title">Plano de Legado</string>
@@ -330,12 +330,12 @@
 
     <!-- ── Reclamación de Legados ─────────────────────────────────── -->
     <!-- Claim Legacy - Banner -->
-    <string name="banner_pending_legacy">Alguém deixou um legado para você. Há um cofre esperando por você.</string>
-    <string name="action_claim_legacy">Reivindicar Cofre</string>
+    <string name="banner_pending_inheritance">Alguém deixou um legado para você. Há um cofre esperando por você.</string>
+    <string name="action_claim_inheritance">Reivindicar Cofre</string>
 
     <!-- Claim Legacy - Screen -->
-    <string name="screen_claim_legacy">Reivindicar Legado</string>
-    <string name="desc_claim_legacy">Digite o PIN de 4 dígitos que o criador do legado compartilhou com você para desbloqueá-lo.</string>
+    <string name="screen_claim_inheritance">Reivindicar Legado</string>
+    <string name="desc_claim_inheritance">Digite o PIN de 4 dígitos que o criador do legado compartilhou com você para desbloqueá-lo.</string>
     <string name="label_pin">PIN de Acesso</string>
     <string name="action_unlock_vault">Desbloquear Cofre</string>
 
@@ -349,7 +349,7 @@
     <!-- Claim Legacy - Success -->
     <string name="title_unlock_success">Cofre Desbloqueado!</string>
     <string name="message_unlock_success">Você desbloqueou com sucesso o legado. Agora você pode acessar seu conteúdo.</string>
-    <string name="action_view_legacy">Ver Legado</string>
+    <string name="action_open_inheritance">Ver Legado</string>
     <string name="error_video_too_large">O vídeo ultrapassa o limite de 200 MB. Corte-o ou escolha um mais curto ou de menor resolução.</string>
     <string name="error_file_too_large">O arquivo é grande demais. O limite é de 10 MB para imagens e 50 MB para áudio.</string>
     <string name="screen_inheritance">Herança</string>
@@ -358,11 +358,11 @@
     <string name="error_load_inheritance">Não foi possível carregar a herança. Tente novamente mais tarde.</string>
     <string name="banner_claimed_inheritance">Você tem acesso à herança de %1$s.</string>
     <string name="action_view_inheritance">Ver</string>
-    <string name="error_legacy_not_configured">Este legado ainda não está pronto para ser reivindicado: o criador precisa salvar o PIN de acesso novamente.</string>
-    <string name="error_legacy_expired">Este convite de legado expirou.</string>
-    <string name="banner_pending_legacy_from">%1$s deixou um legado para você. Há um cofre esperando por você.</string>
-    <string name="desc_claim_legacy_from">Digite o PIN de 4 dígitos que %1$s compartilhou com você para desbloquear o legado.</string>
-    <string name="error_legacy_not_available">Este convite não está mais disponível.</string>
+    <string name="error_inheritance_not_configured">Este legado ainda não está pronto para ser reivindicado: o criador precisa salvar o PIN de acesso novamente.</string>
+    <string name="error_inheritance_expired">Este convite de legado expirou.</string>
+    <string name="banner_pending_inheritance_from">%1$s deixou um legado para você. Há um cofre esperando por você.</string>
+    <string name="desc_claim_inheritance_from">Digite o PIN de 4 dígitos que %1$s compartilhou com você para desbloquear o legado.</string>
+    <string name="error_inheritance_not_available">Este convite não está mais disponível.</string>
     <string name="biometric_default_name">Guardião</string>
     <string name="desc_attachment">Anexo</string>
     <string name="desc_trigger_type">Condição de abertura</string>

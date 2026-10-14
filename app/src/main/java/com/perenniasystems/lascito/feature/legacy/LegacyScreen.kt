@@ -41,14 +41,14 @@ import coil.request.ImageRequest
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.data.model.MediaType
 import com.perenniasystems.lascito.data.model.Memory
-import com.perenniasystems.lascito.data.model.Profile
-import com.perenniasystems.lascito.data.model.ProfileType
+import com.perenniasystems.lascito.data.model.Legacy
+import com.perenniasystems.lascito.data.model.LegacyType
 import com.perenniasystems.lascito.core.designsystem.theme.*
 import com.perenniasystems.lascito.core.media.CustomAudioPlayer
 import com.perenniasystems.lascito.core.designsystem.component.LascitoAlertDialog
 import com.perenniasystems.lascito.core.designsystem.component.shimmerEffect
-import com.perenniasystems.lascito.feature.legacy.AltarUiState
-import com.perenniasystems.lascito.feature.legacy.AltarViewModel
+import com.perenniasystems.lascito.feature.legacy.LegacyUiState
+import com.perenniasystems.lascito.feature.legacy.LegacyViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -63,27 +63,27 @@ import kotlinx.coroutines.isActive
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AltarScreen(
+fun LegacyScreen(
     profileId:      String,
     onNavigateBack: () -> Unit = {},
     onAddMemory:    () -> Unit = {},
     onEditMemory:   (String) -> Unit = {},
     onDeleteMemory: (String) -> Unit = {},
-    onEditProfileClick: () -> Unit = {},
-    onDeleteProfileClick: () -> Unit = {},
+    onEditLegacyClick: () -> Unit = {},
+    onDeleteLegacyClick: () -> Unit = {},
     readOnly:       Boolean = false,
-    viewModel:      AltarViewModel = hiltViewModel()
+    viewModel:      LegacyViewModel = hiltViewModel()
 ) {
     // Trigger reload when the profileId changes OR when the screen becomes active again
     LaunchedEffect(profileId, Unit) { viewModel.load(profileId) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var memoryToDelete by remember { mutableStateOf<Memory?>(null) }
-    var showDeleteProfileDialog by remember { mutableStateOf(false) }
+    var showDeleteLegacyDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = AmoledBlack,
         floatingActionButton = {
-            if (uiState is AltarUiState.Success && !readOnly) {
+            if (uiState is LegacyUiState.Success && !readOnly) {
                 FloatingActionButton(
                     onClick        = onAddMemory,
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -105,26 +105,26 @@ fun AltarScreen(
                 .padding(padding)
         ) {
             when (val state = uiState) {
-                is AltarUiState.Loading -> {
+                is LegacyUiState.Loading -> {
                     CircularProgressIndicator(
                         color    = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-                is AltarUiState.Error -> {
+                is LegacyUiState.Error -> {
                     LascitoAlertDialog(
                         messageRes = state.messageResId,
                         onDismiss  = onNavigateBack
                     )
                 }
-                is AltarUiState.Success -> {
-                    AltarContent(
-                        profile        = state.profile,
+                is LegacyUiState.Success -> {
+                    LegacyContent(
+                        legacy        = state.legacy,
                         memories       = state.memories,
                         readOnly       = readOnly,
                         onNavigateBack = onNavigateBack,
-                        onEditProfileClick = onEditProfileClick,
-                        onDeleteProfileClick = { showDeleteProfileDialog = true },
+                        onEditLegacyClick = onEditLegacyClick,
+                        onDeleteLegacyClick = { showDeleteLegacyDialog = true },
                         onEditMemory   = onEditMemory,
                         onDeleteMemory = { memoryId ->
                             memoryToDelete = state.memories.find { it.memoryId == memoryId }
@@ -166,19 +166,19 @@ fun AltarScreen(
                 )
             }
 
-            if (showDeleteProfileDialog) {
-                val profile = (uiState as? AltarUiState.Success)?.profile
-                if (profile == null) {
+            if (showDeleteLegacyDialog) {
+                val legacy = (uiState as? LegacyUiState.Success)?.legacy
+                if (legacy == null) {
                     Box(modifier = Modifier.fillMaxSize())
                     return@Scaffold
                 }
-                val titleProf = stringResource(R.string.confirm_delete_profile_title)
-                val textProf = stringResource(R.string.confirm_delete_profile_text, profile?.fullName ?: "")
+                val titleProf = stringResource(R.string.confirm_delete_legacy_title)
+                val textProf = stringResource(R.string.confirm_delete_legacy_text, legacy?.fullName ?: "")
                 val btnDeleteProf = stringResource(R.string.action_delete)
                 val btnCancelProf = stringResource(R.string.btn_cancel)
 
                 AlertDialog(
-                    onDismissRequest = { showDeleteProfileDialog = false },
+                    onDismissRequest = { showDeleteLegacyDialog = false },
                     containerColor = SurfaceDark,
                     titleContentColor = ErrorRed,
                     textContentColor = TextPrimary,
@@ -187,19 +187,19 @@ fun AltarScreen(
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                profile?.let {
-                                    viewModel.deleteProfile(it.profileId, it.avatarUrl, onSuccess = {
-                                        onDeleteProfileClick()
+                                legacy?.let {
+                                    viewModel.deleteLegacy(it.profileId, it.avatarUrl, onSuccess = {
+                                        onDeleteLegacyClick()
                                     })
                                 }
-                                showDeleteProfileDialog = false
+                                showDeleteLegacyDialog = false
                             }
                         ) {
                             Text(btnDeleteProf, color = ErrorRed)
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showDeleteProfileDialog = false }) {
+                        TextButton(onClick = { showDeleteLegacyDialog = false }) {
                             Text(btnCancelProf, color = TextSecondary)
                         }
                     }
@@ -210,25 +210,25 @@ fun AltarScreen(
 }
 
 @Composable
-private fun AltarContent(
-    profile:       Profile,
+private fun LegacyContent(
+    legacy:       Legacy,
     memories:      List<Memory>,
     readOnly:      Boolean,
     onNavigateBack: () -> Unit,
-    onEditProfileClick: () -> Unit,
-    onDeleteProfileClick: () -> Unit,
+    onEditLegacyClick: () -> Unit,
+    onDeleteLegacyClick: () -> Unit,
     onEditMemory:   (String) -> Unit,
     onDeleteMemory: (String) -> Unit
 ) {
-    var showProfileMenu by remember { mutableStateOf(false) }
-    val textRefineProfile = stringResource(R.string.action_edit)
-    val textDeleteProfile = stringResource(R.string.action_delete)
+    var showLegacyMenu by remember { mutableStateOf(false) }
+    val textRefineLegacy = stringResource(R.string.action_edit)
+    val textDeleteLegacy = stringResource(R.string.action_delete)
 
     val yearFmt = SimpleDateFormat("yyyy", Locale.getDefault())
     val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-    val birthYear    = yearFmt.format(Date(profile.birthDate))
-    val passingLabel = profile.passingDate?.let { yearFmt.format(Date(it)) } ?: stringResource(R.string.label_present)
+    val birthYear    = yearFmt.format(Date(legacy.birthDate))
+    val passingLabel = legacy.passingDate?.let { yearFmt.format(Date(it)) } ?: stringResource(R.string.label_present)
     val dateRange    = "$birthYear — $passingLabel"
 
     LazyColumn(
@@ -245,10 +245,10 @@ private fun AltarContent(
                 // Foto del perfil (con Loading Shimmer y Error state combinados)
                 SubcomposeAsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(profile.avatarUrl.takeIf { it.isNotBlank() })
+                        .data(legacy.avatarUrl.takeIf { it.isNotBlank() })
                         .crossfade(true)
                         .build(),
-                    contentDescription = profile.fullName,
+                    contentDescription = legacy.fullName,
                     contentScale       = ContentScale.Crop,
                     modifier           = Modifier.fillMaxSize(),
                     loading = {
@@ -259,7 +259,7 @@ private fun AltarContent(
                             modifier         = Modifier.fillMaxSize().background(SurfaceVariant),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (profile.profileType == ProfileType.PET) {
+                            if (legacy.profileType == LegacyType.PET) {
                                 Text(
                                     text  = "🐾",
                                     style = MaterialTheme.typography.displayLarge.copy(color = MaterialTheme.colorScheme.primaryContainer)
@@ -294,7 +294,7 @@ private fun AltarContent(
                         .border(1.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (profile.profileType == ProfileType.PET) {
+                    if (legacy.profileType == LegacyType.PET) {
                         Text(text = "🐾", fontSize = 18.sp)
                     } else {
                         Icon(
@@ -327,7 +327,7 @@ private fun AltarContent(
                         .wrapContentSize(Alignment.TopEnd)
                 ) {
                     IconButton(
-                        onClick = { showProfileMenu = true },
+                        onClick = { showLegacyMenu = true },
                         modifier = Modifier.background(AmoledBlack.copy(alpha = 0.55f), CircleShape)
                     ) {
                         Icon(
@@ -337,22 +337,22 @@ private fun AltarContent(
                         )
                     }
                     DropdownMenu(
-                        expanded = showProfileMenu,
-                        onDismissRequest = { showProfileMenu = false },
+                        expanded = showLegacyMenu,
+                        onDismissRequest = { showLegacyMenu = false },
                         modifier = Modifier.background(SurfaceDark)
                     ) {
                         DropdownMenuItem(
-                            text = { Text(textRefineProfile, color = TextPrimary) },
+                            text = { Text(textRefineLegacy, color = TextPrimary) },
                             onClick = {
-                                showProfileMenu = false
-                                onEditProfileClick()
+                                showLegacyMenu = false
+                                onEditLegacyClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(textDeleteProfile, color = ErrorRed) },
+                            text = { Text(textDeleteLegacy, color = ErrorRed) },
                             onClick = {
-                                showProfileMenu = false
-                                onDeleteProfileClick()
+                                showLegacyMenu = false
+                                onDeleteLegacyClick()
                             }
                         )
                     }
@@ -370,13 +370,13 @@ private fun AltarContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text      = profile.fullName,
+                    text      = legacy.fullName,
                     style     = MaterialTheme.typography.displayMedium.copy(fontFamily = PlayfairDisplay),
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text      = "${profile.relationship}\n$dateRange",
+                    text      = "${legacy.relationship}\n$dateRange",
                     style     = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.primaryContainer),
                     textAlign = TextAlign.Center
                 )

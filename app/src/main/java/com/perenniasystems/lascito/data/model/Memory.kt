@@ -4,12 +4,12 @@ import androidx.annotation.Keep
 import com.google.firebase.firestore.IgnoreExtraProperties
 
 /**
- * Represents a single Memory (media item) attached to a Profile.
+ * Represents a single Memory (media item) attached to a Legacy.
  *
  * The [contextText] field is MANDATORY by product design — every media item
  * must have a written story explaining its significance.
  *
- * Maps 1:1 to a Firestore document under `profiles/{profileId}/memories`.
+ * Maps 1:1 to a Firestore document under `legacies/{profileId}/memories`.
  *
  * The no-arg constructor with defaults is required by Firestore's
  * automatic deserialization (`toObject<Memory>()`).

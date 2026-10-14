@@ -34,10 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.annotation.StringRes
 import com.perenniasystems.lascito.R
 import com.perenniasystems.lascito.core.designsystem.theme.*
-import com.perenniasystems.lascito.data.model.ProfileType
+import com.perenniasystems.lascito.data.model.LegacyType
 import com.perenniasystems.lascito.core.designsystem.component.LascitoAlertDialog
-import com.perenniasystems.lascito.feature.legacy.AddProfileUiState
-import com.perenniasystems.lascito.feature.legacy.AddProfileViewModel
+import com.perenniasystems.lascito.feature.legacy.AddLegacyUiState
+import com.perenniasystems.lascito.feature.legacy.AddLegacyViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -57,7 +57,7 @@ import kotlinx.coroutines.delay
 private const val MAX_NAME_LENGTH = 60
 private const val MAX_RELATIONSHIP_LENGTH = 60
 
-private enum class ProfileTypeChoice { HUMAN, PET }
+private enum class LegacyTypeChoice { HUMAN, PET }
 
 /**
  * VisualTransformation que muestra digitos crudos (max. 8) como DD/MM/AAAA.
@@ -135,14 +135,14 @@ private fun validateDateDigits(digits: String): Int? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProfileScreen(
-    viewModel: AddProfileViewModel,
+fun AddLegacyScreen(
+    viewModel: AddLegacyViewModel,
     onNavigateBack: () -> Unit,
     onShowSnackbar: (String, String?, () -> Unit) -> Unit = { _, _, _ -> }
 ) {
     var rawName         by remember { mutableStateOf("") }
     var rawRelationship by remember { mutableStateOf("") }
-    var selectedType    by remember { mutableStateOf(ProfileTypeChoice.HUMAN) }
+    var selectedType    by remember { mutableStateOf(LegacyTypeChoice.HUMAN) }
     // Estado = solo digitos (max. 8). La transformacion visual agrega las '/'.
     var birthDigits  by remember { mutableStateOf("") }
     var passDigits   by remember { mutableStateOf("") }
@@ -162,29 +162,29 @@ fun AddProfileScreen(
     val currentLocale = LocalConfiguration.current.locales[0]
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val isLoading = uiState is AddProfileUiState.Loading
+    val isLoading = uiState is AddLegacyUiState.Loading
     val uploadProgress by viewModel.uploadProgress.collectAsStateWithLifecycle()
 
     // Handle initial load and success navigation
     LaunchedEffect(uiState) {
         when (uiState) {
-            is AddProfileUiState.Success -> {
+            is AddLegacyUiState.Success -> {
                 viewModel.resetState()
                 onNavigateBack()
             }
-            is AddProfileUiState.Loaded -> {
-                val profile = (uiState as AddProfileUiState.Loaded).profile
-                rawName = profile.fullName
-                rawRelationship = profile.relationship
-                selectedType = if (profile.profileType == ProfileType.HUMAN) ProfileTypeChoice.HUMAN else ProfileTypeChoice.PET
+            is AddLegacyUiState.Loaded -> {
+                val legacy = (uiState as AddLegacyUiState.Loaded).legacy
+                rawName = legacy.fullName
+                rawRelationship = legacy.relationship
+                selectedType = if (legacy.profileType == LegacyType.HUMAN) LegacyTypeChoice.HUMAN else LegacyTypeChoice.PET
                 
                 // Construct DDMMYYYY dates
                 val format = SimpleDateFormat("ddMMyyyy", Locale.getDefault())
-                birthDigits = format.format(Date(profile.birthDate))
+                birthDigits = format.format(Date(legacy.birthDate))
                 
-                if (profile.passingDate != null) {
+                if (legacy.passingDate != null) {
                     isPresent = false
-                    passDigits = format.format(Date(profile.passingDate))
+                    passDigits = format.format(Date(legacy.passingDate))
                 } else {
                     isPresent = true
                     passDigits = ""
@@ -276,7 +276,7 @@ fun AddProfileScreen(
                         modifier         = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        val titleText = if (uiState is AddProfileUiState.Loaded) stringResource(R.string.screen_edit_altar) else stringResource(R.string.screen_new_altar)
+                        val titleText = if (uiState is AddLegacyUiState.Loaded) stringResource(R.string.screen_edit_legacy) else stringResource(R.string.screen_new_legacy)
                         Text(titleText, style = MaterialTheme.typography.headlineLarge)
                     }
                 },
@@ -328,7 +328,7 @@ fun AddProfileScreen(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                val currentProfile = (uiState as? AddProfileUiState.Loaded)?.profile
+                val currentLegacy = (uiState as? AddLegacyUiState.Loaded)?.legacy
                 if (selectedImageUri != null) {
                     AsyncImage(
                         model = selectedImageUri,
@@ -336,9 +336,9 @@ fun AddProfileScreen(
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
-                } else if (currentProfile != null && currentProfile.avatarUrl.isNotBlank()) {
+                } else if (currentLegacy != null && currentLegacy.avatarUrl.isNotBlank()) {
                      AsyncImage(
-                        model = currentProfile.avatarUrl,
+                        model = currentLegacy.avatarUrl,
                         contentDescription = stringResource(R.string.desc_current_photo),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -367,11 +367,11 @@ fun AddProfileScreen(
                     modifier = Modifier.padding(start = 4.dp)
                 )
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    ProfileTypeChoice.entries.forEachIndexed { index, choice ->
+                    LegacyTypeChoice.entries.forEachIndexed { index, choice ->
                         SegmentedButton(
                             selected = selectedType == choice,
                             onClick  = { selectedType = choice },
-                            shape    = SegmentedButtonDefaults.itemShape(index, ProfileTypeChoice.entries.size),
+                            shape    = SegmentedButtonDefaults.itemShape(index, LegacyTypeChoice.entries.size),
                             colors   = SegmentedButtonDefaults.colors(
                                 activeContainerColor   = MaterialTheme.colorScheme.primary,
                                 activeContentColor     = AmoledBlack,
@@ -382,7 +382,7 @@ fun AddProfileScreen(
                             ),
                             label = {
                                 Text(
-                                    if (choice == ProfileTypeChoice.HUMAN)
+                                    if (choice == LegacyTypeChoice.HUMAN)
                                         stringResource(R.string.type_human)
                                     else
                                         stringResource(R.string.type_pet),
@@ -402,7 +402,7 @@ fun AddProfileScreen(
                     modifier      = Modifier.fillMaxWidth(),
                     placeholder   = {
                         Text(
-                            if (selectedType == ProfileTypeChoice.HUMAN)
+                            if (selectedType == LegacyTypeChoice.HUMAN)
                                 stringResource(R.string.placeholder_human_name)
                             else
                                 stringResource(R.string.placeholder_pet_name),
@@ -438,7 +438,7 @@ fun AddProfileScreen(
                     modifier      = Modifier.fillMaxWidth(),
                     placeholder   = {
                         Text(
-                            if (selectedType == ProfileTypeChoice.HUMAN)
+                            if (selectedType == LegacyTypeChoice.HUMAN)
                                 stringResource(R.string.placeholder_human_rel)
                             else
                                 stringResource(R.string.placeholder_pet_rel),
@@ -585,8 +585,8 @@ fun AddProfileScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Show error if any (Delegated to ErrorHandler + LascitoAlertDialog)
-            if (uiState is AddProfileUiState.Error) {
-                val errState = uiState as AddProfileUiState.Error
+            if (uiState is AddLegacyUiState.Error) {
+                val errState = uiState as AddLegacyUiState.Error
                 LascitoAlertDialog(
                     messageRes = errState.messageResId,
                     onDismiss  = { viewModel.resetState() },
@@ -597,7 +597,7 @@ fun AddProfileScreen(
                 )
             }
 
-            // -- Levantar Altar Button -----------------------------------------
+            // -- Levantar Legacy Button -----------------------------------------
             Button(
                 onClick  = {
                     coroutineScope.launch {
@@ -607,10 +607,10 @@ fun AddProfileScreen(
                             try { format.parse(passDigits)?.time } catch (e: Exception) { null }
                         }
 
-                        val pType = if (selectedType == ProfileTypeChoice.HUMAN) ProfileType.HUMAN else ProfileType.PET
+                        val pType = if (selectedType == LegacyTypeChoice.HUMAN) LegacyType.HUMAN else LegacyType.PET
                         val bytes = selectedImageUri?.let { ImageCompressor.compressImage(context, it) }
 
-                        viewModel.saveProfile(
+                        viewModel.saveLegacy(
                             fullName = rawName,
                             profileType = pType,
                             relationship = rawRelationship,
@@ -630,7 +630,7 @@ fun AddProfileScreen(
                 ),
                 modifier = Modifier.fillMaxWidth().height(54.dp)
             ) {
-                Text(stringResource(R.string.btn_create_altar), style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.btn_create_legacy), style = MaterialTheme.typography.labelLarge)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -640,7 +640,7 @@ fun AddProfileScreen(
             if (isLoading) {
                 LoadingOverlay(
                     progress = uploadProgress,
-                    message = stringResource(R.string.msg_uploading_profile)
+                    message = stringResource(R.string.msg_uploading_legacy)
                 )
             }
         } // End of outer Box
