@@ -1,6 +1,5 @@
 package com.perenniasystems.lascito.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -129,7 +128,6 @@ class AddMemoryViewModel(
                     try {
                         currentUser.reload().await()
                     } catch (e: Exception) {
-                        Log.e("FirebaseAuth", "Failed to reload user", e)
                         _uiState.value = AddMemoryUiState.Error(R.string.error_session_expired)
                         return@withTimeout
                     }
@@ -189,7 +187,6 @@ class AddMemoryViewModel(
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 _uiState.value = AddMemoryUiState.Error(R.string.error_network)
             } catch (e: Exception) {
-                Log.e("FirestoreError", "Error al guardar memoria", e)
                 _uiState.value = AddMemoryUiState.Error(ErrorHandler.mapExceptionToResId(e))
             }
         }

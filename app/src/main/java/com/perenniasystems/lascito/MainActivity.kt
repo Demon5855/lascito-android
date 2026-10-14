@@ -1,7 +1,6 @@
 package com.perenniasystems.lascito
 
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
@@ -294,16 +293,8 @@ fun BiometricLockScreen(
                 }
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    when (errorCode) {
-                        BiometricPrompt.ERROR_USER_CANCELED,
-                        BiometricPrompt.ERROR_NEGATIVE_BUTTON,
-                        BiometricPrompt.ERROR_CANCELED -> {
-                            // Usuario canceló, no loguear
-                        }
-                        else -> {
-                            Log.w("BiometricLock", "Authentication error: $errString (code: $errorCode)")
-                        }
-                    }
+                    // Cancelación o error del sensor: la app sigue bloqueada y el
+                    // usuario puede reintentar; no hay nada más que hacer aquí.
                 }
             }
         )
@@ -320,7 +311,7 @@ fun BiometricLockScreen(
         try {
             biometricPrompt.authenticate(promptInfo)
         } catch (e: Exception) {
-            Log.e("BiometricLock", "Biometric authentication failed", e)
+            // Sin prompt disponible la app permanece bloqueada.
         }
     }
     

@@ -71,8 +71,7 @@ class ClaimLegacyViewModel(
             }
 
             try {
-                // FASE 4.2: Llamada a la red
-                val legacyVault = guardianRepository.unlockLegacyVault(
+                val legacyVault = guardianRepository.claimInheritance(
                     pin = state.pin
                 ).getOrThrow()
 

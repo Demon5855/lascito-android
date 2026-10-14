@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.perenniasystems.lascito.R
+import com.perenniasystems.lascito.data.model.LegacyVault
 import com.perenniasystems.lascito.data.model.Profile
 import com.perenniasystems.lascito.data.repository.FirebaseProfileRepository
 import com.perenniasystems.lascito.data.repository.ProfileRepository
@@ -59,18 +60,20 @@ class DashboardViewModel(
                 withTimeout(15_000L) {
                     val user = FirebaseAuth.getInstance().currentUser
                         ?: throw Exception("Not authenticated")
-                    
+
                     // Reload user to get latest email verification status
-                    user.reload().addOnCompleteListener { 
+                    user.reload().addOnCompleteListener {
                         _isEmailVerified.value = user.isEmailVerified
                     }
 
                     val profiles = repository.getProfiles(userId = user.uid)
                     _isEmailVerified.value = user.isEmailVerified
-                    
+
                     val hasPendingLegacy = checkPendingLegacyStatus(user)
-                    
-                    _uiState.value = DashboardUiState.Success(profiles, hasPendingLegacy)
+                    val claimedInheritances = guardianRepository.getClaimedInheritances()
+                        .getOrDefault(emptyList())
+
+                    _uiState.value = DashboardUiState.Success(profiles, hasPendingLegacy, claimedInheritances)
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 _uiState.value = DashboardUiState.Error(R.string.error_network)
@@ -84,11 +87,11 @@ class DashboardViewModel(
 
     private suspend fun checkPendingLegacyStatus(user: com.google.firebase.auth.FirebaseUser): Boolean {
         if (!FEATURE_CLAIM_LEGACY_ENABLED) return false
-        
+
         return try {
-            user.email?.let { 
+            user.email?.let {
                 // FASE 4.2: Implementación real a Firebase
-                guardianRepository.checkPendingLegacies(it).getOrDefault(false) 
+                guardianRepository.checkPendingLegacies(it).getOrDefault(false)
             } ?: false
         } catch (e: Exception) {
             false
@@ -121,14 +124,14 @@ class DashboardViewModel(
         viewModelScope.launch {
             _isSendingVerification.value = true
             try {
-                val user = FirebaseAuth.getInstance().currentUser 
+                val user = FirebaseAuth.getInstance().currentUser
                     ?: throw Exception("Not authenticated")
-                
+
                 withTimeout(15_000L) {
                     user.sendEmailVerification().await()
                 }
                 _verificationEmailSent.value = true
-                
+
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 _uiState.value = DashboardUiState.Error(R.string.error_network)
             } catch (e: Exception) {
@@ -145,6 +148,10 @@ class DashboardViewModel(
 // ── Sealed UI State ────────────────────────────────────────────────────────────
 sealed interface DashboardUiState {
     data object Loading : DashboardUiState
-    data class Success(val profiles: List<Profile>, val hasPendingLegacy: Boolean = false) : DashboardUiState
+    data class Success(
+        val profiles: List<Profile>,
+        val hasPendingLegacy: Boolean = false,
+        val claimedInheritances: List<LegacyVault> = emptyList()
+    ) : DashboardUiState
     data class Error(@StringRes val messageResId: Int) : DashboardUiState
 }

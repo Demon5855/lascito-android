@@ -4,9 +4,7 @@ import android.content.Context
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import java.io.File
-import java.io.IOException
 
 class AudioRecorderHelper(private val context: Context) {
 
@@ -31,11 +29,7 @@ class AudioRecorderHelper(private val context: Context) {
                 start()
             }
             true
-        } catch (e: IOException) {
-            Log.e("AudioRecorderHelper", "prepare() failed", e)
-            false
         } catch (e: Exception) {
-            Log.e("AudioRecorderHelper", "start() failed", e)
             false
         }
     }
@@ -49,7 +43,6 @@ class AudioRecorderHelper(private val context: Context) {
             recorder = null
             outputFile?.let { Uri.fromFile(it) }
         } catch (e: Exception) {
-            Log.e("AudioRecorderHelper", "stop() failed", e)
             recorder?.release()
             recorder = null
             null
@@ -63,7 +56,7 @@ class AudioRecorderHelper(private val context: Context) {
                 release()
             }
         } catch (e: Exception) {
-            Log.e("AudioRecorderHelper", "cancel() stop failed", e)
+            // stop() lanza si no llegó a grabarse nada; se descarta igualmente.
         } finally {
             recorder = null
             outputFile?.delete()

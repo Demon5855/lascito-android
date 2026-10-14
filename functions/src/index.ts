@@ -3,11 +3,13 @@
  * LASCITO - DEAD MAN'S SWITCH CLOUD FUNCTION (Production Grade v2.2)
  * ═══════════════════════════════════════════════════════════════════════════
  * 
- * ARQUITECTURA ZERO-KNOWLEDGE CON ENCRIPTACIÓN:
- * - El PIN NUNCA viaja por internet
- * - pinHint está encriptado con AES-256-CBC en Firestore
+ * MANEJO DEL PIN Y SU PISTA:
+ * - El hash del PIN vive en `users/{uid}/private/inheritance` y solo lo lee
+ *   la función `claimInheritance`; nunca se copia a la invitación
+ * - pinHint está ofuscado con AES-256-CBC en Firestore. La clave se deriva de
+ *   SHA-256(creatorUid), por lo que el servidor puede derivarla: NO es cifrado
+ *   de extremo a extremo
  * - La Cloud Function desencripta la pista para enviarla por email
- * - Clave de encriptación derivada desde SHA-256(creatorUid)
  * 
  * @version 2.2.0
  * @author Lascito Engineering Team
@@ -54,7 +56,6 @@ interface DeadManSwitch {
 interface LegacyGuardian {
     email: string;
     name: string;
-    accessPinHash?: string | null;
     encryptedPinHint?: string | null;  // ✅ NUEVO: Pista encriptada (Base64)
     pinHintIv?: string | null;          // ✅ NUEVO: Vector de inicialización (Base64)
     status: string;
@@ -169,7 +170,7 @@ function decryptPinHint(
 /**
  * Envía el correo de notificación al heredero/guardian con la pista del PIN desencriptada.
  * 
- * ⚠️ ZERO-KNOWLEDGE: Este email NO contiene el PIN real, solo la pista desencriptada.
+ * Este email NO contiene el PIN real, solo la pista desencriptada.
  * 
  * @param guardianEmail Email del heredero
  * @param userName Nombre del usuario fallecido/inactivo
@@ -485,7 +486,6 @@ export const checkDeadManSwitches = onSchedule(
 
                     // ✅ EXTRAER DATOS ENCRIPTADOS
                     const guardianEmail = legacyGuardian.email;
-                    const accessPinHash = legacyGuardian.accessPinHash || "";
                     const encryptedPinHint = legacyGuardian.encryptedPinHint;
                     const pinHintIv = legacyGuardian.pinHintIv;
 
@@ -514,9 +514,7 @@ export const checkDeadManSwitches = onSchedule(
                             logger.info(`🔓 Desencriptando PIN Hint para usuario ${doc.id}...`);
                             decryptedPinHint = decryptPinHint(encryptedPinHint, pinHintIv, doc.id);
 
-                            if (decryptedPinHint) {
-                                logger.info(`✅ PIN Hint desencriptado: "${decryptedPinHint.substring(0, 30)}..."`);
-                            } else {
+                            if (!decryptedPinHint) {
                                 logger.warn(`⚠️  No se pudo desencriptar PIN Hint para usuario ${doc.id}`);
                             }
                         } else {
@@ -571,7 +569,6 @@ export const checkDeadManSwitches = onSchedule(
                                     creatorUid: doc.id,
                                     creatorName: userName,
                                     guardianEmail: guardianEmail.toLowerCase(),
-                                    accessPinHash: accessPinHash,
                                     pinHint: decryptedPinHint || null,  // ✅ Guardar pista desencriptada
                                     status: "PENDING",
                                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -818,3 +815,4 @@ export const retryFailedEmails = onSchedule(
 );
 
 export { sendGuardianEmail, decryptPinHint };  // ✅ Exportar para tests
+export { claimInheritance } from "./claimInheritance";

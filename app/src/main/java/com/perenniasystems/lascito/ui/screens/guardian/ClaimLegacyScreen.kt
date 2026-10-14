@@ -10,7 +10,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,13 +36,6 @@ fun ClaimLegacyScreen(
     onNavigateToVault: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(uiState.unlockSuccess) {
-        if (uiState.unlockSuccess) {
-            // Fase 4.1: Mostrar dialogo, se cierra automaticamente despues. (Fase 4.2 sera el salto a la boveda)
-            // onNavigateToVault(uiState.legacyVault?.id ?: "")
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -180,8 +172,9 @@ fun ClaimLegacyScreen(
             messageRes = R.string.message_unlock_success,
             actionRes = R.string.action_view_legacy,
             onAction = {
+                val creatorUid = uiState.legacyVault?.creatorUid
                 viewModel.dismissSuccessDialog()
-                onNavigateBack() // FASE 4.1 Volver por defecto 
+                if (creatorUid.isNullOrBlank()) onNavigateBack() else onNavigateToVault(creatorUid)
             },
             onDismiss = { viewModel.dismissSuccessDialog() }
         )

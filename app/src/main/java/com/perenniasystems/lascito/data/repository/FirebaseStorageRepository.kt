@@ -1,11 +1,14 @@
 package com.perenniasystems.lascito.data.repository
 
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageMetadata
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import com.perenniasystems.lascito.data.model.MediaTooLargeException
 import com.perenniasystems.lascito.data.model.MediaType
 
 /**
@@ -44,10 +47,18 @@ class FirebaseStorageRepositoryImpl(
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 ) : FirebaseStorageRepository {
 
+    private companion object {
+        // Keep in sync with storage.rules
+        const val MAX_IMAGE_BYTES = 10L * 1024 * 1024
+        const val MAX_AUDIO_BYTES = 50L * 1024 * 1024
+        const val MAX_VIDEO_BYTES = 200L * 1024 * 1024
+    }
+
     override suspend fun uploadImage(bytes: ByteArray, path: String): String {
+        if (bytes.size >= MAX_IMAGE_BYTES) throw MediaTooLargeException(isVideo = false)
         val storageRef = storage.reference.child(path)
-        // Upload the byte array
-        storageRef.putBytes(bytes).await()
+        // ImageCompressor always produces WEBP; storage.rules require an image content type
+        storageRef.putBytes(bytes, metadataOf("image/webp")).await()
         // Retrieve and return the download URL
         return storageRef.downloadUrl.await().toString()
     }
@@ -60,8 +71,14 @@ class FirebaseStorageRepositoryImpl(
             val path = "memories/$profileId/$folder/$uuid.$extension"
 
             val storageRef = storage.reference.child(path)
-            
-            val uploadTask = storageRef.putFile(uri)
+
+            val contentType = if (mediaType == MediaType.VIDEO) {
+                resolveContentType(uri)?.takeIf { it.startsWith("video/") } ?: "video/mp4"
+            } else {
+                "audio/mp4"
+            }
+            ensureWithinLimit(uri, contentType)
+            val uploadTask = storageRef.putFile(uri, metadataOf(contentType))
 
             uploadTask.addOnProgressListener { snapshot ->
                 val progress = snapshot.bytesTransferred.toFloat() / snapshot.totalByteCount.toFloat()
@@ -91,8 +108,15 @@ class FirebaseStorageRepositoryImpl(
         return try {
             val path = "capsules/$userId/$capsuleId.$extension"
             val storageRef = storage.reference.child(path)
-            
-            val uploadTask = storageRef.putFile(uri)
+
+            val contentType = resolveContentType(uri)
+                ?: MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+            ensureWithinLimit(uri, contentType)
+            val uploadTask = if (contentType != null) {
+                storageRef.putFile(uri, metadataOf(contentType))
+            } else {
+                storageRef.putFile(uri)
+            }
 
             uploadTask.addOnProgressListener { snapshot ->
                 val progress = snapshot.bytesTransferred.toFloat() / snapshot.totalByteCount.toFloat()
@@ -111,6 +135,28 @@ class FirebaseStorageRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    private fun metadataOf(contentType: String): StorageMetadata =
+        StorageMetadata.Builder().setContentType(contentType).build()
+
+    /** MIME type reported by the ContentResolver; null for `file://` URIs. */
+    private fun resolveContentType(uri: Uri): String? =
+        storage.app.applicationContext.contentResolver.getType(uri)
+
+    /** Fails fast with [MediaTooLargeException] instead of letting storage.rules reject the upload. */
+    private fun ensureWithinLimit(uri: Uri, contentType: String?) {
+        val limit = when {
+            contentType == null -> return
+            contentType.startsWith("video/") -> MAX_VIDEO_BYTES
+            contentType.startsWith("audio/") -> MAX_AUDIO_BYTES
+            else -> MAX_IMAGE_BYTES
+        }
+        val size = runCatching {
+            storage.app.applicationContext.contentResolver
+                .openAssetFileDescriptor(uri, "r")?.use { it.length }
+        }.getOrNull() ?: return
+        if (size >= limit) throw MediaTooLargeException(isVideo = contentType.startsWith("video/"))
     }
 
     override suspend fun deleteImage(imageUrl: String): Result<Unit> {

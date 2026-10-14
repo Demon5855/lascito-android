@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function profileCreatorId(profileId) {
+      return get(/databases/$(database)/documents/profiles/$(profileId)).data.creatorUserId;
+    }
+
+    function isProfileCreator(profileId) {
+      return isSignedIn() && profileCreatorId(profileId) == request.auth.uid;
+    }
+
+    // El guardián hereda acceso de solo lectura cuando la invitación del creador
+    // (su ID es el UID del creador) está CLAIMED a su nombre. Ese estado solo lo
+    // escribe la Cloud Function claimInheritance tras verificar el PIN.
+    function hasClaimedInheritance(creatorUid) {
+      let invitation = /databases/$(database)/documents/legacyInvitations/$(creatorUid);
+      return isSignedIn()
+             && exists(invitation)
+             && get(invitation).data.status == 'CLAIMED'
+             && get(invitation).data.claimedByUid == request.auth.uid;
+    }
+
+    // Infraestructura Oculta
+    match /_failedEmails/{docId} { allow read, write: if false; }
+    match /_permanentFailures/{docId} { allow read, write: if false; }
+    match /_auditLog/{docId} { allow read, write: if false; }
+
+    // Usuarios y Capsulas
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /capsules/{capsuleId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secreto de herencia (hash bcrypt del PIN).
+      // El dueño lo escribe pero nadie lo lee desde la app: solo la Cloud Function
+      // claimInheritance (Admin SDK) lo consulta para verificar el PIN.
+      match /private/inheritance {
+        allow read: if false;
+        allow delete: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+                              && request.resource.data.keys().hasOnly(['accessPinHash', 'updatedAt'])
+                              && request.resource.data.accessPinHash is string
+                              && request.resource.data.accessPinHash.matches('^[$]2[aby][$][0-9]{2}[$].{53}$');
+      }
+    }
+
+    // Santuarios (Perfiles y Memorias)
+    match /profiles/{profileId} {
+      allow read: if isSignedIn()
+                  && (request.auth.uid == resource.data.creatorUserId
+                      || hasClaimedInheritance(resource.data.creatorUserId));
+      allow update, delete: if isSignedIn() && request.auth.uid == resource.data.creatorUserId;
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.creatorUserId;
+
+      // Solo el creador del perfil escribe sus memorias; el guardián con la
+      // herencia reclamada puede leerlas.
+      match /memories/{memoryId} {
+        allow read: if isProfileCreator(profileId)
+                    || hasClaimedInheritance(profileCreatorId(profileId));
+        allow write: if isProfileCreator(profileId);
+      }
+    }
+
+    // Invitaciones de legado
+    match /legacyInvitations/{invitationId} {
+      // El heredero solo puede ver su propia invitación, y solo con el email verificado.
+      // guardianEmail se guarda siempre en minúsculas (checkDeadManSwitches).
+      allow read: if isSignedIn()
+                  && request.auth.token.email_verified == true
+                  && resource.data.guardianEmail == request.auth.token.email.lower();
+
+      // Nadie escribe desde la app: la crea el Cron Job y el estado / intentos
+      // los gestiona la Cloud Function claimInheritance.
+      allow create, update, delete: if false;
+    }
+  }
+}

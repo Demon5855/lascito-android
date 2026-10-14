@@ -1,0 +1,84 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function profileCreatorId(profileId) {
+      return firestore.get(/databases/(default)/documents/profiles/$(profileId)).data.creatorUserId;
+    }
+
+    function isProfileCreator(profileId) {
+      return isSignedIn() && profileCreatorId(profileId) == request.auth.uid;
+    }
+
+    // Guardián con la herencia del creador reclamada (ver firestore.rules).
+    function hasClaimedInheritance(creatorUid) {
+      return isSignedIn()
+             && firestore.exists(/databases/(default)/documents/legacyInvitations/$(creatorUid))
+             && firestore.get(/databases/(default)/documents/legacyInvitations/$(creatorUid)).data.status == 'CLAIMED'
+             && firestore.get(/databases/(default)/documents/legacyInvitations/$(creatorUid)).data.claimedByUid == request.auth.uid;
+    }
+
+    function isUnderMb(maxMb) {
+      return request.resource.size < maxMb * 1024 * 1024;
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isVideo() {
+      return request.resource.contentType.matches('video/.*');
+    }
+
+    function isAudio() {
+      return request.resource.contentType.matches('audio/.*');
+    }
+
+    // Capsulas
+    // Solo el dueño (verificado por su UID en el nombre de la carpeta) puede leer/escribir.
+    match /capsules/{userId}/{fileName} {
+      allow read, delete: if isSignedIn() && request.auth.uid == userId;
+      allow create, update: if isSignedIn() && request.auth.uid == userId
+                            && ((isImage() && isUnderMb(10))
+                                || (isAudio() && isUnderMb(50))
+                                || (isVideo() && isUnderMb(200)));
+    }
+
+    // Avatares de perfiles: profiles/covers/{userId}/{profileId}.jpg
+    // Solo el dueño escribe; el guardián con la herencia reclamada puede leer.
+    match /profiles/covers/{userId}/{fileName} {
+      allow read: if (isSignedIn() && request.auth.uid == userId) || hasClaimedInheritance(userId);
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+      allow create, update: if isSignedIn() && request.auth.uid == userId
+                            && isImage() && isUnderMb(10);
+    }
+
+    // Portadas del esquema anterior: profiles/covers/{profileId}.jpg
+    // Ya no se suben aquí; el creador del perfil conserva lectura y borrado.
+    match /profiles/covers/{fileName} {
+      allow read, delete: if isProfileCreator(fileName.split('[.]')[0]);
+      allow create, update: if false;
+    }
+
+    // Memorias (Audio/Video/Fotos): solo el creador del perfil escribe;
+    // el guardián con la herencia reclamada puede leer.
+    match /memories/{profileId}/{mediaType}/{fileName} {
+      allow read: if isProfileCreator(profileId)
+                  || hasClaimedInheritance(profileCreatorId(profileId));
+      allow delete: if isProfileCreator(profileId);
+      allow create, update: if isProfileCreator(profileId)
+                            && ((mediaType == 'images' && isImage() && isUnderMb(10))
+                                || (mediaType == 'audio' && isAudio() && isUnderMb(50))
+                                || (mediaType == 'videos' && isVideo() && isUnderMb(200)));
+    }
+
+    // Deniega cualquier intento de subir archivos fuera de las rutas anteriores.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

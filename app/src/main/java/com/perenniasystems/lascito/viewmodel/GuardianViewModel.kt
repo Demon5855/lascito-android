@@ -1,6 +1,5 @@
 package com.perenniasystems.lascito.viewmodel
 
-import android.util.Log
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,7 +32,7 @@ data class GuardianUiState(
     val isLoading:       Boolean = false,
     val guardianName:    String  = "",
     val guardianEmail:   String  = "",
-    /** 4-digit PIN de acceso para el heredero. Almacenado como hash en Firestore. */
+    /** 4-digit PIN de acceso para el heredero. Se persiste solo como hash bcrypt. */
     val guardianPin:     String  = "",
     /** Pista introducida por el usuario, sin encriptar, solo para estado de UI */
     val guardianPinHint: String  = "",
@@ -115,7 +114,6 @@ class GuardianViewModel(
                     }
                 }
                 .onFailure { e ->
-                    Log.e("GuardianViewModel", "Error loading guardian config", e)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -215,18 +213,22 @@ class GuardianViewModel(
                     encryptPinHint(state.guardianPinHint, uid)
                 } else null
 
-                // 2. Guardar configuración del Heredero
+                // 2. Guardar el PIN solo si se escribió uno nuevo (no pisar el existente)
+                if (state.guardianPin.isNotBlank()) {
+                    repository.setInheritancePin(state.guardianPin).getOrThrow()
+                }
+
+                // 3. Guardar configuración del Heredero
                 val guardian = LegacyGuardian(
                     name          = state.guardianName.trim().ifBlank { null },
                     email         = state.guardianEmail.trim().ifBlank { null },
-                    accessPinHash = hashPin(state.guardianPin),
                     encryptedPinHint = encryptedHintData?.data,
                     pinHintIv = encryptedHintData?.iv,
                     lastGuardianUpdatedAt = newTimestamp
                 )
                 repository.updateGuardian(guardian).getOrThrow()
 
-                // 2. Guardar configuración del Dead Man's Switch
+                // 4. Guardar configuración del Dead Man's Switch
                 val switch = DeadManSwitch(
                     isActive               = state.isSwitchActive,
                     inactivityThresholdDays = state.inactivityDays,
@@ -237,7 +239,6 @@ class GuardianViewModel(
 
                 _uiState.update { it.copy(isLoading = false, isSaved = true) }
             } catch (e: Exception) {
-                Log.e("GuardianViewModel", "Error saving guardian config", e)
                 // Ejecutando ROLLBACK en caso de fallo
                 _uiState.value = previousState.copy(
                     isLoading = false,
@@ -258,9 +259,7 @@ class GuardianViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 repository.registerProofOfLife().getOrThrow()
-                Log.d("GuardianViewModel", "Manual proof of life registered: $now")
             } catch (e: Exception) {
-                Log.w("GuardianViewModel", "Manual proof of life failed silently: ${e.message}")
                 // Fallo silencioso — el timestamp local ya se actualizó en la UI.
                 // El servidor se sincronizará en la próxima sesión.
             }
@@ -268,21 +267,6 @@ class GuardianViewModel(
     }
 
     // ── Utilidades ────────────────────────────────────────────────────────────
-
-    /**
-     * Hashea el PIN antes de persistirlo. En producción usar bcrypt o
-     * al menos SHA-256 con salt. Aquí usamos SHA-256 como base.
-     */
-    private fun hashPin(pin: String): String? {
-        if (pin.isBlank()) return null
-        return try {
-            val digest = java.security.MessageDigest.getInstance("SHA-256")
-            val hash = digest.digest(pin.toByteArray())
-            hash.joinToString("") { "%02x".format(it) }
-        } catch (e: Exception) {
-            null
-        }
-    }
 
     data class EncryptedData(val data: String, val iv: String)
 

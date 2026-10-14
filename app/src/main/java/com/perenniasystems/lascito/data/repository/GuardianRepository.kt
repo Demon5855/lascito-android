@@ -101,9 +101,21 @@ interface GuardianRepository {
     suspend fun getLegacyInvitation(email: String): Result<com.perenniasystems.lascito.data.model.LegacyInvitation?>
 
     /**
-     * Intenta desbloquear la bóveda de legado utilizando el PIN.
+     * Herencias que el usuario actual ya reclamó (invitación CLAIMED con su UID).
+     */
+    suspend fun getClaimedInheritances(): Result<List<com.perenniasystems.lascito.data.model.LegacyVault>>
+
+    /**
+     * Guarda el PIN de herencia del usuario actual como hash bcrypt en un documento
+     * que ningún cliente puede leer. El PIN en claro nunca se persiste.
+     */
+    suspend fun setInheritancePin(pin: String): Result<Unit>
+
+    /**
+     * Reclama la herencia pendiente del usuario actual. La verificación del PIN y el
+     * conteo de intentos ocurren en la Cloud Function `claimInheritance`.
      * @throws InvalidPinException si el PIN es incorrecto
      * @throws LegacyBlockedException si excedió el límite de intentos
      */
-    suspend fun unlockLegacyVault(pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault>
+    suspend fun claimInheritance(pin: String): Result<com.perenniasystems.lascito.data.model.LegacyVault>
 }

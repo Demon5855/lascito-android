@@ -354,5 +354,13 @@
 
     <string name="placeholder_new_heir_pin">Ingresar nuevo PIN para cambiar</string>
     <string name="heartbeat_just_now">Hace un momento</string>
+    <string name="error_video_too_large">El video supera el límite de 200 MB. Recórtalo o elige uno más corto o de menor resolución.</string>
+    <string name="error_file_too_large">El archivo es demasiado grande. El límite es de 10 MB para imágenes y 50 MB para audio.</string>
+    <string name="screen_inheritance">Herencia</string>
+    <string name="inheritance_from">Legados que %1$s dejó a tu cuidado</string>
+    <string name="empty_inheritance">Esta herencia aún no contiene legados.</string>
+    <string name="error_load_inheritance">No se pudo cargar la herencia. Intenta nuevamente más tarde.</string>
+    <string name="banner_claimed_inheritance">Tienes acceso a la herencia de %1$s.</string>
+    <string name="action_view_inheritance">Ver</string>
 
 </resources>

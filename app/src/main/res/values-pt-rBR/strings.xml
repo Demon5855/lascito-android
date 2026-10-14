@@ -351,5 +351,13 @@
     <string name="title_unlock_success">Cofre Desbloqueado!</string>
     <string name="message_unlock_success">Você desbloqueou com sucesso o legado. Agora você pode acessar seu conteúdo.</string>
     <string name="action_view_legacy">Ver Legado</string>
+    <string name="error_video_too_large">O vídeo ultrapassa o limite de 200 MB. Corte-o ou escolha um mais curto ou de menor resolução.</string>
+    <string name="error_file_too_large">O arquivo é grande demais. O limite é de 10 MB para imagens e 50 MB para áudio.</string>
+    <string name="screen_inheritance">Herança</string>
+    <string name="inheritance_from">Legados que %1$s deixou aos seus cuidados</string>
+    <string name="empty_inheritance">Esta herança ainda não contém legados.</string>
+    <string name="error_load_inheritance">Não foi possível carregar a herança. Tente novamente mais tarde.</string>
+    <string name="banner_claimed_inheritance">Você tem acesso à herança de %1$s.</string>
+    <string name="action_view_inheritance">Ver</string>
 
 </resources>

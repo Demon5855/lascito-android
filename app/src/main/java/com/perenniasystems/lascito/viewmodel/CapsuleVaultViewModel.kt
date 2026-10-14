@@ -1,6 +1,5 @@
 package com.perenniasystems.lascito.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perenniasystems.lascito.data.model.TimeCapsule
@@ -52,7 +51,6 @@ class CapsuleVaultViewModel(
                 val capsules = repository.getTimeCapsules()
                 _uiState.update { it.copy(isLoading = false, capsules = capsules) }
             } catch (e: Exception) {
-                Log.e("CapsuleVaultViewModel", "Error loading capsules", e)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -84,7 +82,6 @@ class CapsuleVaultViewModel(
                     loadCapsules()
                 }
                 .onFailure { e ->
-                    Log.e("CapsuleVaultViewModel", "Error deleting capsule ${capsule.capsuleId}", e)
                     // Revertir: restaurar lista anterior
                     _uiState.update {
                         it.copy(

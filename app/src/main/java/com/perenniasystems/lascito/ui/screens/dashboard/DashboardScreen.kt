@@ -36,7 +36,8 @@ fun DashboardScreen(
     onNavigateToAltar:        (String) -> Unit = {},
     onNavigateToAddProfile:   (String?) -> Unit = {},
     onNavigateToUserSettings: () -> Unit = {},
-    onNavigateToClaimLegacy:  () -> Unit = {}
+    onNavigateToClaimLegacy:  () -> Unit = {},
+    onNavigateToInheritance:  (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isEmailVerified by viewModel.isEmailVerified.collectAsStateWithLifecycle()
@@ -136,6 +137,15 @@ fun DashboardScreen(
                         actionText = stringResource(R.string.action_claim_legacy),
                         onActionClick = onNavigateToClaimLegacy
                     )
+                }
+                if (state is DashboardUiState.Success) {
+                    state.claimedInheritances.forEach { inheritance ->
+                        InfoBanner(
+                            message = stringResource(R.string.banner_claimed_inheritance, inheritance.creatorName),
+                            actionText = stringResource(R.string.action_view_inheritance),
+                            onActionClick = { onNavigateToInheritance(inheritance.creatorUid) }
+                        )
+                    }
                 }
             }
             

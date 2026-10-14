@@ -5,15 +5,10 @@ data class LegacyInvitation(
     val creatorUid: String = "",
     val creatorName: String = "",
     val guardianEmail: String = "",
-    val accessPinHash: String = "",
     val status: InvitationStatus = InvitationStatus.PENDING,
     val createdAt: Long = 0L,
     val expiresAt: Long? = null,
-    val vaultContentRef: String = "",
-    val encryptedPinHint: String? = null,
-    val pinHintIv: String? = null,
-    val failedAttempts: Int = 0,
-    val lastFailedAttempt: Long? = null
+    val vaultContentRef: String = ""
 )
 
 enum class InvitationStatus {
